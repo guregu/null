@@ -45,3 +45,8 @@ func (s String) Pointer() *string {
 	}
 	return &s.String
 }
+
+// IsZero returns true for invalid strings, for future omitempty support (Go 1.4?)
+func (s String) IsZero() bool {
+	return !s.Valid
+}

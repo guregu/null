@@ -63,6 +63,18 @@ func TestPointer(t *testing.T) {
 	}
 }
 
+func TestIsZero(t *testing.T) {
+	str := StringFrom("test")
+	if str.IsZero() {
+		t.Errorf("IsZero() should be false")
+	}
+
+	null := StringFrom("")
+	if !null.IsZero() {
+		t.Errorf("IsZero() should be true")
+	}
+}
+
 func TestScan(t *testing.T) {
 	var str String
 	err := str.Scan("test")
