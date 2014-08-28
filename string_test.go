@@ -12,11 +12,11 @@ var (
 )
 
 func TestStringFrom(t *testing.T) {
-	str := From("test")
-	assert(t, str, "From() string")
+	str := StringFrom("test")
+	assert(t, str, "StringFrom() string")
 
-	null := From("")
-	assertNull(t, null, "From() empty string")
+	null := StringFrom("")
+	assertNull(t, null, "StringFrom() empty string")
 }
 
 func TestUnmarshalString(t *testing.T) {
@@ -37,26 +37,26 @@ func TestUnmarshalString(t *testing.T) {
 }
 
 func TestMarshalString(t *testing.T) {
-	str := From("test")
+	str := StringFrom("test")
 	data, err := json.Marshal(str)
 	maybePanic(err)
 	assertJSONEquals(t, data, `"test"`, "non-empty json marshal")
 
 	// invalid values should be encoded as an empty string
-	null := From("")
+	null := StringFrom("")
 	data, err = json.Marshal(null)
 	maybePanic(err)
 	assertJSONEquals(t, data, `""`, "non-empty json marshal")
 }
 
 func TestPointer(t *testing.T) {
-	str := From("test")
+	str := StringFrom("test")
 	ptr := str.Pointer()
 	if *ptr != "test" {
 		t.Errorf("bad %s string: %#v ≠ %s\n", "pointer", ptr, "test")
 	}
 
-	null := From("")
+	null := StringFrom("")
 	ptr = null.Pointer()
 	if ptr != nil {
 		t.Errorf("bad %s: %#v ≠ %s\n", "nil pointer", ptr, "nil")
