@@ -103,6 +103,11 @@ func TestIsZero(t *testing.T) {
 	if !null.IsZero() {
 		t.Errorf("IsZero() should be true")
 	}
+
+	empty := NewString("", true)
+	if !empty.IsZero() {
+		t.Errorf("IsZero() should be true")
+	}
 }
 
 func TestScan(t *testing.T) {

@@ -73,5 +73,5 @@ func (s String) Pointer() *string {
 
 // IsZero returns true for null strings, for future omitempty support. (Go 1.4?)
 func (s String) IsZero() bool {
-	return !s.Valid
+	return !s.Valid || s.String == ""
 }
