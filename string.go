@@ -21,7 +21,7 @@ func NewString(s string, valid bool) String {
 	return String{
 		NullString: sql.NullString{
 			String: s,
-			Valid:  s != "",
+			Valid:  valid,
 		},
 	}
 }
