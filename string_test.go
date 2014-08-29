@@ -6,10 +6,15 @@ import (
 )
 
 var (
-	stringJSON     = []byte(`"test"`)
-	nullStringJSON = []byte(`{"String":"test","Valid":true}`)
-	nullJSON       = []byte(`null`)
+	stringJSON      = []byte(`"test"`)
+	blankStringJSON = []byte(`""`)
+	nullStringJSON  = []byte(`{"String":"test","Valid":true}`)
+	nullJSON        = []byte(`null`)
 )
+
+type stringInStruct struct {
+	Test String `json:"test,omitempty"`
+}
 
 func TestStringFrom(t *testing.T) {
 	str := StringFrom("test")
@@ -30,6 +35,11 @@ func TestUnmarshalString(t *testing.T) {
 	maybePanic(err)
 	assert(t, ns, "null string object json")
 
+	var blank String
+	err = json.Unmarshal(blankStringJSON, &blank)
+	maybePanic(err)
+	assertNull(t, blank, "blank string json")
+
 	var null String
 	err = json.Unmarshal(nullJSON, &null)
 	maybePanic(err)
@@ -46,8 +56,16 @@ func TestMarshalString(t *testing.T) {
 	null := StringFrom("")
 	data, err = json.Marshal(null)
 	maybePanic(err)
-	assertJSONEquals(t, data, `""`, "non-empty json marshal")
+	assertJSONEquals(t, data, `""`, "empty json marshal")
 }
+
+// Tests omitempty... broken until Go 1.4
+// func TestMarshalStringInStruct(t *testing.T) {
+// 	obj := stringInStruct{Test: StringFrom("")}
+// 	data, err := json.Marshal(obj)
+// 	maybePanic(err)
+// 	assertJSONEquals(t, data, `{}`, "null string in struct")
+// }
 
 func TestPointer(t *testing.T) {
 	str := StringFrom("test")
