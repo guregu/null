@@ -46,6 +46,18 @@ func TestUnmarshalString(t *testing.T) {
 	assertNull(t, null, "null json")
 }
 
+func TestTextUnmarshalString(t *testing.T) {
+	var str String
+	err := str.UnmarshalText([]byte("test"))
+	maybePanic(err)
+	assert(t, str, "TextUnmarshal() string")
+
+	var null String
+	err = null.UnmarshalText([]byte(""))
+	maybePanic(err)
+	assertNull(t, null, "TextUnmarshal() empty string")
+}
+
 func TestMarshalString(t *testing.T) {
 	str := StringFrom("test")
 	data, err := json.Marshal(str)
