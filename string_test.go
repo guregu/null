@@ -50,12 +50,12 @@ func TestTextUnmarshalString(t *testing.T) {
 	var str String
 	err := str.UnmarshalText([]byte("test"))
 	maybePanic(err)
-	assert(t, str, "TextUnmarshal() string")
+	assert(t, str, "UnmarshalText() string")
 
 	var null String
 	err = null.UnmarshalText([]byte(""))
 	maybePanic(err)
-	assertNull(t, null, "TextUnmarshal() empty string")
+	assertNull(t, null, "UnmarshalText() empty string")
 }
 
 func TestMarshalString(t *testing.T) {
