@@ -1,0 +1,139 @@
+package null
+
+import (
+	"encoding/json"
+	"testing"
+)
+
+var (
+	intJSON     = []byte(`12345`)
+	nullIntJSON = []byte(`{"Int64":12345,"Valid":true}`)
+)
+
+func TestIntFrom(t *testing.T) {
+	i := IntFrom(12345)
+	assertInt(t, i, "IntFrom()")
+
+	zero := IntFrom(0)
+	if !zero.Valid {
+		t.Error("IntFrom(0)", "is invalid, but should be valid")
+	}
+}
+
+func TestUnmarshalInt(t *testing.T) {
+	var i Int
+	err := json.Unmarshal(intJSON, &i)
+	maybePanic(err)
+	assertInt(t, i, "int json")
+
+	var ni Int
+	err = json.Unmarshal(nullIntJSON, &ni)
+	maybePanic(err)
+	assertInt(t, ni, "sq.NullInt64 json")
+
+	var null Int
+	err = json.Unmarshal(nullJSON, &null)
+	maybePanic(err)
+	assertNullInt(t, null, "null json")
+}
+
+func TestTextUnmarshalInt(t *testing.T) {
+	var i Int
+	err := i.UnmarshalText([]byte("12345"))
+	maybePanic(err)
+	assertInt(t, i, "UnmarshalText() int")
+
+	var blank Int
+	err = blank.UnmarshalText([]byte(""))
+	maybePanic(err)
+	assertNullInt(t, blank, "UnmarshalText() empty int")
+
+	var null Int
+	err = null.UnmarshalText([]byte("null"))
+	maybePanic(err)
+	assertNullInt(t, null, `UnmarshalText() "null"`)
+}
+
+func TestMarshalInt(t *testing.T) {
+	i := IntFrom(12345)
+	data, err := json.Marshal(i)
+	maybePanic(err)
+	assertJSONEquals(t, data, "12345", "non-empty json marshal")
+
+	// invalid values should be encoded as null
+	null := NewInt(0, false)
+	data, err = json.Marshal(null)
+	maybePanic(err)
+	assertJSONEquals(t, data, "null", "null json marshal")
+}
+
+func TestMarshalIntText(t *testing.T) {
+	i := IntFrom(12345)
+	data, err := i.MarshalText()
+	maybePanic(err)
+	assertJSONEquals(t, data, "12345", "non-empty text marshal")
+
+	// invalid values should be encoded as null
+	null := NewInt(0, false)
+	data, err = null.MarshalText()
+	maybePanic(err)
+	assertJSONEquals(t, data, "", "null text marshal")
+}
+
+func TestIntPointer(t *testing.T) {
+	i := IntFrom(12345)
+	ptr := i.Pointer()
+	if *ptr != 12345 {
+		t.Errorf("bad %s int: %#v ≠ %s\n", "pointer", ptr, 12345)
+	}
+
+	null := NewInt(0, false)
+	ptr = null.Pointer()
+	if ptr != nil {
+		t.Errorf("bad %s int: %#v ≠ %s\n", "nil pointer", ptr, "nil")
+	}
+}
+
+func TestIntIsZero(t *testing.T) {
+	i := IntFrom(12345)
+	if i.IsZero() {
+		t.Errorf("IsZero() should be false")
+	}
+
+	null := NewInt(0, false)
+	if !null.IsZero() {
+		t.Errorf("IsZero() should be true")
+	}
+
+	zero := NewInt(0, true)
+	if zero.IsZero() {
+		t.Errorf("IsZero() should be false")
+	}
+}
+
+func TestIntScan(t *testing.T) {
+	var i Int
+	err := i.Scan(12345)
+	maybePanic(err)
+	assertInt(t, i, "scanned int")
+
+	var null Int
+	err = null.Scan(nil)
+	maybePanic(err)
+	assertNullInt(t, null, "scanned null")
+}
+
+func assertInt(t *testing.T, i Int, from string) {
+	if i.Int64 != 12345 {
+		t.Errorf("bad %s int: %d ≠ %d\n", from, i.Int64, 12345)
+	}
+	if !i.Valid {
+		t.Error(from, "is invalid, but should be valid")
+	}
+}
+
+func assertNullInt(t *testing.T, i Int, from string) {
+	if i.Valid {
+		t.Error(from, "is valid, but should be invalid")
+	}
+}

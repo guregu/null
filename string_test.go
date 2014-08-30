@@ -18,44 +18,44 @@ type stringInStruct struct {
 
 func TestStringFrom(t *testing.T) {
 	str := StringFrom("test")
-	assert(t, str, "StringFrom() string")
+	assertStr(t, str, "StringFrom() string")
 
 	null := StringFrom("")
-	assertNull(t, null, "StringFrom() empty string")
+	assertNullStr(t, null, "StringFrom() empty string")
 }
 
 func TestUnmarshalString(t *testing.T) {
 	var str String
 	err := json.Unmarshal(stringJSON, &str)
 	maybePanic(err)
-	assert(t, str, "string json")
+	assertStr(t, str, "string json")
 
 	var ns String
 	err = json.Unmarshal(nullStringJSON, &ns)
 	maybePanic(err)
-	assert(t, ns, "null string object json")
+	assertStr(t, ns, "sql.NullString json")
 
 	var blank String
 	err = json.Unmarshal(blankStringJSON, &blank)
 	maybePanic(err)
-	assertNull(t, blank, "blank string json")
+	assertNullStr(t, blank, "blank string json")
 
 	var null String
 	err = json.Unmarshal(nullJSON, &null)
 	maybePanic(err)
-	assertNull(t, null, "null json")
+	assertNullStr(t, null, "null json")
 }
 
 func TestTextUnmarshalString(t *testing.T) {
 	var str String
 	err := str.UnmarshalText([]byte("test"))
 	maybePanic(err)
-	assert(t, str, "UnmarshalText() string")
+	assertStr(t, str, "UnmarshalText() string")
 
 	var null String
 	err = null.UnmarshalText([]byte(""))
 	maybePanic(err)
-	assertNull(t, null, "UnmarshalText() empty string")
+	assertNullStr(t, null, "UnmarshalText() empty string")
 }
 
 func TestMarshalString(t *testing.T) {
@@ -79,7 +79,7 @@ func TestMarshalString(t *testing.T) {
 // 	assertJSONEquals(t, data, `{}`, "null string in struct")
 // }
 
-func TestPointer(t *testing.T) {
+func TestStringPointer(t *testing.T) {
 	str := StringFrom("test")
 	ptr := str.Pointer()
 	if *ptr != "test" {
@@ -89,11 +89,11 @@ func TestPointer(t *testing.T) {
 	null := StringFrom("")
 	ptr = null.Pointer()
 	if ptr != nil {
-		t.Errorf("bad %s: %#v ≠ %s\n", "nil pointer", ptr, "nil")
+		t.Errorf("bad %s string: %#v ≠ %s\n", "nil pointer", ptr, "nil")
 	}
 }
 
-func TestIsZero(t *testing.T) {
+func TestStringIsZero(t *testing.T) {
 	str := StringFrom("test")
 	if str.IsZero() {
 		t.Errorf("IsZero() should be false")
@@ -110,16 +110,16 @@ func TestIsZero(t *testing.T) {
 	}
 }
 
-func TestScan(t *testing.T) {
+func TestStringScan(t *testing.T) {
 	var str String
 	err := str.Scan("test")
 	maybePanic(err)
-	assert(t, str, "scanned string")
+	assertStr(t, str, "scanned string")
 
 	var null String
 	err = null.Scan(nil)
 	maybePanic(err)
-	assertNull(t, null, "scanned null")
+	assertNullStr(t, null, "scanned null")
 }
 
 func maybePanic(err error) {
@@ -128,7 +128,7 @@ func maybePanic(err error) {
 	}
 }
 
-func assert(t *testing.T, s String, from string) {
+func assertStr(t *testing.T, s String, from string) {
 	if s.String != "test" {
 		t.Errorf("bad %s string: %s ≠ %s\n", from, s.String, "test")
 	}
@@ -137,7 +137,7 @@ func assert(t *testing.T, s String, from string) {
 	}
 }
 
-func assertNull(t *testing.T, s String, from string) {
+func assertNullStr(t *testing.T, s String, from string) {
 	if s.Valid {
 		t.Error(from, "is valid, but should be invalid")
 	}

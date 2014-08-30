@@ -33,9 +33,9 @@ func (s *String) UnmarshalJSON(data []byte) error {
 	var err error
 	var v interface{}
 	json.Unmarshal(data, &v)
-	switch v.(type) {
+	switch x := v.(type) {
 	case string:
-		err = json.Unmarshal(data, &s.String)
+		s.String = x
 	case map[string]interface{}:
 		err = json.Unmarshal(data, &s.NullString)
 	case nil:
@@ -65,7 +65,7 @@ func (s *String) UnmarshalText(text []byte) error {
 
 // Pointer returns a pointer to this String's value, or a nil pointer if this String is null.
 func (s String) Pointer() *string {
-	if s.String == "" {
+	if !s.Valid {
 		return nil
 	}
 	return &s.String
