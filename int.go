@@ -6,7 +6,7 @@ import (
 	"strconv"
 )
 
-// Int is a nullable int.
+// Int is a nullable int64.
 type Int struct {
 	sql.NullInt64
 }
@@ -80,6 +80,7 @@ func (i Int) MarshalText() ([]byte, error) {
 	return []byte(strconv.FormatInt(i.Int64, 10)), nil
 }
 
+// Pointer returns a pointer to this Int's value, or a nil pointer if this Int is null.
 func (i Int) Pointer() *int64 {
 	if !i.Valid {
 		return nil

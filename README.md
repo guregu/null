@@ -8,6 +8,13 @@ Will marshal to a blank string if null. Blank string input produces a null Strin
 
 `UnmarshalJSON` supports `sql.NullString` input. 
 
+### Int
+A nullable int64. 
+
+Unlike null.String, null.Int will marshal to null if null. Zero input will not produce a null Int. 
+
+`UnmarshalJSON` supports `sql.NullInt64` input. 
+
 ### Bugs
 `json`'s `",omitempty"` struct tag does not work correctly right now. It will never omit a null or empty String. This should be [fixed in Go 1.4](https://code.google.com/p/go/issues/detail?id=4357).
 
