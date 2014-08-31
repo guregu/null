@@ -8,7 +8,6 @@ import (
 var (
 	intJSON     = []byte(`12345`)
 	nullIntJSON = []byte(`{"Int64":12345,"Valid":true}`)
-	zeroJSON    = []byte(`0`)
 )
 
 func TestIntFrom(t *testing.T) {
@@ -16,8 +15,8 @@ func TestIntFrom(t *testing.T) {
 	assertInt(t, i, "IntFrom()")
 
 	zero := IntFrom(0)
-	if zero.Valid {
-		t.Error("IntFrom(0)", "is valid, but should be invalid")
+	if !zero.Valid {
+		t.Error("IntFrom(0)", "is invalid, but should be valid")
 	}
 }
 
@@ -42,11 +41,6 @@ func TestUnmarshalInt(t *testing.T) {
 	maybePanic(err)
 	assertInt(t, ni, "sq.NullInt64 json")
 
-	var zero Int
-	err = json.Unmarshal(zeroJSON, &zero)
-	maybePanic(err)
-	assertNullInt(t, zero, "zero json")
-
 	var null Int
 	err = json.Unmarshal(nullJSON, &null)
 	maybePanic(err)
@@ -58,11 +52,6 @@ func TestTextUnmarshalInt(t *testing.T) {
 	err := i.UnmarshalText([]byte("12345"))
 	maybePanic(err)
 	assertInt(t, i, "UnmarshalText() int")
-
-	var zero Int
-	err = zero.UnmarshalText([]byte("0"))
-	maybePanic(err)
-	assertNullInt(t, zero, "UnmarshalText() zero int")
 
 	var blank Int
 	err = blank.UnmarshalText([]byte(""))
@@ -81,11 +70,11 @@ func TestMarshalInt(t *testing.T) {
 	maybePanic(err)
 	assertJSONEquals(t, data, "12345", "non-empty json marshal")
 
-	// invalid values should be encoded as 0
+	// invalid values should be encoded as null
 	null := NewInt(0, false)
 	data, err = json.Marshal(null)
 	maybePanic(err)
-	assertJSONEquals(t, data, "0", "null json marshal")
+	assertJSONEquals(t, data, "null", "null json marshal")
 }
 
 func TestMarshalIntText(t *testing.T) {
@@ -94,11 +83,11 @@ func TestMarshalIntText(t *testing.T) {
 	maybePanic(err)
 	assertJSONEquals(t, data, "12345", "non-empty text marshal")
 
-	// invalid values should be encoded as zero
+	// invalid values should be encoded as null
 	null := NewInt(0, false)
 	data, err = null.MarshalText()
 	maybePanic(err)
-	assertJSONEquals(t, data, "0", "null text marshal")
+	assertJSONEquals(t, data, "", "null text marshal")
 }
 
 func TestIntPointer(t *testing.T) {
@@ -127,8 +116,8 @@ func TestIntIsZero(t *testing.T) {
 	}
 
 	zero := NewInt(0, true)
-	if !zero.IsZero() {
-		t.Errorf("IsZero() should be true")
+	if zero.IsZero() {
+		t.Errorf("IsZero() should be false")
 	}
 }
 

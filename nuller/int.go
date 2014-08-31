@@ -6,7 +6,9 @@ import (
 	"strconv"
 )
 
-// Int is a nullable int64.
+// Int is an even nuller nullable int64.
+// It does not consider zero values to be null.
+// It will decode to null, not zero, if null.
 type Int struct {
 	sql.NullInt64
 }
@@ -21,9 +23,9 @@ func NewInt(i int64, valid bool) Int {
 	}
 }
 
-// IntFrom creates a new Int that will be null if zero.
+// IntFrom creates a new Int that will always be valid.
 func IntFrom(i int64) Int {
-	return NewInt(i, i != 0)
+	return NewInt(i, true)
 }
 
 // StringFrom creates a new String that be null if i is nil.
@@ -37,7 +39,7 @@ func IntFromPtr(i *int64) Int {
 
 // UnmarshalJSON implements json.Unmarshaler.
 // It supports number and null input.
-// 0 will be considered a null Int.
+// 0 will not be considered a null Int.
 // It also supports unmarshalling a sql.NullInt64.
 func (i *Int) UnmarshalJSON(data []byte) error {
 	var err error
@@ -52,12 +54,12 @@ func (i *Int) UnmarshalJSON(data []byte) error {
 		i.Valid = false
 		return nil
 	}
-	i.Valid = (err == nil) && (i.Int64 != 0)
+	i.Valid = err == nil
 	return err
 }
 
 // UnmarshalText implements encoding.TextUnmarshaler.
-// It will unmarshal to a null Int if the input is a blank, zero, or not an integer.
+// It will unmarshal to a null Int if the input is a blank or not an integer.
 // It will return an error if the input is not an integer, blank, or "null".
 func (i *Int) UnmarshalText(text []byte) error {
 	str := string(text)
@@ -67,28 +69,26 @@ func (i *Int) UnmarshalText(text []byte) error {
 	}
 	var err error
 	i.Int64, err = strconv.ParseInt(string(text), 10, 64)
-	i.Valid = (err == nil) && (i.Int64 != 0)
+	i.Valid = err == nil
 	return err
 }
 
 // MarshalJSON implements json.Marshaler.
 // It will encode null if this Int is null.
 func (i Int) MarshalJSON() ([]byte, error) {
-	n := i.Int64
 	if !i.Valid {
-		n = 0
+		return []byte("null"), nil
 	}
-	return []byte(strconv.FormatInt(n, 10)), nil
+	return []byte(strconv.FormatInt(i.Int64, 10)), nil
 }
 
 // MarshalText implements encoding.TextMarshaler.
-// It will encode a zero if this Int is null.
+// It will encode a blank string if this Int is null.
 func (i Int) MarshalText() ([]byte, error) {
-	n := i.Int64
 	if !i.Valid {
-		n = 0
+		return []byte{}, nil
 	}
-	return []byte(strconv.FormatInt(n, 10)), nil
+	return []byte(strconv.FormatInt(i.Int64, 10)), nil
 }
 
 // Ptr returns a pointer to this Int's value, or a nil pointer if this Int is null.
@@ -99,7 +99,8 @@ func (i Int) Ptr() *int64 {
 	return &i.Int64
 }
 
-// IsZero returns true for null or zero Ints, for future omitempty support (Go 1.4?)
+// IsZero returns true for invalid Ints, for future omitempty support (Go 1.4?)
+// A non-null Int with a 0 value will not be considered zero.
 func (i Int) IsZero() bool {
-	return !i.Valid || i.Int64 == 0
+	return !i.Valid
 }

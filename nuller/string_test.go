@@ -20,8 +20,20 @@ func TestStringFrom(t *testing.T) {
 	str := StringFrom("test")
 	assertStr(t, str, "StringFrom() string")
 
-	null := StringFrom("")
-	assertNullStr(t, null, "StringFrom() empty string")
+	zero := StringFrom("")
+	if !zero.Valid {
+		t.Error("StringFrom(0)", "is invalid, but should be valid")
+	}
+}
+
+func TestStringFromPtr(t *testing.T) {
+	s := "test"
+	sptr := &s
+	str := StringFromPtr(sptr)
+	assertStr(t, str, "StringFromPtr() string")
+
+	null := StringFromPtr(nil)
+	assertNullStr(t, null, "StringFromPtr(nil)")
 }
 
 func TestUnmarshalString(t *testing.T) {
@@ -64,11 +76,16 @@ func TestMarshalString(t *testing.T) {
 	maybePanic(err)
 	assertJSONEquals(t, data, `"test"`, "non-empty json marshal")
 
-	// invalid values should be encoded as an empty string
-	null := StringFrom("")
-	data, err = json.Marshal(null)
+	// empty values should be encoded as an empty string
+	zero := StringFrom("")
+	data, err = json.Marshal(zero)
 	maybePanic(err)
 	assertJSONEquals(t, data, `""`, "empty json marshal")
+
+	null := StringFromPtr(nil)
+	data, err = json.Marshal(null)
+	maybePanic(err)
+	assertJSONEquals(t, data, `null`, "null json marshal")
 }
 
 // Tests omitempty... broken until Go 1.4
@@ -86,24 +103,8 @@ func TestStringPointer(t *testing.T) {
 		t.Errorf("bad %s string: %#v ≠ %s\n", "pointer", ptr, "test")
 	}
 
-	null := StringFrom("")
+	null := NewString("", false)
 	ptr = null.Ptr()
-	if ptr != nil {
-		t.Errorf("bad %s string: %#v ≠ %s\n", "nil pointer", ptr, "nil")
-	}
-}
-
-func TestStringFromPointer(t *testing.T) {
-	test := "test"
-	testptr := &test
-	str := StringFromPtr(testptr)
-	assertStr(t, str, "StringFromPtr()")
-
-	testptr = nil
-	null := StringFromPtr(testptr)
-	assertNullStr(t, null, "StringFromPtr()")
-
-	ptr := null.Ptr()
 	if ptr != nil {
 		t.Errorf("bad %s string: %#v ≠ %s\n", "nil pointer", ptr, "nil")
 	}
@@ -115,13 +116,18 @@ func TestStringIsZero(t *testing.T) {
 		t.Errorf("IsZero() should be false")
 	}
 
-	null := StringFrom("")
-	if !null.IsZero() {
-		t.Errorf("IsZero() should be true")
+	blank := StringFrom("")
+	if blank.IsZero() {
+		t.Errorf("IsZero() should be false")
 	}
 
 	empty := NewString("", true)
-	if !empty.IsZero() {
+	if empty.IsZero() {
+		t.Errorf("IsZero() should be false")
+	}
+
+	null := StringFromPtr(nil)
+	if !null.IsZero() {
 		t.Errorf("IsZero() should be true")
 	}
 }

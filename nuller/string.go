@@ -6,9 +6,23 @@ import (
 	"encoding/json"
 )
 
-// String is a nullable string.
+// String is an even nuller nullable string.
 type String struct {
 	sql.NullString
+}
+
+// StringFrom creates a new String that will never be blank.
+func StringFrom(s string) String {
+	return NewString(s, true)
+}
+
+// StringFrom creates a new String that be null if s is nil.
+func StringFromPtr(s *string) String {
+	if s == nil {
+		return NewString("", false)
+	}
+	str := NewString(*s, true)
+	return str
 }
 
 // NewString creates a new String
@@ -19,21 +33,6 @@ func NewString(s string, valid bool) String {
 			Valid:  valid,
 		},
 	}
-}
-
-// StringFrom creates a new String that will be null if s is blank.
-func StringFrom(s string) String {
-	return NewString(s, s != "")
-}
-
-// StringFrom creates a new String that be null if s is nil or blank.
-// It will make s point to the String's value.
-func StringFromPtr(s *string) String {
-	if s == nil {
-		return NewString("", false)
-	}
-	str := NewString(*s, *s != "")
-	return str
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
@@ -56,13 +55,13 @@ func (s *String) UnmarshalJSON(data []byte) error {
 	return err
 }
 
-// MarshalText implements encoding.TextMarshaler.
-// It will encode a blank string when this String is null.
-func (s String) MarshalText() ([]byte, error) {
+// MarshalJSON implements json.Marshaler.
+// It will encode null if this String is null.
+func (s String) MarshalJSON() ([]byte, error) {
 	if !s.Valid {
-		return []byte{}, nil
+		return []byte("null"), nil
 	}
-	return []byte(s.String), nil
+	return json.Marshal(s.String)
 }
 
 // UnmarshalText implements encoding.TextUnmarshaler.
@@ -73,7 +72,7 @@ func (s *String) UnmarshalText(text []byte) error {
 	return nil
 }
 
-// Pointer returns a pointer to this String's value, or a nil pointer if this String is null.
+// Ptr returns a pointer to this String's value, or a nil pointer if this String is null.
 func (s String) Ptr() *string {
 	if !s.Valid {
 		return nil
@@ -82,6 +81,7 @@ func (s String) Ptr() *string {
 }
 
 // IsZero returns true for null or empty strings, for future omitempty support. (Go 1.4?)
+// Will return false s is blank but non-null.
 func (s String) IsZero() bool {
-	return !s.Valid || s.String == ""
+	return !s.Valid
 }
