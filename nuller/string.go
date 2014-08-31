@@ -1,5 +1,6 @@
-// Package null provides an opinionated yet reasonable way of handling null values.
-package null
+// Package nuller contains types that consider zero input and null input as separate values.
+// Types in this package will always encode to their null value if null.
+package nuller
 
 import (
 	"database/sql"

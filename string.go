@@ -1,4 +1,6 @@
-// Package null provides an opinionated yet reasonable way of handling null values.
+// Package null provides a convenient way of handling null values.
+// Types in this package consider empty or zero input the same as null input.
+// Types in this package will encode to their zero value, even if null.
 package null
 
 import (

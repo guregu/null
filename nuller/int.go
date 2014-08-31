@@ -1,4 +1,4 @@
-package null
+package nuller
 
 import (
 	"database/sql"
