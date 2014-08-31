@@ -17,7 +17,7 @@ func StringFrom(s string) String {
 	return NewString(s, true)
 }
 
-// StringFrom creates a new String that be null if s is nil.
+// StringFromPtr creates a new String that be null if s is nil.
 func StringFromPtr(s *string) String {
 	if s == nil {
 		return NewString("", false)

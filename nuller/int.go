@@ -28,7 +28,7 @@ func IntFrom(i int64) Int {
 	return NewInt(i, true)
 }
 
-// StringFrom creates a new String that be null if i is nil.
+// IntFromPtr creates a new String that be null if i is nil.
 func IntFromPtr(i *int64) Int {
 	if i == nil {
 		return NewInt(0, false)

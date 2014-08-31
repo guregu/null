@@ -29,7 +29,7 @@ func StringFrom(s string) String {
 	return NewString(s, s != "")
 }
 
-// StringFrom creates a new String that be null if s is nil or blank.
+// StringFromPtr creates a new String that be null if s is nil or blank.
 // It will make s point to the String's value.
 func StringFromPtr(s *string) String {
 	if s == nil {
@@ -76,7 +76,7 @@ func (s *String) UnmarshalText(text []byte) error {
 	return nil
 }
 
-// Pointer returns a pointer to this String's value, or a nil pointer if this String is null.
+// Ptr returns a pointer to this String's value, or a nil pointer if this String is null.
 func (s String) Ptr() *string {
 	if !s.Valid {
 		return nil
