@@ -2,8 +2,11 @@
 null is a library with opinions on how to deal with nullable SQL and JSON values
 
 There are two packages, `null`, and `nuller`. 
+
 Types in `null` are treated like zero values in Go: blank string input will produce a null `null.String`, and null Strings will JSON encode to `""`. If you need zero and null treated the same, use these.
+
 Types in `nuller` will only be considered null on null input, and will JSON encode to `null`. If you need zero and null be considered separate values, use these.
+
 All types implement `sql.Scanner`, so you can use this library in place of `sql.NullXXX`. 
 
 ### null.String
