@@ -9,22 +9,22 @@ Types in `nuller` will only be considered null on null input, and will JSON enco
 
 All types implement `sql.Scanner` and `driver.Valuer`, so you can use this library in place of `sql.NullXXX`. All types also implement: `encoding.TextMarshaler`, `encoding.TextUnmarshaler`, `json.Marshaler`, and `json.Unmarshaler`. 
 
-### null.String
+#### null.String
 A nullable string.
 
 Will marshal to a blank string if null. Blank string input produces a null String. In other words, null values and empty values are considered equivalent. Can unmarshal from `sql.NullString` JSON input. 
 
-### null.Int
+#### null.Int
 A nullable int64.
 
 Will marshal to 0 if null. Blank string or 0 input produces a null Int. In other words, null values and empty values are considered equivalent. Can unmarshal from `sql.NullInt64` JSON input. 
 
-### nuller.String
+#### nuller.String
 An even nuller nullable string. 
 
 Unlike `null.String`, `nuller.String` will marshal to null if null. Zero (blank) input will not produce a null String. Can unmarshal from `sql.NullString` JSON input. 
 
-### nuller.Int
+#### nuller.Int
 An even nuller nullable int64. 
 
 Unlike `null.Int`, `nuller.Int` will marshal to null if null. Zero input will not produce a null Int. Can unmarshal from `sql.NullInt64` JSON input. 
