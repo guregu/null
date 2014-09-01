@@ -138,6 +138,13 @@ func TestStringScan(t *testing.T) {
 	assertNullStr(t, null, "scanned null")
 }
 
+func TestStringSetValid(t *testing.T) {
+	change := NewString("", false)
+	assertNullStr(t, change, "SetValid()")
+	change.SetValid("test")
+	assertStr(t, change, "SetValid()")
+}
+
 func maybePanic(err error) {
 	if err != nil {
 		panic(err)

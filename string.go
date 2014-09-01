@@ -75,6 +75,12 @@ func (s *String) UnmarshalText(text []byte) error {
 	return nil
 }
 
+// SetValid changes this String's value and also sets it to be non-null.
+func (s *String) SetValid(v string) {
+	s.String = v
+	s.Valid = true
+}
+
 // Ptr returns a pointer to this String's value, or a nil pointer if this String is null.
 func (s String) Ptr() *string {
 	if !s.Valid {

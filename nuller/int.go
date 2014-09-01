@@ -90,6 +90,12 @@ func (i Int) MarshalText() ([]byte, error) {
 	return []byte(strconv.FormatInt(i.Int64, 10)), nil
 }
 
+// SetValid changes this Int's value and also sets it to be non-null.
+func (i *Int) SetValid(n int64) {
+	i.Int64 = n
+	i.Valid = true
+}
+
 // Ptr returns a pointer to this Int's value, or a nil pointer if this Int is null.
 func (i Int) Ptr() *int64 {
 	if !i.Valid {

@@ -132,6 +132,13 @@ func TestStringIsZero(t *testing.T) {
 	}
 }
 
+func TestStringSetValid(t *testing.T) {
+	change := NewString("", false)
+	assertNullStr(t, change, "SetValid()")
+	change.SetValid("test")
+	assertStr(t, change, "SetValid()")
+}
+
 func TestStringScan(t *testing.T) {
 	var str String
 	err := str.Scan("test")

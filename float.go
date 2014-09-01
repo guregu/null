@@ -90,6 +90,12 @@ func (f Float) MarshalText() ([]byte, error) {
 	return []byte(strconv.FormatFloat(n, 'f', -1, 64)), nil
 }
 
+// SetValid changes this Float's value and also sets it to be non-null.
+func (f *Float) SetValid(v float64) {
+	f.Float64 = v
+	f.Valid = true
+}
+
 // Ptr returns a poFloater to this Float's value, or a nil poFloater if this Float is null.
 func (f Float) Ptr() *float64 {
 	if !f.Valid {

@@ -121,6 +121,13 @@ func TestFloatIsZero(t *testing.T) {
 	}
 }
 
+func TestFloatSetValid(t *testing.T) {
+	change := NewFloat(0, false)
+	assertNullFloat(t, change, "SetValid()")
+	change.SetValid(1.2345)
+	assertFloat(t, change, "SetValid()")
+}
+
 func TestFloatScan(t *testing.T) {
 	var f Float
 	err := f.Scan(1.2345)

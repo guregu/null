@@ -93,6 +93,12 @@ func (b Bool) MarshalText() ([]byte, error) {
 	return []byte("true"), nil
 }
 
+// SetValid changes this Bool's value and also sets it to be non-null.
+func (b *Bool) SetValid(v bool) {
+	b.Bool = v
+	b.Valid = true
+}
+
 // Ptr returns a poBooler to this Bool's value, or a nil poBooler if this Bool is null.
 func (b Bool) Ptr() *bool {
 	if !b.Valid {

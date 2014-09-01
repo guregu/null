@@ -9,6 +9,7 @@ var (
 	boolJSON     = []byte(`true`)
 	falseJSON    = []byte(`false`)
 	nullBoolJSON = []byte(`{"Bool":true,"Valid":true}`)
+	invalidJSON  = []byte(`:)`)
 )
 
 func TestBoolFrom(t *testing.T) {
@@ -51,6 +52,13 @@ func TestUnmarshalBool(t *testing.T) {
 	err = json.Unmarshal(nullJSON, &null)
 	maybePanic(err)
 	assertNullBool(t, null, "null json")
+
+	var invalid Bool
+	err = invalid.UnmarshalText(invalidJSON)
+	if err == nil {
+		panic("err should not be nil")
+	}
+	assertNullBool(t, invalid, "invalid json")
 }
 
 func TestTextUnmarshalBool(t *testing.T) {
@@ -130,6 +138,13 @@ func TestBoolIsZero(t *testing.T) {
 	if !zero.IsZero() {
 		t.Errorf("IsZero() should be true")
 	}
+}
+
+func TestBoolSetValid(t *testing.T) {
+	change := NewBool(false, false)
+	assertNullBool(t, change, "SetValid()")
+	change.SetValid(true)
+	assertBool(t, change, "SetValid()")
 }
 
 func TestBoolScan(t *testing.T) {

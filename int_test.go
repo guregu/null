@@ -144,6 +144,13 @@ func TestIntScan(t *testing.T) {
 	assertNullInt(t, null, "scanned null")
 }
 
+func TestIntSetValid(t *testing.T) {
+	change := NewInt(0, false)
+	assertNullInt(t, change, "SetValid()")
+	change.SetValid(12345)
+	assertInt(t, change, "SetValid()")
+}
+
 func assertInt(t *testing.T, i Int, from string) {
 	if i.Int64 != 12345 {
 		t.Errorf("bad %s int: %d ≠ %d\n", from, i.Int64, 12345)

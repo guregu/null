@@ -121,6 +121,13 @@ func TestIntIsZero(t *testing.T) {
 	}
 }
 
+func TestIntSetValid(t *testing.T) {
+	change := NewInt(0, false)
+	assertNullInt(t, change, "SetValid()")
+	change.SetValid(12345)
+	assertInt(t, change, "SetValid()")
+}
+
 func TestIntScan(t *testing.T) {
 	var i Int
 	err := i.Scan(12345)
