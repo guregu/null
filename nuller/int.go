@@ -33,8 +33,7 @@ func IntFromPtr(i *int64) Int {
 	if i == nil {
 		return NewInt(0, false)
 	}
-	n := NewInt(*i, true)
-	return n
+	return NewInt(*i, true)
 }
 
 // UnmarshalJSON implements json.Unmarshaler.

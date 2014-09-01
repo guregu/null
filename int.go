@@ -72,7 +72,7 @@ func (i *Int) UnmarshalText(text []byte) error {
 }
 
 // MarshalJSON implements json.Marshaler.
-// It will encode null if this Int is null.
+// It will encode 0 if this Int is null.
 func (i Int) MarshalJSON() ([]byte, error) {
 	n := i.Int64
 	if !i.Valid {

@@ -22,8 +22,7 @@ func StringFromPtr(s *string) String {
 	if s == nil {
 		return NewString("", false)
 	}
-	str := NewString(*s, true)
-	return str
+	return NewString(*s, true)
 }
 
 // NewString creates a new String
@@ -82,7 +81,7 @@ func (s String) Ptr() *string {
 }
 
 // IsZero returns true for null or empty strings, for future omitempty support. (Go 1.4?)
-// Will return false s is blank but non-null.
+// Will return false s if blank but non-null.
 func (s String) IsZero() bool {
 	return !s.Valid
 }

@@ -40,7 +40,7 @@ func TestUnmarshalInt(t *testing.T) {
 	var ni Int
 	err = json.Unmarshal(nullIntJSON, &ni)
 	maybePanic(err)
-	assertInt(t, ni, "sq.NullInt64 json")
+	assertInt(t, ni, "sql.NullInt64 json")
 
 	var zero Int
 	err = json.Unmarshal(zeroJSON, &zero)

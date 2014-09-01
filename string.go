@@ -35,8 +35,7 @@ func StringFromPtr(s *string) String {
 	if s == nil {
 		return NewString("", false)
 	}
-	str := NewString(*s, *s != "")
-	return str
+	return NewString(*s, *s != "")
 }
 
 // UnmarshalJSON implements json.Unmarshaler.

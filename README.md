@@ -1,7 +1,7 @@
 ## null [![GoDoc](https://godoc.org/github.com/guregu/null?status.svg)](https://godoc.org/github.com/guregu/null) [![Coverage](http://gocover.io/_badge/github.com/guregu/null)](http://gocover.io/github.com/guregu/null)
 null is a library with opinions on how to deal with nullable SQL and JSON values
 
-There are two packages, `null`, and `nuller`. 
+There are two packages: `null` and `nuller`. 
 
 Types in `null` are treated like zero values in Go: blank string input will produce a null `null.String`, and null Strings will JSON encode to `""`. If you need zero and null treated the same, use these.
 
@@ -19,6 +19,16 @@ A nullable int64.
 
 Will marshal to 0 if null. Blank string or 0 input produces a null Int. In other words, null values and empty values are considered equivalent. Can unmarshal from `sql.NullInt64` JSON input. 
 
+#### null.Float
+A nullable float64.
+
+Will marshal to 0 if null. Blank string or 0 input produces a null Float. In other words, null values and empty values are considered equivalent. Can unmarshal from `sql.NullFloat64` JSON input. 
+
+#### null.Bool
+A nullable bool.
+
+Will marshal to false if null. Blank string or false input produces a null Float. In other words, null values and empty values are considered equivalent. Can unmarshal from `sql.NullBool` JSON input. 
+
 #### nuller.String
 An even nuller nullable string. 
 
@@ -28,6 +38,16 @@ Unlike `null.String`, `nuller.String` will marshal to null if null. Zero (blank)
 An even nuller nullable int64. 
 
 Unlike `null.Int`, `nuller.Int` will marshal to null if null. Zero input will not produce a null Int. Can unmarshal from `sql.NullInt64` JSON input. 
+
+#### nuller.Float
+An even nuller nullable float64. 
+
+Unlike `null.Float`, `nuller.Float` will marshal to null if null. Zero input will not produce a null Float. Can unmarshal from `sql.NullFloat64` JSON input. 
+
+#### nuller.Bool
+An even nuller nullable float64. 
+
+Unlike `null.Bool`, `nuller.Bool` will marshal to null if null. False input will not produce a null Bool. Can unmarshal from `sql.NullBool` JSON input. 
 
 ### Bugs
 `json`'s `",omitempty"` struct tag does not work correctly right now. It will never omit a null or empty String. This should be [fixed in Go 1.4](https://code.google.com/p/go/issues/detail?id=4357).
