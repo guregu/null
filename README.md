@@ -1,7 +1,7 @@
 ## null [![GoDoc](https://godoc.org/github.com/guregu/null?status.svg)](https://godoc.org/github.com/guregu/null) [![Coverage](http://gocover.io/_badge/github.com/guregu/null)](http://gocover.io/github.com/guregu/null)
 `import "gopkg.in/guregu/null.v2"`
 
-null is a library with opinions on how to deal with nullable SQL and JSON values
+null is a library with reasonable options for dealing with nullable SQL and JSON values
 
 There are two packages: `null` and its subpackage `zero`. 
 
