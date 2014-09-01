@@ -1,4 +1,4 @@
-package null
+package zero
 
 import (
 	"encoding/json"
@@ -8,6 +8,7 @@ import (
 var (
 	intJSON     = []byte(`12345`)
 	nullIntJSON = []byte(`{"Int64":12345,"Valid":true}`)
+	zeroJSON    = []byte(`0`)
 )
 
 func TestIntFrom(t *testing.T) {
@@ -15,8 +16,8 @@ func TestIntFrom(t *testing.T) {
 	assertInt(t, i, "IntFrom()")
 
 	zero := IntFrom(0)
-	if !zero.Valid {
-		t.Error("IntFrom(0)", "is invalid, but should be valid")
+	if zero.Valid {
+		t.Error("IntFrom(0)", "is valid, but should be invalid")
 	}
 }
 
@@ -39,7 +40,12 @@ func TestUnmarshalInt(t *testing.T) {
 	var ni Int
 	err = json.Unmarshal(nullIntJSON, &ni)
 	maybePanic(err)
-	assertInt(t, ni, "sq.NullInt64 json")
+	assertInt(t, ni, "sql.NullInt64 json")
+
+	var zero Int
+	err = json.Unmarshal(zeroJSON, &zero)
+	maybePanic(err)
+	assertNullInt(t, zero, "zero json")
 
 	var null Int
 	err = json.Unmarshal(nullJSON, &null)
@@ -52,6 +58,11 @@ func TestTextUnmarshalInt(t *testing.T) {
 	err := i.UnmarshalText([]byte("12345"))
 	maybePanic(err)
 	assertInt(t, i, "UnmarshalText() int")
+
+	var zero Int
+	err = zero.UnmarshalText([]byte("0"))
+	maybePanic(err)
+	assertNullInt(t, zero, "UnmarshalText() zero int")
 
 	var blank Int
 	err = blank.UnmarshalText([]byte(""))
@@ -70,11 +81,11 @@ func TestMarshalInt(t *testing.T) {
 	maybePanic(err)
 	assertJSONEquals(t, data, "12345", "non-empty json marshal")
 
-	// invalid values should be encoded as null
+	// invalid values should be encoded as 0
 	null := NewInt(0, false)
 	data, err = json.Marshal(null)
 	maybePanic(err)
-	assertJSONEquals(t, data, "null", "null json marshal")
+	assertJSONEquals(t, data, "0", "null json marshal")
 }
 
 func TestMarshalIntText(t *testing.T) {
@@ -83,11 +94,11 @@ func TestMarshalIntText(t *testing.T) {
 	maybePanic(err)
 	assertJSONEquals(t, data, "12345", "non-empty text marshal")
 
-	// invalid values should be encoded as null
+	// invalid values should be encoded as zero
 	null := NewInt(0, false)
 	data, err = null.MarshalText()
 	maybePanic(err)
-	assertJSONEquals(t, data, "", "null text marshal")
+	assertJSONEquals(t, data, "0", "null text marshal")
 }
 
 func TestIntPointer(t *testing.T) {
@@ -116,16 +127,9 @@ func TestIntIsZero(t *testing.T) {
 	}
 
 	zero := NewInt(0, true)
-	if zero.IsZero() {
-		t.Errorf("IsZero() should be false")
+	if !zero.IsZero() {
+		t.Errorf("IsZero() should be true")
 	}
-}
-
-func TestIntSetValid(t *testing.T) {
-	change := NewInt(0, false)
-	assertNullInt(t, change, "SetValid()")
-	change.SetValid(12345)
-	assertInt(t, change, "SetValid()")
 }
 
 func TestIntScan(t *testing.T) {
@@ -138,6 +142,13 @@ func TestIntScan(t *testing.T) {
 	err = null.Scan(nil)
 	maybePanic(err)
 	assertNullInt(t, null, "scanned null")
+}
+
+func TestIntSetValid(t *testing.T) {
+	change := NewInt(0, false)
+	assertNullInt(t, change, "SetValid()")
+	change.SetValid(12345)
+	assertInt(t, change, "SetValid()")
 }
 
 func assertInt(t *testing.T, i Int, from string) {

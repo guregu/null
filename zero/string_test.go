@@ -1,4 +1,4 @@
-package null
+package zero
 
 import (
 	"encoding/json"
@@ -20,20 +20,8 @@ func TestStringFrom(t *testing.T) {
 	str := StringFrom("test")
 	assertStr(t, str, "StringFrom() string")
 
-	zero := StringFrom("")
-	if !zero.Valid {
-		t.Error("StringFrom(0)", "is invalid, but should be valid")
-	}
-}
-
-func TestStringFromPtr(t *testing.T) {
-	s := "test"
-	sptr := &s
-	str := StringFromPtr(sptr)
-	assertStr(t, str, "StringFromPtr() string")
-
-	null := StringFromPtr(nil)
-	assertNullStr(t, null, "StringFromPtr(nil)")
+	null := StringFrom("")
+	assertNullStr(t, null, "StringFrom() empty string")
 }
 
 func TestUnmarshalString(t *testing.T) {
@@ -76,16 +64,11 @@ func TestMarshalString(t *testing.T) {
 	maybePanic(err)
 	assertJSONEquals(t, data, `"test"`, "non-empty json marshal")
 
-	// empty values should be encoded as an empty string
-	zero := StringFrom("")
-	data, err = json.Marshal(zero)
-	maybePanic(err)
-	assertJSONEquals(t, data, `""`, "empty json marshal")
-
-	null := StringFromPtr(nil)
+	// invalid values should be encoded as an empty string
+	null := StringFrom("")
 	data, err = json.Marshal(null)
 	maybePanic(err)
-	assertJSONEquals(t, data, `null`, "null json marshal")
+	assertJSONEquals(t, data, `""`, "empty json marshal")
 }
 
 // Tests omitempty... broken until Go 1.4
@@ -103,8 +86,24 @@ func TestStringPointer(t *testing.T) {
 		t.Errorf("bad %s string: %#v ≠ %s\n", "pointer", ptr, "test")
 	}
 
-	null := NewString("", false)
+	null := StringFrom("")
 	ptr = null.Ptr()
+	if ptr != nil {
+		t.Errorf("bad %s string: %#v ≠ %s\n", "nil pointer", ptr, "nil")
+	}
+}
+
+func TestStringFromPointer(t *testing.T) {
+	test := "test"
+	testptr := &test
+	str := StringFromPtr(testptr)
+	assertStr(t, str, "StringFromPtr()")
+
+	testptr = nil
+	null := StringFromPtr(testptr)
+	assertNullStr(t, null, "StringFromPtr()")
+
+	ptr := null.Ptr()
 	if ptr != nil {
 		t.Errorf("bad %s string: %#v ≠ %s\n", "nil pointer", ptr, "nil")
 	}
@@ -116,27 +115,15 @@ func TestStringIsZero(t *testing.T) {
 		t.Errorf("IsZero() should be false")
 	}
 
-	blank := StringFrom("")
-	if blank.IsZero() {
-		t.Errorf("IsZero() should be false")
-	}
-
-	empty := NewString("", true)
-	if empty.IsZero() {
-		t.Errorf("IsZero() should be false")
-	}
-
-	null := StringFromPtr(nil)
+	null := StringFrom("")
 	if !null.IsZero() {
 		t.Errorf("IsZero() should be true")
 	}
-}
 
-func TestStringSetValid(t *testing.T) {
-	change := NewString("", false)
-	assertNullStr(t, change, "SetValid()")
-	change.SetValid("test")
-	assertStr(t, change, "SetValid()")
+	empty := NewString("", true)
+	if !empty.IsZero() {
+		t.Errorf("IsZero() should be true")
+	}
 }
 
 func TestStringScan(t *testing.T) {
@@ -149,6 +136,13 @@ func TestStringScan(t *testing.T) {
 	err = null.Scan(nil)
 	maybePanic(err)
 	assertNullStr(t, null, "scanned null")
+}
+
+func TestStringSetValid(t *testing.T) {
+	change := NewString("", false)
+	assertNullStr(t, change, "SetValid()")
+	change.SetValid("test")
+	assertStr(t, change, "SetValid()")
 }
 
 func maybePanic(err error) {

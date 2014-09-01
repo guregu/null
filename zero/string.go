@@ -1,29 +1,17 @@
-// Package null contains types that consider zero input and null input as separate values.
-// Types in this package will always encode to their null value if null.
-// Use the zero subpackage if you want empty and null to be treated the same.
-package null
+// Package zero provides a convenient way of handling null values.
+// Types in this package consider empty or zero input the same as null input.
+// Types in this package will encode to their zero value, even if null.
+// Use the nuller subpackage if you don't want this.
+package zero
 
 import (
 	"database/sql"
 	"encoding/json"
 )
 
-// String is an even nuller nullable string.
+// String is a nullable string.
 type String struct {
 	sql.NullString
-}
-
-// StringFrom creates a new String that will never be blank.
-func StringFrom(s string) String {
-	return NewString(s, true)
-}
-
-// StringFromPtr creates a new String that be null if s is nil.
-func StringFromPtr(s *string) String {
-	if s == nil {
-		return NewString("", false)
-	}
-	return NewString(*s, true)
 }
 
 // NewString creates a new String
@@ -34,6 +22,20 @@ func NewString(s string, valid bool) String {
 			Valid:  valid,
 		},
 	}
+}
+
+// StringFrom creates a new String that will be null if s is blank.
+func StringFrom(s string) String {
+	return NewString(s, s != "")
+}
+
+// StringFromPtr creates a new String that be null if s is nil or blank.
+// It will make s point to the String's value.
+func StringFromPtr(s *string) String {
+	if s == nil {
+		return NewString("", false)
+	}
+	return NewString(*s, *s != "")
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
@@ -56,13 +58,13 @@ func (s *String) UnmarshalJSON(data []byte) error {
 	return err
 }
 
-// MarshalJSON implements json.Marshaler.
-// It will encode null if this String is null.
-func (s String) MarshalJSON() ([]byte, error) {
+// MarshalText implements encoding.TextMarshaler.
+// It will encode a blank string when this String is null.
+func (s String) MarshalText() ([]byte, error) {
 	if !s.Valid {
-		return []byte("null"), nil
+		return []byte{}, nil
 	}
-	return json.Marshal(s.String)
+	return []byte(s.String), nil
 }
 
 // UnmarshalText implements encoding.TextUnmarshaler.
@@ -88,7 +90,6 @@ func (s String) Ptr() *string {
 }
 
 // IsZero returns true for null or empty strings, for future omitempty support. (Go 1.4?)
-// Will return false s if blank but non-null.
 func (s String) IsZero() bool {
-	return !s.Valid
+	return !s.Valid || s.String == ""
 }

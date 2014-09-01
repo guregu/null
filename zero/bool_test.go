@@ -1,4 +1,4 @@
-package null
+package zero
 
 import (
 	"encoding/json"
@@ -9,6 +9,7 @@ var (
 	boolJSON     = []byte(`true`)
 	falseJSON    = []byte(`false`)
 	nullBoolJSON = []byte(`{"Bool":true,"Valid":true}`)
+	invalidJSON  = []byte(`:)`)
 )
 
 func TestBoolFrom(t *testing.T) {
@@ -16,14 +17,14 @@ func TestBoolFrom(t *testing.T) {
 	assertBool(t, b, "BoolFrom()")
 
 	zero := BoolFrom(false)
-	if !zero.Valid {
-		t.Error("BoolFrom(false)", "is invalid, but should be valid")
+	if zero.Valid {
+		t.Error("BoolFrom(false)", "is valid, but should be invalid")
 	}
 }
 
 func TestBoolFromPtr(t *testing.T) {
-	n := true
-	bptr := &n
+	v := true
+	bptr := &v
 	b := BoolFromPtr(bptr)
 	assertBool(t, b, "BoolFromPtr()")
 
@@ -35,29 +36,41 @@ func TestUnmarshalBool(t *testing.T) {
 	var b Bool
 	err := json.Unmarshal(boolJSON, &b)
 	maybePanic(err)
-	assertBool(t, b, "bool json")
+	assertBool(t, b, "float json")
 
 	var nb Bool
 	err = json.Unmarshal(nullBoolJSON, &nb)
 	maybePanic(err)
-	assertBool(t, nb, "sq.NullBool json")
+	assertBool(t, nb, "sql.NullBool json")
+
+	var zero Bool
+	err = json.Unmarshal(falseJSON, &zero)
+	maybePanic(err)
+	assertNullBool(t, zero, "zero json")
 
 	var null Bool
 	err = json.Unmarshal(nullJSON, &null)
 	maybePanic(err)
 	assertNullBool(t, null, "null json")
+
+	var invalid Bool
+	err = invalid.UnmarshalText(invalidJSON)
+	if err == nil {
+		panic("err should not be nil")
+	}
+	assertNullBool(t, invalid, "invalid json")
 }
 
 func TestTextUnmarshalBool(t *testing.T) {
 	var b Bool
-	err := b.UnmarshalText([]byte("true"))
+	err := b.UnmarshalText(boolJSON)
 	maybePanic(err)
 	assertBool(t, b, "UnmarshalText() bool")
 
 	var zero Bool
-	err = zero.UnmarshalText([]byte("false"))
+	err = zero.UnmarshalText(falseJSON)
 	maybePanic(err)
-	assertFalseBool(t, zero, "UnmarshalText() false")
+	assertNullBool(t, zero, "UnmarshalText() zero bool")
 
 	var blank Bool
 	err = blank.UnmarshalText([]byte(""))
@@ -65,16 +78,9 @@ func TestTextUnmarshalBool(t *testing.T) {
 	assertNullBool(t, blank, "UnmarshalText() empty bool")
 
 	var null Bool
-	err = null.UnmarshalText([]byte("null"))
+	err = null.UnmarshalText(nullJSON)
 	maybePanic(err)
 	assertNullBool(t, null, `UnmarshalText() "null"`)
-
-	var invalid Bool
-	err = invalid.UnmarshalText([]byte(":D"))
-	if err == nil {
-		panic("err should not be nil")
-	}
-	assertNullBool(t, invalid, "invalid json")
 }
 
 func TestMarshalBool(t *testing.T) {
@@ -83,16 +89,11 @@ func TestMarshalBool(t *testing.T) {
 	maybePanic(err)
 	assertJSONEquals(t, data, "true", "non-empty json marshal")
 
-	zero := NewBool(false, true)
-	data, err = json.Marshal(zero)
-	maybePanic(err)
-	assertJSONEquals(t, data, "false", "zero json marshal")
-
-	// invalid values should be encoded as null
+	// invalid values should be encoded as false
 	null := NewBool(false, false)
 	data, err = json.Marshal(null)
 	maybePanic(err)
-	assertJSONEquals(t, data, "null", "null json marshal")
+	assertJSONEquals(t, data, "false", "null json marshal")
 }
 
 func TestMarshalBoolText(t *testing.T) {
@@ -101,16 +102,11 @@ func TestMarshalBoolText(t *testing.T) {
 	maybePanic(err)
 	assertJSONEquals(t, data, "true", "non-empty text marshal")
 
-	zero := NewBool(false, true)
-	data, err = zero.MarshalText()
-	maybePanic(err)
-	assertJSONEquals(t, data, "false", "zero text marshal")
-
-	// invalid values should be encoded as null
+	// invalid values should be encoded as zero
 	null := NewBool(false, false)
 	data, err = null.MarshalText()
 	maybePanic(err)
-	assertJSONEquals(t, data, "", "null text marshal")
+	assertJSONEquals(t, data, "false", "null text marshal")
 }
 
 func TestBoolPointer(t *testing.T) {
@@ -139,8 +135,8 @@ func TestBoolIsZero(t *testing.T) {
 	}
 
 	zero := NewBool(false, true)
-	if zero.IsZero() {
-		t.Errorf("IsZero() should be false")
+	if !zero.IsZero() {
+		t.Errorf("IsZero() should be true")
 	}
 }
 
@@ -165,16 +161,7 @@ func TestBoolScan(t *testing.T) {
 
 func assertBool(t *testing.T, b Bool, from string) {
 	if b.Bool != true {
-		t.Errorf("bad %s bool: %v ≠ %v\n", from, b.Bool, true)
-	}
-	if !b.Valid {
-		t.Error(from, "is invalid, but should be valid")
-	}
-}
-
-func assertFalseBool(t *testing.T, b Bool, from string) {
-	if b.Bool != false {
-		t.Errorf("bad %s bool: %v ≠ %v\n", from, b.Bool, false)
+		t.Errorf("bad %s bool: %d ≠ %d\n", from, b.Bool, true)
 	}
 	if !b.Valid {
 		t.Error(from, "is invalid, but should be valid")

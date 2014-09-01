@@ -1,4 +1,4 @@
-package null
+package zero
 
 import (
 	"encoding/json"
@@ -15,8 +15,8 @@ func TestFloatFrom(t *testing.T) {
 	assertFloat(t, f, "FloatFrom()")
 
 	zero := FloatFrom(0)
-	if !zero.Valid {
-		t.Error("FloatFrom(0)", "is invalid, but should be valid")
+	if zero.Valid {
+		t.Error("FloatFrom(0)", "is valid, but should be invalid")
 	}
 }
 
@@ -39,7 +39,12 @@ func TestUnmarshalFloat(t *testing.T) {
 	var nf Float
 	err = json.Unmarshal(nullFloatJSON, &nf)
 	maybePanic(err)
-	assertFloat(t, nf, "sq.NullFloat64 json")
+	assertFloat(t, nf, "sql.NullFloat64 json")
+
+	var zero Float
+	err = json.Unmarshal(zeroJSON, &zero)
+	maybePanic(err)
+	assertNullFloat(t, zero, "zero json")
 
 	var null Float
 	err = json.Unmarshal(nullJSON, &null)
@@ -52,6 +57,11 @@ func TestTextUnmarshalFloat(t *testing.T) {
 	err := f.UnmarshalText([]byte("1.2345"))
 	maybePanic(err)
 	assertFloat(t, f, "UnmarshalText() float")
+
+	var zero Float
+	err = zero.UnmarshalText([]byte("0"))
+	maybePanic(err)
+	assertNullFloat(t, zero, "UnmarshalText() zero float")
 
 	var blank Float
 	err = blank.UnmarshalText([]byte(""))
@@ -70,11 +80,11 @@ func TestMarshalFloat(t *testing.T) {
 	maybePanic(err)
 	assertJSONEquals(t, data, "1.2345", "non-empty json marshal")
 
-	// invalid values should be encoded as null
+	// invalid values should be encoded as 0
 	null := NewFloat(0, false)
 	data, err = json.Marshal(null)
 	maybePanic(err)
-	assertJSONEquals(t, data, "null", "null json marshal")
+	assertJSONEquals(t, data, "0", "null json marshal")
 }
 
 func TestMarshalFloatText(t *testing.T) {
@@ -83,24 +93,24 @@ func TestMarshalFloatText(t *testing.T) {
 	maybePanic(err)
 	assertJSONEquals(t, data, "1.2345", "non-empty text marshal")
 
-	// invalid values should be encoded as null
+	// invalid values should be encoded as zero
 	null := NewFloat(0, false)
 	data, err = null.MarshalText()
 	maybePanic(err)
-	assertJSONEquals(t, data, "", "null text marshal")
+	assertJSONEquals(t, data, "0", "null text marshal")
 }
 
 func TestFloatPointer(t *testing.T) {
 	f := FloatFrom(1.2345)
 	ptr := f.Ptr()
 	if *ptr != 1.2345 {
-		t.Errorf("bad %s float: %#v ≠ %s\n", "pointer", ptr, 1.2345)
+		t.Errorf("bad %s Float: %#v ≠ %s\n", "pointer", ptr, 1.2345)
 	}
 
 	null := NewFloat(0, false)
 	ptr = null.Ptr()
 	if ptr != nil {
-		t.Errorf("bad %s float: %#v ≠ %s\n", "nil pointer", ptr, "nil")
+		t.Errorf("bad %s Float: %#v ≠ %s\n", "nil pointer", ptr, "nil")
 	}
 }
 
@@ -116,8 +126,8 @@ func TestFloatIsZero(t *testing.T) {
 	}
 
 	zero := NewFloat(0, true)
-	if zero.IsZero() {
-		t.Errorf("IsZero() should be false")
+	if !zero.IsZero() {
+		t.Errorf("IsZero() should be true")
 	}
 }
 
