@@ -28,7 +28,7 @@ func BoolFrom(b bool) Bool {
 	return NewBool(b, true)
 }
 
-// BoolFromPtr creates a new String that be null if f is nil.
+// BoolFromPtr creates a new Bool that be null if f is nil.
 func BoolFromPtr(b *bool) Bool {
 	if b == nil {
 		return NewBool(false, false)

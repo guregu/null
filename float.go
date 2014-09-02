@@ -28,7 +28,7 @@ func FloatFrom(f float64) Float {
 	return NewFloat(f, true)
 }
 
-// FloatFromPtr creates a new String that be null if f is nil.
+// FloatFromPtr creates a new Float that be null if f is nil.
 func FloatFromPtr(f *float64) Float {
 	if f == nil {
 		return NewFloat(0, false)
