@@ -7,7 +7,7 @@ There are two packages: `null` and its subpackage `zero`.
 
 Types in `null` will only be considered null on null input, and will JSON encode to `null`. If you need zero and null be considered separate values, use these.
 
-Types in `zero` are treated like zero values in Go: blank string input will produce a null `null.String`, and null Strings will JSON encode to `""`. If you need zero and null treated the same, use these.
+Types in `zero` are treated like zero values in Go: blank string input will produce a null `zero.String`, and null Strings will JSON encode to `""`. If you need zero and null treated the same, use these.
 
 All types implement `sql.Scanner` and `driver.Valuer`, so you can use this library in place of `sql.NullXXX`. All types also implement: `encoding.TextMarshaler`, `encoding.TextUnmarshaler`, `json.Marshaler`, and `json.Unmarshaler`. 
 
