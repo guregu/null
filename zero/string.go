@@ -7,6 +7,8 @@ package zero
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
+	"reflect"
 )
 
 // String is a nullable string.
@@ -53,6 +55,8 @@ func (s *String) UnmarshalJSON(data []byte) error {
 	case nil:
 		s.Valid = false
 		return nil
+	default:
+		err = fmt.Errorf("json: cannot unmarshal %v into Go value of type zero.String", reflect.TypeOf(v).Name())
 	}
 	s.Valid = (err == nil) && (s.String != "")
 	return err

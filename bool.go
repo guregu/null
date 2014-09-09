@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"reflect"
 )
 
 // Bool is an even nuller nullable bool.
@@ -52,6 +54,8 @@ func (b *Bool) UnmarshalJSON(data []byte) error {
 	case nil:
 		b.Valid = false
 		return nil
+	default:
+		err = fmt.Errorf("json: cannot unmarshal %v into Go value of type null.Bool", reflect.TypeOf(v).Name())
 	}
 	b.Valid = err == nil
 	return err
