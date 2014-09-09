@@ -3,6 +3,8 @@ package zero
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
+	"reflect"
 	"strconv"
 )
 
@@ -50,6 +52,8 @@ func (f *Float) UnmarshalJSON(data []byte) error {
 	case nil:
 		f.Valid = false
 		return nil
+	default:
+		err = fmt.Errorf("json: cannot unmarshal %v into Go value of type zero.Float", reflect.TypeOf(v).Name())
 	}
 	f.Valid = (err == nil) && (f.Float64 != 0)
 	return err

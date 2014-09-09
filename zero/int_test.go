@@ -51,6 +51,13 @@ func TestUnmarshalInt(t *testing.T) {
 	err = json.Unmarshal(nullJSON, &null)
 	maybePanic(err)
 	assertNullInt(t, null, "null json")
+
+	var badType Int
+	err = json.Unmarshal(boolJSON, &badType)
+	if err == nil {
+		panic("err should not be nil")
+	}
+	assertNullInt(t, badType, "wrong type json")
 }
 
 func TestTextUnmarshalInt(t *testing.T) {
