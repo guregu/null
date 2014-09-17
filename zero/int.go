@@ -45,9 +45,10 @@ func (i *Int) UnmarshalJSON(data []byte) error {
 	var err error
 	var v interface{}
 	json.Unmarshal(data, &v)
-	switch x := v.(type) {
+	switch v.(type) {
 	case float64:
-		i.Int64 = int64(x)
+		// Unmarshal again, directly to int64, to avoid intermediate float64
+		err = json.Unmarshal(data, &i.Int64)
 	case map[string]interface{}:
 		err = json.Unmarshal(data, &i.NullInt64)
 	case nil:
