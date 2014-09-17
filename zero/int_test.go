@@ -2,6 +2,8 @@ package zero
 
 import (
 	"encoding/json"
+	"math"
+	"strconv"
 	"testing"
 )
 
@@ -58,6 +60,30 @@ func TestUnmarshalInt(t *testing.T) {
 		panic("err should not be nil")
 	}
 	assertNullInt(t, badType, "wrong type json")
+}
+
+func TestUnmarshalNonIntegerNumber(t *testing.T) {
+	var i Int
+	err := json.Unmarshal(floatJSON, &i)
+	if err == nil {
+		panic("err should be present; non-integer number coerced to int")
+	}
+}
+
+func TestUnmarshalInt64Overflow(t *testing.T) {
+	int64Overflow := uint64(math.MaxInt64)
+
+	// Max int64 should decode successfully
+	var i Int
+	err := json.Unmarshal([]byte(strconv.FormatUint(int64Overflow, 10)), &i)
+	maybePanic(err)
+
+	// Attempt to overflow
+	int64Overflow++
+	err = json.Unmarshal([]byte(strconv.FormatUint(int64Overflow, 10)), &i)
+	if err == nil {
+		panic("err should be present; decoded value overflows int64")
+	}
 }
 
 func TestTextUnmarshalInt(t *testing.T) {

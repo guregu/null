@@ -57,7 +57,6 @@ func TestUnmarshalInt(t *testing.T) {
 }
 
 func TestUnmarshalNonIntegerNumber(t *testing.T) {
-	floatJSON = []byte(`123.45`)
 	var i Int
 	err := json.Unmarshal(floatJSON, &i)
 	if err == nil {
