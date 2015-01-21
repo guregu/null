@@ -8,7 +8,7 @@ import (
 	"strconv"
 )
 
-// Float is an even nuller nullable float64.
+// Float is a nullable float64.
 // It does not consider zero values to be null.
 // It will decode to null, not zero, if null.
 type Float struct {

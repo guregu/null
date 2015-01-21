@@ -8,7 +8,7 @@ import (
 	"reflect"
 )
 
-// Bool is an even nuller nullable bool.
+// Bool is a nullable bool.
 // It does not consider false values to be null.
 // It will decode to null, not false, if null.
 type Bool struct {

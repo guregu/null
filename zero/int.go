@@ -9,6 +9,8 @@ import (
 )
 
 // Int is a nullable int64.
+// JSON marshals to zero if null.
+// Considered null to SQL if zero.
 type Int struct {
 	sql.NullInt64
 }

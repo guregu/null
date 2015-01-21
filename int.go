@@ -8,7 +8,7 @@ import (
 	"strconv"
 )
 
-// Int is an even nuller nullable int64.
+// Int is an nullable int64.
 // It does not consider zero values to be null.
 // It will decode to null, not zero, if null.
 type Int struct {

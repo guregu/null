@@ -8,7 +8,8 @@ import (
 	"reflect"
 )
 
-// Bool is a nullable bool.
+// Bool is a nullable bool. False input is considered null.
+// Considered null to SQL unmarshaled from a false value.
 type Bool struct {
 	sql.NullBool
 }

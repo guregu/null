@@ -8,7 +8,9 @@ import (
 	"strconv"
 )
 
-// Float is a nullable float64.
+// Float is a nullable float64. Zero input will be considered null.
+// JSON marshals to zero if null.
+// Considered null to SQL if zero.
 type Float struct {
 	sql.NullFloat64
 }

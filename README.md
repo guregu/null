@@ -52,7 +52,7 @@ An even nuller nullable float64.
 Unlike `zero.Bool`, `null.Bool` will marshal to null if null. False input will not produce a null Bool. Can unmarshal from `sql.NullBool` JSON input. 
 
 ### Bugs
-`json`'s `",omitempty"` struct tag does not work correctly right now. It will never omit a null or empty String. This should be [fixed in Go 1.4](https://code.google.com/p/go/issues/detail?id=4357).
+`json`'s `",omitempty"` struct tag does not work correctly right now. It will never omit a null or empty String. This should be [fixed eventually](https://github.com/golang/go/issues/4357).
 
 ### License
 BSD

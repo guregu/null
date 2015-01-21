@@ -12,6 +12,8 @@ import (
 )
 
 // String is a nullable string.
+// JSON marshals to a blank string if null.
+// Considered null to SQL if zero.
 type String struct {
 	sql.NullString
 }

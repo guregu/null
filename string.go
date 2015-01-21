@@ -10,7 +10,8 @@ import (
 	"reflect"
 )
 
-// String is an even nuller nullable string.
+// String is a nullable string. It supports SQL and JSON serialization.
+// It will marshal to null if null. Blank string input will be considered null.
 type String struct {
 	sql.NullString
 }
