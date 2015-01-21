@@ -51,6 +51,11 @@ An even nuller nullable float64.
 
 Unlike `zero.Bool`, `null.Bool` will marshal to null if null. False input will not produce a null Bool. Can unmarshal from `sql.NullBool` JSON input. 
 
+#### null.Time
+An even nuller nullable time.Time. 
+
+Unlike `null.Time` will marshal to null if null. Zero input will not produce a null time.Time. Can unmarshal from `pq.NullTime` JSON input. 
+
 ### Bugs
 `json`'s `",omitempty"` struct tag does not work correctly right now. It will never omit a null or empty String. This should be [fixed eventually](https://github.com/golang/go/issues/4357).
 
