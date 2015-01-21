@@ -127,8 +127,7 @@ func TestTimeScan(t *testing.T) {
 	var i Time
 	err := i.Scan(timeTest)
 	maybePanic(err)
-	assertTime(t, i, "scanned time.Time")
-
+	assertTime(t, i, "scanned time.Time")	
 	var null Time
 	err = null.Scan(nil)
 	maybePanic(err)

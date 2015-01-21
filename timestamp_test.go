@@ -130,7 +130,7 @@ func testTimestampstampPointer(t *testing.T) {
 	i := TimestampFrom(testTimestamp)
 	ptr := i.Ptr()
 	if *ptr != testTimestamp {
-		t.Errorf("bad %s int: %#v ≠ %s\n", "pointer", ptr, 12345)
+		t.Errorf("bad %s time.Time: %#v ≠ %s\n", "pointer", ptr, 12345)
 	}
 
 	null := NewTimestamp(time.Time{}, false)

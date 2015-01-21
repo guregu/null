@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-// Time is an even nuller nullable Time.
+// Timestamp is helper an even nuller nullable Time.
 // It does not consider zero values to be null.
 // It will decode to null, not zero, if null.
 type Timestamp struct {
@@ -26,12 +26,12 @@ func NewTimestamp(t time.Time, valid bool) Timestamp {
 	}
 }
 
-// TimeFrom creates a new Time that will always be valid.
+// TimestampFrom creates a new Timestamp that will always be valid.
 func TimestampFrom(t time.Time) Timestamp {
 	return NewTimestamp(t, true)
 }
 
-// TimeFromPtr creates a new Time that be null if i is nil.
+// TimestampFromPtr creates a new Time that be null if i is nil.
 func TimestampFromPtr(t *time.Time) Timestamp {
 	if t == nil {
 		return NewTimestamp(time.Time{}, false)
@@ -40,7 +40,7 @@ func TimestampFromPtr(t *time.Time) Timestamp {
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
-// It supports null.Time JSON or nil values
+// It supports null.Timestamp JSON or nil values
 // It also supports unmarshalling a pq.NullTime
 func (t *Timestamp) UnmarshalJSON(data []byte) error {
 	var err error
@@ -61,8 +61,7 @@ func (t *Timestamp) UnmarshalJSON(data []byte) error {
 		}
 	case map[string]interface{}:
 		err = json.Unmarshal(data, &j)
-		if (err == nil) && j.Valid {
-			fmt.Println("======!=========!!=======", j)
+		if (err == nil) && j.Valid {			
 			t.Time = time.Unix(j.Time, 0)
 		}
 	case nil:
@@ -76,8 +75,7 @@ func (t *Timestamp) UnmarshalJSON(data []byte) error {
 }
 
 // UnmarshalText implements encoding.TextUnmarshaler.
-// It will unmarshal to a null Int if the input is a blank or not an time.Time RFC3339.
-// It will return an error if the input is not an time.Time RFC3339, blank, or "null".
+// It will unmarshal to a null int64 Unix timestamp to time.Time if the input is a blank or not an time.Time.
 func (t *Timestamp) UnmarshalText(text []byte) error {
 	str := string(text)
 	if str == "" || str == "null" {
@@ -97,7 +95,6 @@ func (t *Timestamp) UnmarshalText(text []byte) error {
 }
 
 // MarshalJSON implements json.Marshaler.
-// It will encode time.Time RFC3339 or null if this Time is null
 func (t Timestamp) MarshalJSON() ([]byte, error) {
 	if !t.Valid {
 		return []byte("null"), nil
@@ -106,7 +103,7 @@ func (t Timestamp) MarshalJSON() ([]byte, error) {
 }
 
 // MarshalText implements encoding.TextMarshaler.
-// It will encode a blank string if this Time is null.
+// It will encode a blank string if this Timestamp is null.
 func (t Timestamp) MarshalText() ([]byte, error) {
 	if !t.Valid {
 		return []byte{}, nil
@@ -114,13 +111,13 @@ func (t Timestamp) MarshalText() ([]byte, error) {
 	return []byte(strconv.FormatInt(t.Time.Unix(), 10)), nil
 }
 
-// SetValid changes this Time's value and also sets it to be non-null.
+// SetValid changes this Timestamp's value and also sets it to be non-null.
 func (t *Timestamp) SetValid(n time.Time) {
 	t.Time = n
 	t.Valid = true
 }
 
-// Ptr returns a pointer to this Time's value, or a nil pointer if this Time is null.
+// Ptr returns a pointer to this Timestamp's value, or a nil pointer if this Timestamp is null.
 func (t Timestamp) Ptr() *time.Time {
 	if !t.Valid {
 		return nil
@@ -128,7 +125,7 @@ func (t Timestamp) Ptr() *time.Time {
 	return &t.Time
 }
 
-// IsZero returns true for invalid Times, for future omitempty support (Go 1.4?)
+// IsZero returns true for invalid Timestamps, for future omitempty support (Go 1.4?)
 func (t Timestamp) IsZero() bool {
 	return !t.Valid
 }
