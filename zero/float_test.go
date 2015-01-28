@@ -111,7 +111,7 @@ func TestFloatPointer(t *testing.T) {
 	f := FloatFrom(1.2345)
 	ptr := f.Ptr()
 	if *ptr != 1.2345 {
-		t.Errorf("bad %s Float: %#v ≠ %s\n", "pointer", ptr, 1.2345)
+		t.Errorf("bad %s Float: %#v ≠ %v\n", "pointer", ptr, 1.2345)
 	}
 
 	null := NewFloat(0, false)

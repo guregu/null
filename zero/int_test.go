@@ -138,7 +138,7 @@ func TestIntPointer(t *testing.T) {
 	i := IntFrom(12345)
 	ptr := i.Ptr()
 	if *ptr != 12345 {
-		t.Errorf("bad %s int: %#v ≠ %s\n", "pointer", ptr, 12345)
+		t.Errorf("bad %s int: %#v ≠ %d\n", "pointer", ptr, 12345)
 	}
 
 	null := NewInt(0, false)

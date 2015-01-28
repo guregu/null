@@ -124,7 +124,7 @@ func TestBoolPointer(t *testing.T) {
 	b := BoolFrom(true)
 	ptr := b.Ptr()
 	if *ptr != true {
-		t.Errorf("bad %s bool: %#v ≠ %s\n", "pointer", ptr, true)
+		t.Errorf("bad %s bool: %#v ≠ %v\n", "pointer", ptr, true)
 	}
 
 	null := NewBool(false, false)
