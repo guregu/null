@@ -3,10 +3,11 @@ package null
 import (
 	"encoding/json"
 	"fmt"
-	pq "github.com/lib/pq"
 	"reflect"
 	"strconv"
 	"time"
+
+	pq "github.com/lib/pq"
 )
 
 // Timestamp is helper an even nuller nullable Time.
@@ -49,9 +50,10 @@ func (t *Timestamp) UnmarshalJSON(data []byte) error {
 		Time int64
 	}
 	var j struct {
-		Time int64
+		Time  int64
 		Valid bool
 	}
+	var s string
 	json.Unmarshal(data, &v)
 	switch v.(type) {
 	case float64:
@@ -61,9 +63,12 @@ func (t *Timestamp) UnmarshalJSON(data []byte) error {
 		}
 	case map[string]interface{}:
 		err = json.Unmarshal(data, &j)
-		if (err == nil) && j.Valid {			
+		if (err == nil) && j.Valid {
 			t.Time = time.Unix(j.Time, 0)
 		}
+	case string:
+		err = json.Unmarshal(data, &s)
+		t.Time, _ = time.Parse(time.RFC3339, s)
 	case nil:
 		t.Valid = false
 		return nil

@@ -13,6 +13,7 @@ var (
 	//nullJSON     = []byte(`null`)
 	timestampJSON     = []byte(`1419196236`)
 	nullTimestampJSON = []byte(`{"Time":1419196236,"Valid":true}`)
+	strTimestampJSON  = []byte(`"2014-12-21T13:10:36-08:00"`)
 )
 
 func testTimestampstampFrom(t *testing.T) {
@@ -45,6 +46,11 @@ func TestUnmarshalTimestamp(t *testing.T) {
 	err = json.Unmarshal(nullTimestampJSON, &ni)
 	maybePanic(err)
 	assertTimestamp(t, ni, "pq.NullTime json")
+
+	var si Timestamp
+	err = json.Unmarshal(strTimestampJSON, &si)
+	maybePanic(err)
+	assertTimestamp(t, si, "string json")
 
 	var null Timestamp
 	err = json.Unmarshal(nullJSON, &null)
