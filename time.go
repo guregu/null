@@ -71,16 +71,29 @@ func (t Time) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
-// It supports time, string and null input.
+// It supports string, map[string]interface{},
+// and null input.
 func (t *Time) UnmarshalJSON(data []byte) error {
 	var err error
 	var v interface{}
-	json.Unmarshal(data, &v)
+	if err = json.Unmarshal(data, &v); err != nil {
+		return err
+	}
 	switch x := v.(type) {
-	case time.Time:
-		t.Time = x
 	case string:
-		t.Time, err = time.Parse(time.RFC3339, x)
+		err = t.Time.UnmarshalJSON(data)
+	case map[string]interface{}:
+		ti, tiOK := x["Time"].(string)
+		valid, validOK := x["Valid"].(bool)
+		if !tiOK || !validOK {
+			err = fmt.Errorf("json: unmarshalling map[string]interface{} into Go value of type null.Time requires key \"Time\" to be of type string and key \"Valid\" to be of type bool; found %T and %T, respectively", x["Time"], x["Valid"])
+			break
+		}
+		err = t.Time.UnmarshalJSON([]byte(`"` + ti + `"`))
+		t.Valid = valid
+		if err == nil && t.Valid == false {
+			return nil // Return here to prevent `Valid` from being set to true based on nil error below.
+		}
 	case nil:
 		t.Valid = false
 		return nil

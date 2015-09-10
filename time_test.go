@@ -11,6 +11,8 @@ var (
 	timeJSON      = []byte(`"` + timeString + `"`)
 	blankTimeJSON = []byte(`null`)
 	timeValue, _  = time.Parse(time.RFC3339, timeString)
+	timeMap       = []byte(`{"Time":"2012-12-21T21:21:21Z","Valid":true}`)
+	invalidMap    = []byte(`{"Time":"0001-01-01T00:00:00Z","Valid":false}`)
 )
 
 func TestUnmarshalTimeString(t *testing.T) {
@@ -23,6 +25,16 @@ func TestUnmarshalTimeString(t *testing.T) {
 	err = json.Unmarshal(blankTimeJSON, &blank)
 	maybePanic(err)
 	assertNullTime(t, blank, "blank time json")
+
+	var fromMap Time
+	err = json.Unmarshal(timeMap, &fromMap)
+	maybePanic(err)
+	assertTime(t, fromMap, "map time json")
+
+	var invalid Time
+	err = json.Unmarshal(invalidMap, &invalid)
+	maybePanic(err)
+	assertNullTime(t, invalid, "map invalid time json")
 }
 
 func TestMarshalTime(t *testing.T) {
