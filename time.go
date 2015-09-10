@@ -17,8 +17,15 @@ type Time struct {
 
 // Scan implements the Scanner interface.
 func (t *Time) Scan(value interface{}) error {
-	t.Time, t.Valid = value.(time.Time)
-	return nil
+	var err error
+	switch x := value.(type) {
+	case time.Time:
+		t.Time = x
+	default:
+		err = fmt.Errorf("null: cannot scan type %T into null.Time: %v", value, value)
+	}
+	t.Valid = err == nil
+	return err
 }
 
 // Value implements the driver Valuer interface.
