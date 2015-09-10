@@ -9,7 +9,9 @@ var (
 	stringJSON      = []byte(`"test"`)
 	blankStringJSON = []byte(`""`)
 	nullStringJSON  = []byte(`{"String":"test","Valid":true}`)
-	nullJSON        = []byte(`null`)
+
+	nullJSON    = []byte(`null`)
+	invalidJSON = []byte(`:)`)
 )
 
 type stringInStruct struct {
@@ -51,6 +53,13 @@ func TestUnmarshalString(t *testing.T) {
 		panic("err should not be nil")
 	}
 	assertNullStr(t, badType, "wrong type json")
+
+	var invalid String
+	err = invalid.UnmarshalJSON(invalidJSON)
+	if _, ok := err.(*json.SyntaxError); !ok {
+		t.Errorf("expected json.SyntaxError, not %T", err)
+	}
+	assertNullStr(t, invalid, "invalid json")
 }
 
 func TestTextUnmarshalString(t *testing.T) {

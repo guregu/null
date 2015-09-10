@@ -1,6 +1,6 @@
-// Package zero provides a convenient way of handling null values.
-// Types in this package consider empty or zero input the same as null input.
-// Types in this package will encode to their zero value, even if null.
+// Package zero contains SQL types that consider zero input and null input to be equivalent
+// with convenient support for JSON and text marshaling.
+// Types in this package will JSON marshal to their zero value, even if null.
 // Use the null parent package if you don't want this.
 package zero
 
@@ -48,7 +48,9 @@ func StringFromPtr(s *string) String {
 func (s *String) UnmarshalJSON(data []byte) error {
 	var err error
 	var v interface{}
-	json.Unmarshal(data, &v)
+	if err = json.Unmarshal(data, &v); err != nil {
+		return err
+	}
 	switch x := v.(type) {
 	case string:
 		s.String = x

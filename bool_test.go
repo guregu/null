@@ -53,6 +53,12 @@ func TestUnmarshalBool(t *testing.T) {
 		panic("err should not be nil")
 	}
 	assertNullBool(t, badType, "wrong type json")
+
+	var invalid Bool
+	err = invalid.UnmarshalJSON(invalidJSON)
+	if _, ok := err.(*json.SyntaxError); !ok {
+		t.Errorf("expected json.SyntaxError, not %T", err)
+	}
 }
 
 func TestTextUnmarshalBool(t *testing.T) {

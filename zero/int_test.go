@@ -60,6 +60,13 @@ func TestUnmarshalInt(t *testing.T) {
 		panic("err should not be nil")
 	}
 	assertNullInt(t, badType, "wrong type json")
+
+	var invalid Int
+	err = invalid.UnmarshalJSON(invalidJSON)
+	if _, ok := err.(*json.SyntaxError); !ok {
+		t.Errorf("expected json.SyntaxError, not %T", err)
+	}
+	assertNullInt(t, invalid, "invalid json")
 }
 
 func TestUnmarshalNonIntegerNumber(t *testing.T) {

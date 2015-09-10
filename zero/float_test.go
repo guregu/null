@@ -57,6 +57,13 @@ func TestUnmarshalFloat(t *testing.T) {
 		panic("err should not be nil")
 	}
 	assertNullFloat(t, badType, "wrong type json")
+
+	var invalid Float
+	err = invalid.UnmarshalJSON(invalidJSON)
+	if _, ok := err.(*json.SyntaxError); !ok {
+		t.Errorf("expected json.SyntaxError, not %T", err)
+	}
+	assertNullFloat(t, invalid, "invalid json")
 }
 
 func TestTextUnmarshalFloat(t *testing.T) {

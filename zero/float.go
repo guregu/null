@@ -45,7 +45,9 @@ func FloatFromPtr(f *float64) Float {
 func (f *Float) UnmarshalJSON(data []byte) error {
 	var err error
 	var v interface{}
-	json.Unmarshal(data, &v)
+	if err = json.Unmarshal(data, &v); err != nil {
+		return err
+	}
 	switch x := v.(type) {
 	case float64:
 		f.Float64 = x

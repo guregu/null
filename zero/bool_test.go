@@ -9,7 +9,6 @@ var (
 	boolJSON     = []byte(`true`)
 	falseJSON    = []byte(`false`)
 	nullBoolJSON = []byte(`{"Bool":true,"Valid":true}`)
-	invalidJSON  = []byte(`:)`)
 )
 
 func TestBoolFrom(t *testing.T) {
@@ -54,9 +53,9 @@ func TestUnmarshalBool(t *testing.T) {
 	assertNullBool(t, null, "null json")
 
 	var invalid Bool
-	err = invalid.UnmarshalText(invalidJSON)
-	if err == nil {
-		panic("err should not be nil")
+	err = invalid.UnmarshalJSON(invalidJSON)
+	if _, ok := err.(*json.SyntaxError); !ok {
+		t.Errorf("expected json.SyntaxError, not %T: %v", err, err)
 	}
 	assertNullBool(t, invalid, "invalid json")
 
@@ -88,6 +87,12 @@ func TestTextUnmarshalBool(t *testing.T) {
 	err = null.UnmarshalText(nullJSON)
 	maybePanic(err)
 	assertNullBool(t, null, `UnmarshalText() "null"`)
+
+	var invalid Bool
+	err = invalid.UnmarshalText(invalidJSON)
+	if err == nil {
+		panic("err should not be nil")
+	}
 }
 
 func TestMarshalBool(t *testing.T) {

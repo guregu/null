@@ -9,6 +9,7 @@ import (
 )
 
 // Bool is a nullable bool. False input is considered null.
+// JSON marshals to false if null.
 // Considered null to SQL unmarshaled from a false value.
 type Bool struct {
 	sql.NullBool
@@ -43,7 +44,9 @@ func BoolFromPtr(b *bool) Bool {
 func (b *Bool) UnmarshalJSON(data []byte) error {
 	var err error
 	var v interface{}
-	json.Unmarshal(data, &v)
+	if err = json.Unmarshal(data, &v); err != nil {
+		return err
+	}
 	switch x := v.(type) {
 	case bool:
 		b.Bool = x
