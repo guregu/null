@@ -86,14 +86,11 @@ func (t *Time) UnmarshalJSON(data []byte) error {
 		ti, tiOK := x["Time"].(string)
 		valid, validOK := x["Valid"].(bool)
 		if !tiOK || !validOK {
-			err = fmt.Errorf("json: unmarshalling map[string]interface{} into Go value of type null.Time requires key \"Time\" to be of type string and key \"Valid\" to be of type bool; found %T and %T, respectively", x["Time"], x["Valid"])
-			break
+			return fmt.Errorf("json: unmarshalling JSON object into Go value of type null.Time requires key \"Time\" to be of type string and key \"Valid\" to be of type bool; found %T and %T, respectively", x["Time"], x["Valid"])
 		}
 		err = t.Time.UnmarshalJSON([]byte(`"` + ti + `"`))
 		t.Valid = valid
-		if err == nil && t.Valid == false {
-			return nil // Return here to prevent `Valid` from being set to true based on nil error below.
-		}
+		return err
 	case nil:
 		t.Valid = false
 		return nil
