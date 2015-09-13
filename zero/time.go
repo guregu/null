@@ -58,8 +58,7 @@ func TimeFrom(t time.Time) Time {
 // be null if t is nil or *t is the zero value.
 func TimeFromPtr(t *time.Time) Time {
 	if t == nil {
-		var ti time.Time
-		return NewTime(ti, false)
+		return NewTime(time.Time{}, false)
 	}
 	return TimeFrom(*t)
 }
@@ -69,14 +68,13 @@ func TimeFromPtr(t *time.Time) Time {
 // if this time is invalid.
 func (t Time) MarshalJSON() ([]byte, error) {
 	if !t.Valid {
-		var ti time.Time
-		return json.Marshal(ti)
+		return (time.Time{}).MarshalJSON()
 	}
-	return json.Marshal(t.Time)
+	return t.Time.MarshalJSON()
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
-// It supports string, map[string]interface{},
+// It supports string, object (e.g. pq.NullTime and friends)
 // and null input.
 func (t *Time) UnmarshalJSON(data []byte) error {
 	var err error
@@ -96,9 +94,9 @@ func (t *Time) UnmarshalJSON(data []byte) error {
 		ti, tiOK := x["Time"].(string)
 		valid, validOK := x["Valid"].(bool)
 		if !tiOK || !validOK {
-			return fmt.Errorf("json: unmarshalling object into Go value of type null.Time requires key \"Time\" to be of type string and key \"Valid\" to be of type bool; found %T and %T, respectively", x["Time"], x["Valid"])
+			return fmt.Errorf(`json: unmarshalling object into Go value of type null.Time requires key "Time" to be of type string and key "Valid" to be of type bool; found %T and %T, respectively`, x["Time"], x["Valid"])
 		}
-		err = t.Time.UnmarshalJSON([]byte(`"` + ti + `"`))
+		err = t.Time.UnmarshalText([]byte(ti))
 		t.Valid = valid
 		return err
 	case nil:

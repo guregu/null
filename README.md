@@ -23,17 +23,21 @@ Marshals to JSON null if SQL source data is null. Zero (blank) input will not pr
 #### null.Int
 Nullable int64. 
 
-Marshals to JSON null if SQL null. Zero input will not produce a null Int. Can unmarshal from `sql.NullInt64` JSON input. 
+Marshals to JSON null if SQL source data is null. Zero input will not produce a null Int. Can unmarshal from `sql.NullInt64` JSON input. 
 
 #### null.Float
 Nullable float64. 
 
-Unlike `zero.Float`, `null.Float` will marshal to null if null. Zero input will not produce a null Float. Can unmarshal from `sql.NullFloat64` JSON input. 
+Marshals to JSON null if SQL source data is null. Zero input will not produce a null Float. Can unmarshal from `sql.NullFloat64` JSON input. 
 
 #### null.Bool
 Nullable bool. 
 
-Unlike `zero.Bool`, `null.Bool` will marshal to null if null. False input will not produce a null Bool. Can unmarshal from `sql.NullBool` JSON input. 
+Marshals to JSON null if SQL source data is null. False input will not produce a null Bool. Can unmarshal from `sql.NullBool` JSON input. 
+
+#### null.Time
+
+Marshals to JSON null if SQL source data is null. Uses `time.Time`'s marshaler. Can unmarshal from `pq.NullTime` and similar JSON input.
 
 ### zero package
 
@@ -47,17 +51,21 @@ Will marshal to a blank string if null. Blank string input produces a null Strin
 #### zero.Int
 Nullable int64.
 
-Will marshal to 0 if null. Blank string or 0 input produces a null Int. Null values and zero values are considered equivalent. Can unmarshal from `sql.NullInt64` JSON input. 
+Will marshal to 0 if null. 0 produces a null Int. Null values and zero values are considered equivalent. Can unmarshal from `sql.NullInt64` JSON input. 
 
 #### zero.Float
 Nullable float64.
 
-Will marshal to 0 if null. Blank string or 0 input produces a null Float. Null values and zero values are considered equivalent. Can unmarshal from `sql.NullFloat64` JSON input. 
+Will marshal to 0 if null. 0.0 produces a null Float. Null values and zero values are considered equivalent. Can unmarshal from `sql.NullFloat64` JSON input. 
 
 #### zero.Bool
 Nullable bool.
 
-Will marshal to false if null. Blank string, false input produces a null Float. Null values and zero values are considered equivalent. Can unmarshal from `sql.NullBool` JSON input. 
+Will marshal to false if null. `false` produces a null Float. Null values and zero values are considered equivalent. Can unmarshal from `sql.NullBool` JSON input. 
+
+#### null.Time
+
+Will marshal to the zero time if null. Uses `time.Time`'s marshaler. Can unmarshal from `pq.NullTime` and similar JSON input.
 
 
 ### Bugs
