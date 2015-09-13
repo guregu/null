@@ -66,7 +66,7 @@ func (t Time) MarshalJSON() ([]byte, error) {
 	if !t.Valid {
 		return []byte("null"), nil
 	}
-	return json.Marshal(t.Time)
+	return t.Time.MarshalJSON()
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
@@ -98,6 +98,26 @@ func (t *Time) UnmarshalJSON(data []byte) error {
 	}
 	t.Valid = err == nil
 	return err
+}
+
+func (t Time) MarshalText() ([]byte, error) {
+	if !t.Valid {
+		return []byte("null"), nil
+	}
+	return t.Time.MarshalText()
+}
+
+func (t *Time) UnmarshalText(text []byte) error {
+	str := string(text)
+	if str == "" || str == "null" {
+		t.Valid = false
+		return nil
+	}
+	if err := t.Time.UnmarshalText(text); err != nil {
+		return err
+	}
+	t.Valid = true
+	return nil
 }
 
 // SetValid changes this Time's value and sets it to be non-null.

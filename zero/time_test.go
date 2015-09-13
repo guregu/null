@@ -9,6 +9,7 @@ import (
 var (
 	timeString    = "2012-12-21T21:21:21Z"
 	timeJSON      = []byte(`"` + timeString + `"`)
+	zeroTimeStr   = "0001-01-01T00:00:00Z"
 	zeroTimeJSON  = []byte(`"0001-01-01T00:00:00Z"`)
 	blankTimeJSON = []byte(`null`)
 	timeValue, _  = time.Parse(time.RFC3339, timeString)
@@ -17,7 +18,7 @@ var (
 	badObject     = []byte(`{"hello": "world"}`)
 )
 
-func TestUnmarshalTimeString(t *testing.T) {
+func TestUnmarshalTimeJSON(t *testing.T) {
 	var ti Time
 	err := json.Unmarshal(timeObject, &ti)
 	maybePanic(err)
@@ -87,6 +88,33 @@ func TestMarshalTime(t *testing.T) {
 	data, err = json.Marshal(null)
 	maybePanic(err)
 	assertJSONEquals(t, data, string(zeroTimeJSON), "empty json marshal")
+}
+
+func TestUnmarshalTimeText(t *testing.T) {
+	ti := TimeFrom(timeValue)
+	txt, err := ti.MarshalText()
+	maybePanic(err)
+	assertJSONEquals(t, txt, timeString, "marshal text")
+
+	var unmarshal Time
+	err = unmarshal.UnmarshalText(txt)
+	maybePanic(err)
+	assertTime(t, unmarshal, "unmarshal text")
+
+	var null Time
+	err = null.UnmarshalText(nullJSON)
+	maybePanic(err)
+	assertNullTime(t, null, "unmarshal null text")
+	txt, err = null.MarshalText()
+	maybePanic(err)
+	assertJSONEquals(t, txt, zeroTimeStr, "marshal null text")
+
+	var invalid Time
+	err = invalid.UnmarshalText([]byte("hello world"))
+	if err == nil {
+		t.Error("expected error")
+	}
+	assertNullTime(t, invalid, "bad string")
 }
 
 func TestTimeFrom(t *testing.T) {
