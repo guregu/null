@@ -52,7 +52,9 @@ func TestUnmarshalString(t *testing.T) {
 	var blank String
 	err = json.Unmarshal(blankStringJSON, &blank)
 	maybePanic(err)
-	assertNullStr(t, blank, "blank string json")
+	if !blank.Valid {
+		t.Error("blank string should be valid")
+	}
 
 	var null String
 	err = json.Unmarshal(nullJSON, &null)

@@ -1,5 +1,5 @@
 ## null [![GoDoc](https://godoc.org/github.com/guregu/null?status.svg)](https://godoc.org/github.com/guregu/null) [![Coverage](http://gocover.io/_badge/github.com/guregu/null)](http://gocover.io/github.com/guregu/null)
-`import "gopkg.in/guregu/null.v2"`
+`import "gopkg.in/guregu/null.v3"`
 
 null is a library with reasonable options for dealing with nullable SQL and JSON values
 
@@ -13,7 +13,7 @@ All types implement `sql.Scanner` and `driver.Valuer`, so you can use this libra
 
 ### null package
 
-`import "gopkg.in/guregu/null.v2"`
+`import "gopkg.in/guregu/null.v3"`
 
 #### null.String
 Nullable string.
@@ -41,7 +41,7 @@ Marshals to JSON null if SQL source data is null. Uses `time.Time`'s marshaler. 
 
 ### zero package
 
-`import "gopkg.in/guregu/null.v2/zero"`
+`import "gopkg.in/guregu/null.v3/zero"`
 
 #### zero.String
 Nullable int64. 

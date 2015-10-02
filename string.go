@@ -41,7 +41,7 @@ func NewString(s string, valid bool) String {
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
-// It supports string and null input. Blank string input produces a null String.
+// It supports string and null input. Blank string input does not produce a null String.
 // It also supports unmarshalling a sql.NullString.
 func (s *String) UnmarshalJSON(data []byte) error {
 	var err error
@@ -60,7 +60,7 @@ func (s *String) UnmarshalJSON(data []byte) error {
 	default:
 		err = fmt.Errorf("json: cannot unmarshal %v into Go value of type null.String", reflect.TypeOf(v).Name())
 	}
-	s.Valid = (err == nil) && (s.String != "")
+	s.Valid = err == nil
 	return err
 }
 
