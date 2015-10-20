@@ -44,7 +44,7 @@ Marshals to JSON null if SQL source data is null. Uses `time.Time`'s marshaler. 
 `import "gopkg.in/guregu/null.v3/zero"`
 
 #### zero.String
-Nullable int64. 
+Nullable string.
 
 Will marshal to a blank string if null. Blank string input produces a null String. Null values and zero values are considered equivalent. Can unmarshal from `sql.NullString` JSON input. 
 
