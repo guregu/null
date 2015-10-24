@@ -63,7 +63,7 @@ Nullable bool.
 
 Will marshal to false if null. `false` produces a null Float. Null values and zero values are considered equivalent. Can unmarshal from `sql.NullBool` JSON input. 
 
-#### null.Time
+#### zero.Time
 
 Will marshal to the zero time if null. Uses `time.Time`'s marshaler. Can unmarshal from `pq.NullTime` and similar JSON input.
 
