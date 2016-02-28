@@ -95,8 +95,7 @@ func (s String) Ptr() *string {
 	return &s.String
 }
 
-// IsZero returns true for null or empty strings, for future omitempty support. (Go 1.4?)
-// Will return false s if blank but non-null.
+// IsZero returns true for null strings, for potential future omitempty support.
 func (s String) IsZero() bool {
 	return !s.Valid
 }
