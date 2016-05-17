@@ -2,14 +2,12 @@ package null
 
 import (
 	"encoding/json"
-	"math"
-	"strconv"
 	"testing"
 )
 
 var (
 	intJSON     = []byte(`12345`)
-	nullIntJSON = []byte(`{"Int64":12345,"Valid":true}`)
+	nullIntJSON = []byte(`{"Int":12345,"Valid":true}`)
 )
 
 func TestIntFrom(t *testing.T) {
@@ -23,7 +21,7 @@ func TestIntFrom(t *testing.T) {
 }
 
 func TestIntFromPtr(t *testing.T) {
-	n := int64(12345)
+	n := int(12345)
 	iptr := &n
 	i := IntFromPtr(iptr)
 	assertInt(t, i, "IntFromPtr()")
@@ -41,7 +39,7 @@ func TestUnmarshalInt(t *testing.T) {
 	var ni Int
 	err = json.Unmarshal(nullIntJSON, &ni)
 	maybePanic(err)
-	assertInt(t, ni, "sq.NullInt64 json")
+	assertInt(t, ni, "sq.NullInt json")
 
 	var null Int
 	err = json.Unmarshal(nullJSON, &null)
@@ -65,25 +63,9 @@ func TestUnmarshalInt(t *testing.T) {
 
 func TestUnmarshalNonIntegerNumber(t *testing.T) {
 	var i Int
-	err := json.Unmarshal(floatJSON, &i)
+	err := json.Unmarshal(float64JSON, &i)
 	if err == nil {
 		panic("err should be present; non-integer number coerced to int")
-	}
-}
-
-func TestUnmarshalInt64Overflow(t *testing.T) {
-	int64Overflow := uint64(math.MaxInt64)
-
-	// Max int64 should decode successfully
-	var i Int
-	err := json.Unmarshal([]byte(strconv.FormatUint(int64Overflow, 10)), &i)
-	maybePanic(err)
-
-	// Attempt to overflow
-	int64Overflow++
-	err = json.Unmarshal([]byte(strconv.FormatUint(int64Overflow, 10)), &i)
-	if err == nil {
-		panic("err should be present; decoded value overflows int64")
 	}
 }
 
@@ -181,8 +163,8 @@ func TestIntScan(t *testing.T) {
 }
 
 func assertInt(t *testing.T, i Int, from string) {
-	if i.Int64 != 12345 {
-		t.Errorf("bad %s int: %d ≠ %d\n", from, i.Int64, 12345)
+	if i.Int != 12345 {
+		t.Errorf("bad %s int: %d ≠ %d\n", from, i.Int, 12345)
 	}
 	if !i.Valid {
 		t.Error(from, "is invalid, but should be valid")
