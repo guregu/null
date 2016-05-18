@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+
+	"github.com/pobri19/null-extended/convert"
 )
 
 // NullInt is a replica of sql.NullInt64 for int types.
@@ -133,7 +135,7 @@ func (n *NullInt) Scan(value interface{}) error {
 		return nil
 	}
 	n.Valid = true
-	return convertAssign(&n.Int, value)
+	return convert.ConvertAssign(&n.Int, value)
 }
 
 // Value implements the driver Valuer interface.

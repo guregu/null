@@ -8,16 +8,16 @@ import (
 	"strconv"
 )
 
-// Float is a nullable float64. Zero input will be considered null.
+// Float64 is a nullable float64. Zero input will be considered null.
 // JSON marshals to zero if null.
 // Considered null to SQL if zero.
-type Float struct {
+type Float64 struct {
 	sql.NullFloat64
 }
 
-// NewFloat creates a new Float
-func NewFloat(f float64, valid bool) Float {
-	return Float{
+// NewFloat64 creates a new Float64
+func NewFloat64(f float64, valid bool) Float64 {
+	return Float64{
 		NullFloat64: sql.NullFloat64{
 			Float64: f,
 			Valid:   valid,
@@ -25,24 +25,24 @@ func NewFloat(f float64, valid bool) Float {
 	}
 }
 
-// FloatFrom creates a new Float that will be null if zero.
-func FloatFrom(f float64) Float {
-	return NewFloat(f, f != 0)
+// Float64From creates a new Float64 that will be null if zero.
+func Float64From(f float64) Float64 {
+	return NewFloat64(f, f != 0)
 }
 
-// FloatFromPtr creates a new Float that be null if f is nil.
-func FloatFromPtr(f *float64) Float {
+// Float64FromPtr creates a new Float64 that be null if f is nil.
+func Float64FromPtr(f *float64) Float64 {
 	if f == nil {
-		return NewFloat(0, false)
+		return NewFloat64(0, false)
 	}
-	return NewFloat(*f, true)
+	return NewFloat64(*f, true)
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
 // It supports number and null input.
-// 0 will be considered a null Float.
+// 0 will be considered a null Float64.
 // It also supports unmarshalling a sql.NullFloat64.
-func (f *Float) UnmarshalJSON(data []byte) error {
+func (f *Float64) UnmarshalJSON(data []byte) error {
 	var err error
 	var v interface{}
 	if err = json.Unmarshal(data, &v); err != nil {
@@ -57,16 +57,16 @@ func (f *Float) UnmarshalJSON(data []byte) error {
 		f.Valid = false
 		return nil
 	default:
-		err = fmt.Errorf("json: cannot unmarshal %v into Go value of type zero.Float", reflect.TypeOf(v).Name())
+		err = fmt.Errorf("json: cannot unmarshal %v into Go value of type zero.Float64", reflect.TypeOf(v).Name())
 	}
 	f.Valid = (err == nil) && (f.Float64 != 0)
 	return err
 }
 
 // UnmarshalText implements encoding.TextUnmarshaler.
-// It will unmarshal to a null Float if the input is a blank, zero, or not a float.
+// It will unmarshal to a null Float64 if the input is a blank, zero, or not a float.
 // It will return an error if the input is not a float, blank, or "null".
-func (f *Float) UnmarshalText(text []byte) error {
+func (f *Float64) UnmarshalText(text []byte) error {
 	str := string(text)
 	if str == "" || str == "null" {
 		f.Valid = false
@@ -79,8 +79,8 @@ func (f *Float) UnmarshalText(text []byte) error {
 }
 
 // MarshalJSON implements json.Marshaler.
-// It will encode null if this Float is null.
-func (f Float) MarshalJSON() ([]byte, error) {
+// It will encode null if this Float64 is null.
+func (f Float64) MarshalJSON() ([]byte, error) {
 	n := f.Float64
 	if !f.Valid {
 		n = 0
@@ -89,8 +89,8 @@ func (f Float) MarshalJSON() ([]byte, error) {
 }
 
 // MarshalText implements encoding.TextMarshaler.
-// It will encode a zero if this Float is null.
-func (f Float) MarshalText() ([]byte, error) {
+// It will encode a zero if this Float64 is null.
+func (f Float64) MarshalText() ([]byte, error) {
 	n := f.Float64
 	if !f.Valid {
 		n = 0
@@ -98,21 +98,21 @@ func (f Float) MarshalText() ([]byte, error) {
 	return []byte(strconv.FormatFloat(n, 'f', -1, 64)), nil
 }
 
-// SetValid changes this Float's value and also sets it to be non-null.
-func (f *Float) SetValid(v float64) {
+// SetValid changes this Float64's value and also sets it to be non-null.
+func (f *Float64) SetValid(v float64) {
 	f.Float64 = v
 	f.Valid = true
 }
 
-// Ptr returns a poFloater to this Float's value, or a nil poFloater if this Float is null.
-func (f Float) Ptr() *float64 {
+// Ptr returns a poFloater to this Float64's value, or a nil poFloater if this Float64 is null.
+func (f Float64) Ptr() *float64 {
 	if !f.Valid {
 		return nil
 	}
 	return &f.Float64
 }
 
-// IsZero returns true for null or zero Floats, for future omitempty support (Go 1.4?)
-func (f Float) IsZero() bool {
+// IsZero returns true for null or zero Float64's, for future omitempty support (Go 1.4?)
+func (f Float64) IsZero() bool {
 	return !f.Valid || f.Float64 == 0
 }

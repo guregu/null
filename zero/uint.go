@@ -1,4 +1,4 @@
-package null
+package zero
 
 import (
 	"database/sql/driver"
@@ -10,15 +10,14 @@ import (
 	"github.com/pobri19/null-extended/convert"
 )
 
-// NullUint is a replica of sql.NullInt64 for uint types.
 type NullUint struct {
 	Uint  uint
 	Valid bool
 }
 
-// Uint is an nullable uint.
-// It does not consider zero values to be null.
-// It will decode to null, not zero, if null.
+// Uint is a nullable uint.
+// JSON marshals to zero if null.
+// Considered null to SQL if zero.
 type Uint struct {
 	NullUint
 }
@@ -33,9 +32,9 @@ func NewUint(i uint, valid bool) Uint {
 	}
 }
 
-// UintFrom creates a new Uint that will always be valid.
+// UintFrom creates a new Uint that will be null if zero.
 func UintFrom(i uint) Uint {
-	return NewUint(i, true)
+	return NewUint(i, i != 0)
 }
 
 // UintFromPtr creates a new Uint that be null if i is nil.
@@ -43,12 +42,13 @@ func UintFromPtr(i *uint) Uint {
 	if i == nil {
 		return NewUint(0, false)
 	}
-	return NewUint(*i, true)
+	n := NewUint(*i, true)
+	return n
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
 // It supports number and null input.
-// 0 will not be considered a null Uint.
+// 0 will be considered a null Uint.
 // It also supports unmarshalling a sql.NullUint.
 func (i *Uint) UnmarshalJSON(data []byte) error {
 	var err error
@@ -66,14 +66,14 @@ func (i *Uint) UnmarshalJSON(data []byte) error {
 		i.Valid = false
 		return nil
 	default:
-		err = fmt.Errorf("json: cannot unmarshal %v into Go value of type null.Uint", reflect.TypeOf(v).Name())
+		err = fmt.Errorf("json: cannot unmarshal %v into Go value of type zero.Uint", reflect.TypeOf(v).Name())
 	}
-	i.Valid = err == nil
+	i.Valid = (err == nil) && (i.Uint != 0)
 	return err
 }
 
 // UnmarshalText implements encoding.TextUnmarshaler.
-// It will unmarshal to a null Uint if the input is a blank or not an integer.
+// It will unmarshal to a null Uint if the input is a blank, zero, or not an integer.
 // It will return an error if the input is not an integer, blank, or "null".
 func (i *Uint) UnmarshalText(text []byte) error {
 	str := string(text)
@@ -83,29 +83,29 @@ func (i *Uint) UnmarshalText(text []byte) error {
 	}
 	var err error
 	res, err := strconv.ParseUint(string(text), 10, 0)
-	i.Valid = err == nil
-	if i.Valid {
-		i.Uint = uint(res)
-	}
+	i.Uint = uint(res)
+	i.Valid = (err == nil) && (i.Uint != 0)
 	return err
 }
 
 // MarshalJSON implements json.Marshaler.
-// It will encode null if this Uint is null.
+// It will encode 0 if this Uint is null.
 func (i Uint) MarshalJSON() ([]byte, error) {
+	n := i.Uint
 	if !i.Valid {
-		return []byte("null"), nil
+		n = 0
 	}
-	return []byte(strconv.FormatUint(uint64(i.Uint), 10)), nil
+	return []byte(strconv.FormatUint(uint64(n), 10)), nil
 }
 
 // MarshalText implements encoding.TextMarshaler.
-// It will encode a blank string if this Uint is null.
+// It will encode a zero if this Uint is null.
 func (i Uint) MarshalText() ([]byte, error) {
+	n := i.Uint
 	if !i.Valid {
-		return []byte{}, nil
+		n = 0
 	}
-	return []byte(strconv.FormatUint(uint64(i.Uint), 10)), nil
+	return []byte(strconv.FormatUint(uint64(n), 10)), nil
 }
 
 // SetValid changes this Uint's value and also sets it to be non-null.
@@ -122,10 +122,9 @@ func (i Uint) Ptr() *uint {
 	return &i.Uint
 }
 
-// IsZero returns true for invalid Uints, for future omitempty support (Go 1.4?)
-// A non-null Uint with a 0 value will not be considered zero.
+// IsZero returns true for null or zero Uints, for future omitempty support (Go 1.4?)
 func (i Uint) IsZero() bool {
-	return !i.Valid
+	return !i.Valid || i.Uint == 0
 }
 
 // Scan implements the Scanner interface.

@@ -1,4 +1,4 @@
-package null
+package zero
 
 import (
 	"database/sql/driver"
@@ -10,15 +10,14 @@ import (
 	"github.com/pobri19/null-extended/convert"
 )
 
-// NullInt8 is a replica of sql.NullInt64 for int8 types.
 type NullInt8 struct {
 	Int8  int8
 	Valid bool
 }
 
-// Int8 is an nullable int8.
-// It does not consider zero values to be null.
-// It will decode to null, not zero, if null.
+// Int8 is a nullable int8.
+// JSON marshals to zero if null.
+// Considered null to SQL if zero.
 type Int8 struct {
 	NullInt8
 }
@@ -33,9 +32,9 @@ func NewInt8(i int8, valid bool) Int8 {
 	}
 }
 
-// Int8From creates a new Int8 that will always be valid.
+// Int8From creates a new Int8 that will be null if zero.
 func Int8From(i int8) Int8 {
-	return NewInt8(i, true)
+	return NewInt8(i, i != 0)
 }
 
 // Int8FromPtr creates a new Int8 that be null if i is nil.
@@ -43,12 +42,13 @@ func Int8FromPtr(i *int8) Int8 {
 	if i == nil {
 		return NewInt8(0, false)
 	}
-	return NewInt8(*i, true)
+	n := NewInt8(*i, true)
+	return n
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
 // It supports number and null input.
-// 0 will not be considered a null Int8.
+// 0 will be considered a null Int8.
 // It also supports unmarshalling a sql.NullInt8.
 func (i *Int8) UnmarshalJSON(data []byte) error {
 	var err error
@@ -66,14 +66,14 @@ func (i *Int8) UnmarshalJSON(data []byte) error {
 		i.Valid = false
 		return nil
 	default:
-		err = fmt.Errorf("json: cannot unmarshal %v into Go value of type null.Int8", reflect.TypeOf(v).Name())
+		err = fmt.Errorf("json: cannot unmarshal %v into Go value of type zero.Int8", reflect.TypeOf(v).Name())
 	}
-	i.Valid = err == nil
+	i.Valid = (err == nil) && (i.Int8 != 0)
 	return err
 }
 
 // UnmarshalText implements encoding.TextUnmarshaler.
-// It will unmarshal to a null Int8 if the input is a blank or not an integer.
+// It will unmarshal to a null Int8 if the input is a blank, zero, or not an integer.
 // It will return an error if the input is not an integer, blank, or "null".
 func (i *Int8) UnmarshalText(text []byte) error {
 	str := string(text)
@@ -83,29 +83,29 @@ func (i *Int8) UnmarshalText(text []byte) error {
 	}
 	var err error
 	res, err := strconv.ParseInt(string(text), 10, 8)
-	i.Valid = err == nil
-	if i.Valid {
-		i.Int8 = int8(res)
-	}
+	i.Int8 = int8(res)
+	i.Valid = (err == nil) && (i.Int8 != 0)
 	return err
 }
 
 // MarshalJSON implements json.Marshaler.
-// It will encode null if this Int8 is null.
+// It will encode 0 if this Int8 is null.
 func (i Int8) MarshalJSON() ([]byte, error) {
+	n := i.Int8
 	if !i.Valid {
-		return []byte("null"), nil
+		n = 0
 	}
-	return []byte(strconv.FormatInt(int64(i.Int8), 10)), nil
+	return []byte(strconv.FormatInt(int64(n), 10)), nil
 }
 
 // MarshalText implements encoding.TextMarshaler.
-// It will encode a blank string if this Int8 is null.
+// It will encode a zero if this Int8 is null.
 func (i Int8) MarshalText() ([]byte, error) {
+	n := i.Int8
 	if !i.Valid {
-		return []byte{}, nil
+		n = 0
 	}
-	return []byte(strconv.FormatInt(int64(i.Int8), 10)), nil
+	return []byte(strconv.FormatInt(int64(n), 10)), nil
 }
 
 // SetValid changes this Int8's value and also sets it to be non-null.
@@ -122,10 +122,9 @@ func (i Int8) Ptr() *int8 {
 	return &i.Int8
 }
 
-// IsZero returns true for invalid Int8's, for future omitempty support (Go 1.4?)
-// A non-null Int8 with a 0 value will not be considered zero.
+// IsZero returns true for null or zero Int8s, for future omitempty support (Go 1.4?)
 func (i Int8) IsZero() bool {
-	return !i.Valid
+	return !i.Valid || i.Int8 == 0
 }
 
 // Scan implements the Scanner interface.

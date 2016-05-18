@@ -1,0 +1,189 @@
+package zero
+
+import (
+	"encoding/json"
+	"testing"
+)
+
+var (
+	uint64JSON     = []byte(`18446744073709551614`)
+	nullUint64JSON = []byte(`{"Uint64":18446744073709551614,"Valid":true}`)
+	zeroU64JSON    = []byte(`0`)
+)
+
+func TestUint64From(t *testing.T) {
+	i := Uint64From(18446744073709551614)
+	assertUint64(t, i, "Uint64From()")
+
+	zero := Uint64From(0)
+	if zero.Valid {
+		t.Error("Uint64From(0)", "is valid, but should be invalid")
+	}
+}
+
+func TestUint64FromPtr(t *testing.T) {
+	n := uint64(18446744073709551614)
+	iptr := &n
+	i := Uint64FromPtr(iptr)
+	assertUint64(t, i, "Uint64FromPtr()")
+
+	null := Uint64FromPtr(nil)
+	assertNullUint64(t, null, "Uint64FromPtr(nil)")
+}
+
+func TestUnmarshalUint64(t *testing.T) {
+	var i Uint64
+	err := json.Unmarshal(uint64JSON, &i)
+	maybePanic(err)
+	assertUint64(t, i, "int json")
+
+	var ni Uint64
+	err = json.Unmarshal(nullUint64JSON, &ni)
+	maybePanic(err)
+	assertUint64(t, ni, "sql.NullUint64 json")
+
+	var zero Uint64
+	err = json.Unmarshal(zeroU64JSON, &zero)
+	maybePanic(err)
+	assertNullUint64(t, zero, "zero json")
+
+	var null Uint64
+	err = json.Unmarshal(nullJSON, &null)
+	maybePanic(err)
+	assertNullUint64(t, null, "null json")
+
+	var badType Uint64
+	err = json.Unmarshal(boolJSON, &badType)
+	if err == nil {
+		panic("err should not be nil")
+	}
+	assertNullUint64(t, badType, "wrong type json")
+
+	var invalid Uint64
+	err = invalid.UnmarshalJSON(invalidJSON)
+	if _, ok := err.(*json.SyntaxError); !ok {
+		t.Errorf("expected json.SyntaxError, not %T", err)
+	}
+	assertNullUint64(t, invalid, "invalid json")
+}
+
+func TestUnmarshalNonIntegerNumberU64(t *testing.T) {
+	var i Uint64
+	err := json.Unmarshal(floatJSON, &i)
+	if err == nil {
+		panic("err should be present; non-integer number coerced to int")
+	}
+}
+
+func TestTextUnmarshalUint64(t *testing.T) {
+	var i Uint64
+	err := i.UnmarshalText([]byte("18446744073709551614"))
+	maybePanic(err)
+	assertUint64(t, i, "UnmarshalText() int")
+
+	var zero Uint64
+	err = zero.UnmarshalText([]byte("0"))
+	maybePanic(err)
+	assertNullUint64(t, zero, "UnmarshalText() zero int")
+
+	var blank Uint64
+	err = blank.UnmarshalText([]byte(""))
+	maybePanic(err)
+	assertNullUint64(t, blank, "UnmarshalText() empty int")
+
+	var null Uint64
+	err = null.UnmarshalText([]byte("null"))
+	maybePanic(err)
+	assertNullUint64(t, null, `UnmarshalText() "null"`)
+}
+
+func TestMarshalUint64(t *testing.T) {
+	i := Uint64From(18446744073709551614)
+	data, err := json.Marshal(i)
+	maybePanic(err)
+	assertJSONEquals(t, data, "18446744073709551614", "non-empty json marshal")
+
+	// invalid values should be encoded as 0
+	null := NewUint64(0, false)
+	data, err = json.Marshal(null)
+	maybePanic(err)
+	assertJSONEquals(t, data, "0", "null json marshal")
+}
+
+func TestMarshalUint64Text(t *testing.T) {
+	i := Uint64From(18446744073709551614)
+	data, err := i.MarshalText()
+	maybePanic(err)
+	assertJSONEquals(t, data, "18446744073709551614", "non-empty text marshal")
+
+	// invalid values should be encoded as zero
+	null := NewUint64(0, false)
+	data, err = null.MarshalText()
+	maybePanic(err)
+	assertJSONEquals(t, data, "0", "null text marshal")
+}
+
+func TestUint64Pointer(t *testing.T) {
+	i := Uint64From(18446744073709551614)
+	ptr := i.Ptr()
+	if *ptr != 18446744073709551614 {
+		t.Errorf("bad %s int: %#v ≠ %d\n", "pointer", ptr, uint64(18446744073709551614))
+	}
+
+	null := NewUint64(0, false)
+	ptr = null.Ptr()
+	if ptr != nil {
+		t.Errorf("bad %s int: %#v ≠ %s\n", "nil pointer", ptr, "nil")
+	}
+}
+
+func TestUint64IsZero(t *testing.T) {
+	i := Uint64From(18446744073709551614)
+	if i.IsZero() {
+		t.Errorf("IsZero() should be false")
+	}
+
+	null := NewUint64(0, false)
+	if !null.IsZero() {
+		t.Errorf("IsZero() should be true")
+	}
+
+	zero := NewUint64(0, true)
+	if !zero.IsZero() {
+		t.Errorf("IsZero() should be true")
+	}
+}
+
+func TestUint64Scan(t *testing.T) {
+	var i Uint64
+	err := i.Scan(uint64(18446744073709551614))
+	maybePanic(err)
+	assertUint64(t, i, "scanned int")
+
+	var null Uint64
+	err = null.Scan(nil)
+	maybePanic(err)
+	assertNullUint64(t, null, "scanned null")
+}
+
+func TestUint64SetValid(t *testing.T) {
+	change := NewUint64(0, false)
+	assertNullUint64(t, change, "SetValid()")
+	change.SetValid(18446744073709551614)
+	assertUint64(t, change, "SetValid()")
+}
+
+func assertUint64(t *testing.T, i Uint64, from string) {
+	if i.Uint64 != 18446744073709551614 {
+		t.Errorf("bad %s int: %d ≠ %d\n", from, i.Uint64, uint64(18446744073709551614))
+	}
+	if !i.Valid {
+		t.Error(from, "is invalid, but should be valid")
+	}
+}
+
+func assertNullUint64(t *testing.T, i Uint64, from string) {
+	if i.Valid {
+		t.Error(from, "is valid, but should be invalid")
+	}
+}

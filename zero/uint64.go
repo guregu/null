@@ -1,4 +1,4 @@
-package null
+package zero
 
 import (
 	"database/sql/driver"
@@ -33,9 +33,9 @@ func NewUint64(i uint64, valid bool) Uint64 {
 	}
 }
 
-// Uint64From creates a new Uint64 that will always be valid.
+// Uint64From creates a new Uint64 that will be null if zero.
 func Uint64From(i uint64) Uint64 {
-	return NewUint64(i, true)
+	return NewUint64(i, i != 0)
 }
 
 // Uint64FromPtr creates a new Uint64 that be null if i is nil.
@@ -43,12 +43,13 @@ func Uint64FromPtr(i *uint64) Uint64 {
 	if i == nil {
 		return NewUint64(0, false)
 	}
-	return NewUint64(*i, true)
+	n := NewUint64(*i, true)
+	return n
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
 // It supports number and null input.
-// 0 will not be considered a null Uint64.
+// 0 will be considered a null Uint64.
 // It also supports unmarshalling a sql.NullUint64.
 func (i *Uint64) UnmarshalJSON(data []byte) error {
 	var err error
@@ -66,14 +67,14 @@ func (i *Uint64) UnmarshalJSON(data []byte) error {
 		i.Valid = false
 		return nil
 	default:
-		err = fmt.Errorf("json: cannot unmarshal %v into Go value of type null.Uint64", reflect.TypeOf(v).Name())
+		err = fmt.Errorf("json: cannot unmarshal %v into Go value of type zero.Uint64", reflect.TypeOf(v).Name())
 	}
-	i.Valid = err == nil
+	i.Valid = (err == nil) && (i.Uint64 != 0)
 	return err
 }
 
 // UnmarshalText implements encoding.TextUnmarshaler.
-// It will unmarshal to a null Uint64 if the input is a blank or not an integer.
+// It will unmarshal to a null Uint64 if the input is a blank, zero, or not an integer.
 // It will return an error if the input is not an integer, blank, or "null".
 func (i *Uint64) UnmarshalText(text []byte) error {
 	str := string(text)
@@ -82,30 +83,29 @@ func (i *Uint64) UnmarshalText(text []byte) error {
 		return nil
 	}
 	var err error
-	res, err := strconv.ParseUint(string(text), 10, 64)
-	i.Valid = err == nil
-	if i.Valid {
-		i.Uint64 = uint64(res)
-	}
+	i.Uint64, err = strconv.ParseUint(string(text), 10, 64)
+	i.Valid = (err == nil) && (i.Uint64 != 0)
 	return err
 }
 
 // MarshalJSON implements json.Marshaler.
-// It will encode null if this Uint64 is null.
+// It will encode 0 if this Uint64 is null.
 func (i Uint64) MarshalJSON() ([]byte, error) {
+	n := i.Uint64
 	if !i.Valid {
-		return []byte("null"), nil
+		n = 0
 	}
-	return []byte(strconv.FormatUint(i.Uint64, 10)), nil
+	return []byte(strconv.FormatUint(n, 10)), nil
 }
 
 // MarshalText implements encoding.TextMarshaler.
-// It will encode a blank string if this Uint64 is null.
+// It will encode a zero if this Uint64 is null.
 func (i Uint64) MarshalText() ([]byte, error) {
+	n := i.Uint64
 	if !i.Valid {
-		return []byte{}, nil
+		n = 0
 	}
-	return []byte(strconv.FormatUint(i.Uint64, 10)), nil
+	return []byte(strconv.FormatUint(n, 10)), nil
 }
 
 // SetValid changes this Uint64's value and also sets it to be non-null.
@@ -122,10 +122,9 @@ func (i Uint64) Ptr() *uint64 {
 	return &i.Uint64
 }
 
-// IsZero returns true for invalid Uint64's, for future omitempty support (Go 1.4?)
-// A non-null Uint64 with a 0 value will not be considered zero.
+// IsZero returns true for null or zero Uint64s, for future omitempty support (Go 1.4?)
 func (i Uint64) IsZero() bool {
-	return !i.Valid
+	return !i.Valid || i.Uint64 == 0
 }
 
 // Scan implements the Scanner interface.
