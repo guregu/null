@@ -30,6 +30,19 @@ func StringFromPtr(s *string) String {
 	return NewString(*s, true)
 }
 
+// ToString converts to string.
+func (s String) ToString() string {
+	if !s.Valid {
+		return ""
+	}
+	return s.String
+}
+
+// String converts to string.
+func (s String) String() string {
+	return s.ToString()
+}
+
 // NewString creates a new String
 func NewString(s string, valid bool) String {
 	return String{

@@ -38,6 +38,14 @@ func IntFromPtr(i *int64) Int {
 	return NewInt(*i, true)
 }
 
+// ToInt converts to int64.
+func (i Int) ToInt() int64 {
+	if !i.Valid {
+		return 0
+	}
+	return i.Int64
+}
+
 // UnmarshalJSON implements json.Unmarshaler.
 // It supports number and null input.
 // 0 will not be considered a null Int.
