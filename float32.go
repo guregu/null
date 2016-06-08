@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"strconv"
 
-	"github.com/pobri19/null-extended/convert"
+	"gopkg.in/nullbio/null.v4/convert"
 )
 
 // NullFloat32 is a replica of sql.NullFloat64 for float32 types.
@@ -142,5 +142,5 @@ func (n NullFloat32) Value() (driver.Value, error) {
 	if !n.Valid {
 		return nil, nil
 	}
-	return n.Float32, nil
+	return float64(n.Float32), nil
 }

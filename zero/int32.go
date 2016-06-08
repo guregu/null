@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"strconv"
 
-	"github.com/pobri19/null-extended/convert"
+	"gopkg.in/nullbio/null.v4/convert"
 )
 
 type NullInt32 struct {
@@ -142,5 +142,5 @@ func (n NullInt32) Value() (driver.Value, error) {
 	if !n.Valid {
 		return nil, nil
 	}
-	return n.Int32, nil
+	return int64(n.Int32), nil
 }

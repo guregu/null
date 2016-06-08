@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"strconv"
 
-	"github.com/pobri19/null-extended/convert"
+	"gopkg.in/nullbio/null.v4/convert"
 )
 
 // NullUint32 is a replica of sql.NullInt64 for uint32 types.
@@ -143,5 +143,5 @@ func (n NullUint32) Value() (driver.Value, error) {
 	if !n.Valid {
 		return nil, nil
 	}
-	return n.Uint32, nil
+	return int64(n.Uint32), nil
 }

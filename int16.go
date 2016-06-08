@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"strconv"
 
-	"github.com/pobri19/null-extended/convert"
+	"gopkg.in/nullbio/null.v4/convert"
 )
 
 // NullInt16 is a replica of sql.NullInt64 for int16 types.
@@ -143,5 +143,5 @@ func (n NullInt16) Value() (driver.Value, error) {
 	if !n.Valid {
 		return nil, nil
 	}
-	return n.Int16, nil
+	return int64(n.Int16), nil
 }
