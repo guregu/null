@@ -1,3 +1,10 @@
+
+This is a clone of github.com/guregu/null, with master reset to the V2.2 tag
+then altered to allow decoding of strings containing integers into NullInts
+to get around Big Query oddnesses - https://code.google.com/p/google-bigquery/issues/detail?id=31
+
+import at github.com/unravelin/null
+
 ## null [![GoDoc](https://godoc.org/github.com/guregu/null?status.svg)](https://godoc.org/github.com/guregu/null) [![Coverage](http://gocover.io/_badge/github.com/guregu/null)](http://gocover.io/github.com/guregu/null)
 `import "gopkg.in/guregu/null.v3"`
 

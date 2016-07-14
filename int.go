@@ -48,7 +48,7 @@ func (i *Int) UnmarshalJSON(data []byte) error {
 	if err = json.Unmarshal(data, &v); err != nil {
 		return err
 	}
-	switch v.(type) {
+	switch vi := v.(type) {
 	case float64:
 		// Unmarshal again, directly to int64, to avoid intermediate float64
 		err = json.Unmarshal(data, &i.Int64)
@@ -57,6 +57,16 @@ func (i *Int) UnmarshalJSON(data []byte) error {
 	case nil:
 		i.Valid = false
 		return nil
+	case string:
+		// Big Query deliberately encodes integers as strings. If we can decode
+		// an integer from this string do so.
+		var intVal int
+		intVal, err = strconv.Atoi(vi)
+		if err != nil {
+			err = fmt.Errorf("json: cannot unmarshal string (%s) into Go value of type null.Int. %v", vi, err)
+			break
+		}
+		i.Int64 = int64(intVal)
 	default:
 		err = fmt.Errorf("json: cannot unmarshal %v into Go value of type null.Int", reflect.TypeOf(v).Name())
 	}
