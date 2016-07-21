@@ -8,13 +8,14 @@ import (
 )
 
 var (
-	timeString   = "2012-12-21T21:21:21Z"
-	timeJSON     = []byte(`"` + timeString + `"`)
-	nullTimeJSON = []byte(`null`)
-	timeValue, _ = time.Parse(time.RFC3339, timeString)
-	timeObject   = []byte(`{"Time":"2012-12-21T21:21:21Z","Valid":true}`)
-	nullObject   = []byte(`{"Time":"0001-01-01T00:00:00Z","Valid":false}`)
-	badObject    = []byte(`{"hello": "world"}`)
+	timeString    = "2012-12-21T21:21:21Z"
+	timeJSON      = []byte(`"` + timeString + `"`)
+	nullTimeJSON  = []byte(`null`)
+	timeValue, _  = time.Parse(time.RFC3339, timeString)
+	timeObject    = []byte(`{"Time":"2012-12-21T21:21:21Z","Valid":true}`)
+	nullObject    = []byte(`{"Time":"0001-01-01T00:00:00Z","Valid":false}`)
+	timeObjectXML = []byte(`<Time>2012-12-21T21:21:21Z</Time>`)
+	badObject     = []byte(`{"hello": "world"}`)
 
 	//	RFC3339     = "2006-01-02T15:04:05Z07:00"
 	//	RFC3339Nano = "2006-01-02T15:04:05.999999999Z07:00"
