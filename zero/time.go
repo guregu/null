@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
+	"gopkg.in/mgo.v2/bson"
 	"reflect"
 	"sync"
 	"time"
@@ -105,32 +106,6 @@ func (t Time) MarshalJSON() ([]byte, error) {
 	return b, nil
 }
 
-// MarshalXML implements the xml.Marshaler interface
-func (t Time) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
-	if t.Valid {
-		// to string?
-		return e.EncodeElement(t.Time.Format(GetFormat()), start)
-	}
-	return e.EncodeElement((time.Time{}).Format(GetFormat()), start)
-}
-
-// UnmarshalXML implments the xml.Unmarshaler interface
-func (t *Time) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
-
-	var s string
-	err := d.DecodeElement(&s, &start)
-	if err != nil {
-		return err
-	}
-	t.Time, err = time.Parse(GetFormat(), s)
-	if err != nil {
-		t.Valid = false
-	} else {
-		t.Valid = true
-	}
-	return nil
-}
-
 // UnmarshalJSON implements json.Unmarshaler.
 // It supports string, object (e.g. pq.NullTime and friends)
 // and null input.
@@ -166,6 +141,32 @@ func (t *Time) UnmarshalJSON(data []byte) error {
 	}
 }
 
+// MarshalXML implements the xml.Marshaler interface
+func (t Time) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
+	if t.Valid {
+		// to string?
+		return e.EncodeElement(t.Time.Format(GetFormat()), start)
+	}
+	return e.EncodeElement((time.Time{}).Format(GetFormat()), start)
+}
+
+// UnmarshalXML implments the xml.Unmarshaler interface
+func (t *Time) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
+
+	var s string
+	err := d.DecodeElement(&s, &start)
+	if err != nil {
+		return err
+	}
+	t.Time, err = time.Parse(GetFormat(), s)
+	if err != nil {
+		t.Valid = false
+	} else {
+		t.Valid = true
+	}
+	return nil
+}
+
 func (t Time) MarshalText() ([]byte, error) {
 	ti := t.Time
 	if !t.Valid {
@@ -191,6 +192,27 @@ func (t *Time) UnmarshalText(text []byte) error {
 	}
 
 	t.Valid = true
+	return nil
+}
+
+// GetBSON implements bson.Getter.
+func (t Time) GetBSON() (interface{}, error) {
+	if t.Valid {
+		return t.Time, nil
+	}
+	return time.Time{}, nil
+}
+
+// SetBSON implements bson.Setter.
+func (t *Time) SetBSON(raw bson.Raw) error {
+	var ti time.Time
+	err := raw.Unmarshal(&ti)
+
+	if err == nil {
+		*t = Time{Time: ti, Valid: !ti.IsZero()}
+	} else {
+		*t = Time{Valid: false}
+	}
 	return nil
 }
 

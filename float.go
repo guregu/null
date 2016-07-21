@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
+	"gopkg.in/mgo.v2/bson"
 	"reflect"
 	"strconv"
 )
@@ -117,6 +118,28 @@ func (f *Float) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 		f.Float64 = *x
 	} else {
 		f.Valid = false
+	}
+	return nil
+}
+
+// GetBSON implements bson.Getter.
+func (f Float) GetBSON() (interface{}, error) {
+	if f.Valid {
+		return f.Float64, nil
+	}
+	// TODO: do we need a nil pointer to a string?
+	return nil, nil
+}
+
+// SetBSON implements bson.Setter.
+func (f *Float) SetBSON(raw bson.Raw) error {
+	var ff float64
+	err := raw.Unmarshal(&ff)
+
+	if err == nil {
+		*f = Float{sql.NullFloat64{Float64: ff, Valid: true}}
+	} else {
+		*f = Float{sql.NullFloat64{Valid: false}}
 	}
 	return nil
 }

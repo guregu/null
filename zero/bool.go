@@ -6,6 +6,7 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
+	"gopkg.in/mgo.v2/bson"
 	"reflect"
 )
 
@@ -125,6 +126,27 @@ func (b Bool) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
 		n = false
 	}
 	return e.EncodeElement(n, start)
+}
+
+// GetBSON implements bson.Getter.
+func (b Bool) GetBSON() (interface{}, error) {
+	if b.Valid {
+		return b.Bool, nil
+	}
+	return false, nil
+}
+
+// SetBSON implements bson.Setter.
+func (b *Bool) SetBSON(raw bson.Raw) error {
+	var bb bool
+	err := raw.Unmarshal(&bb)
+
+	if err == nil {
+		*b = Bool{sql.NullBool{Bool: bb, Valid: bb}}
+	} else {
+		*b = Bool{sql.NullBool{Valid: false}}
+	}
+	return nil
 }
 
 // SetValid changes this Bool's value and also sets it to be non-null.

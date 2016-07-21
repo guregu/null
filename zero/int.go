@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
+	"gopkg.in/mgo.v2/bson"
 	"reflect"
 	"strconv"
 )
@@ -124,6 +125,29 @@ func (i Int) MarshalText() ([]byte, error) {
 		n = 0
 	}
 	return []byte(strconv.FormatInt(n, 10)), nil
+}
+
+// GetBSON implements bson.Getter.
+func (i Int) GetBSON() (interface{}, error) {
+	n := i.Int64
+	if !i.Valid {
+		n = 0
+	}
+	// TODO: do we need a nil pointer to a string?
+	return n, nil
+}
+
+// SetBSON implements bson.Setter.
+func (i *Int) SetBSON(raw bson.Raw) error {
+	var ii int64
+	err := raw.Unmarshal(&ii)
+
+	if err == nil {
+		*i = Int{sql.NullInt64{Int64: ii, Valid: ii != 0}}
+	} else {
+		*i = Int{sql.NullInt64{Valid: false}}
+	}
+	return nil
 }
 
 // SetValid changes this Int's value and also sets it to be non-null.

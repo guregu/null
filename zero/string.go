@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
+	"gopkg.in/mgo.v2/bson"
 	"reflect"
 )
 
@@ -96,6 +97,27 @@ func (s *String) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 		s.Valid = s.String != ""
 	} else {
 		s.Valid = false
+	}
+	return nil
+}
+
+// GetBSON implements bson.Getter.
+func (s String) GetBSON() (interface{}, error) {
+	if s.Valid {
+		return s.String, nil
+	}
+	return "", nil
+}
+
+// SetBSON implements bson.Setter.
+func (s *String) SetBSON(raw bson.Raw) error {
+	var str string
+	err := raw.Unmarshal(&str)
+
+	if err == nil {
+		*s = String{sql.NullString{String: str, Valid: str != ""}}
+	} else {
+		*s = String{sql.NullString{Valid: false}}
 	}
 	return nil
 }
