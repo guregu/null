@@ -1,4 +1,4 @@
-## null [![GoDoc](https://godoc.org/github.com/axiomzen/null?status.svg)](https://godoc.org/github.com/axiomzen/null) [![Coverage](http://gocover.io/_badge/github.com/axiomzen/null)](http://gocover.io/github.com/axiomzen/null)
+## null [![GoDoc](https://godoc.org/github.com/axiomzen/null?status.svg)](https://godoc.org/github.com/axiomzen/null) [![Coverage](http://gocover.io/_badge/github.com/axiomzen/null)](https://gocover.io/github.com/axiomzen/null)
 `import "gopkg.in/axiomzen/null.v3"`
 
 null is a library with reasonable options for dealing with nullable SQL and JSON values
