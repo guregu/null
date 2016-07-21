@@ -3,6 +3,7 @@ package null
 import (
 	"database/sql"
 	"encoding/json"
+	"encoding/xml"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -64,6 +65,22 @@ func (i *Int) UnmarshalJSON(data []byte) error {
 	return err
 }
 
+// UnmarshalXML implments the xml.Unmarshaler interface
+func (i *Int) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
+
+	var x *int64
+	if err := d.DecodeElement(&x, &start); err != nil {
+		return err
+	}
+	if x != nil {
+		i.Valid = true
+		i.Int64 = *x
+	} else {
+		i.Valid = false
+	}
+	return nil
+}
+
 // UnmarshalText implements encoding.TextUnmarshaler.
 // It will unmarshal to a null Int if the input is a blank or not an integer.
 // It will return an error if the input is not an integer, blank, or "null".
@@ -86,6 +103,14 @@ func (i Int) MarshalJSON() ([]byte, error) {
 		return []byte("null"), nil
 	}
 	return []byte(strconv.FormatInt(i.Int64, 10)), nil
+}
+
+// MarshalXML implements the xml.Marshaler interface
+func (i Int) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
+	if i.Valid {
+		return e.EncodeElement(i.Int64, start)
+	}
+	return e.EncodeElement(nil, start)
 }
 
 // MarshalText implements encoding.TextMarshaler.

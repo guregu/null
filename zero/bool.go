@@ -3,6 +3,7 @@ package zero
 import (
 	"database/sql"
 	"encoding/json"
+	"encoding/xml"
 	"errors"
 	"fmt"
 	"reflect"
@@ -83,8 +84,24 @@ func (b *Bool) UnmarshalText(text []byte) error {
 	return nil
 }
 
+// UnmarshalXML implments the xml.Unmarshaler interface
+func (b *Bool) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
+
+	var x *bool
+	if err := d.DecodeElement(&x, &start); err != nil {
+		return err
+	}
+	if x != nil {
+		b.Bool = *x
+		b.Valid = b.Bool
+	} else {
+		b.Valid = false
+	}
+	return nil
+}
+
 // MarshalJSON implements json.Marshaler.
-// It will encode null if this Bool is null.
+// It will encode false if this Bool is null.
 func (b Bool) MarshalJSON() ([]byte, error) {
 	if !b.Valid || !b.Bool {
 		return []byte("false"), nil
@@ -93,12 +110,21 @@ func (b Bool) MarshalJSON() ([]byte, error) {
 }
 
 // MarshalText implements encoding.TextMarshaler.
-// It will encode a zero if this Bool is null.
+// It will encode a false if this Bool is null.
 func (b Bool) MarshalText() ([]byte, error) {
 	if !b.Valid || !b.Bool {
 		return []byte("false"), nil
 	}
 	return []byte("true"), nil
+}
+
+// MarshalXML implements the xml.Marshaler interface
+func (b Bool) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
+	n := b.Bool
+	if !b.Valid {
+		n = false
+	}
+	return e.EncodeElement(n, start)
 }
 
 // SetValid changes this Bool's value and also sets it to be non-null.

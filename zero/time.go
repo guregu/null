@@ -3,10 +3,34 @@ package zero
 import (
 	"database/sql/driver"
 	"encoding/json"
+	"encoding/xml"
 	"fmt"
 	"reflect"
+	"sync"
 	"time"
 )
+
+// holds the format so we are thread safe
+type formatHolder struct {
+	sync.RWMutex
+	format string
+}
+
+var theFormat = &formatHolder{format: time.RFC3339Nano}
+
+// SetFormat sets the format for the class
+func SetFormat(f string) {
+	theFormat.Lock()
+	theFormat.format = f
+	theFormat.Unlock()
+}
+
+// GetFormat gets the format for the class
+func GetFormat() string {
+	theFormat.RLock()
+	defer theFormat.RUnlock()
+	return theFormat.format
+}
 
 // Time is a nullable time.Time.
 // JSON marshals to the zero value for time.Time if null.
@@ -67,10 +91,44 @@ func TimeFromPtr(t *time.Time) Time {
 // It will encode the zero value of time.Time
 // if this time is invalid.
 func (t Time) MarshalJSON() ([]byte, error) {
-	if !t.Valid {
-		return (time.Time{}).MarshalJSON()
+
+	f := GetFormat()
+	b := make([]byte, 0, len(f)+2)
+	b = append(b, '"')
+	if t.Valid {
+		b = t.Time.AppendFormat(b, f)
+	} else {
+		b = (time.Time{}).AppendFormat(b, f)
 	}
-	return t.Time.MarshalJSON()
+
+	b = append(b, '"')
+	return b, nil
+}
+
+// MarshalXML implements the xml.Marshaler interface
+func (t Time) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
+	if t.Valid {
+		// to string?
+		return e.EncodeElement(t.Time.Format(GetFormat()), start)
+	}
+	return e.EncodeElement((time.Time{}).Format(GetFormat()), start)
+}
+
+// UnmarshalXML implments the xml.Unmarshaler interface
+func (t *Time) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
+
+	var s string
+	err := d.DecodeElement(&s, &start)
+	if err != nil {
+		return err
+	}
+	t.Time, err = time.Parse(GetFormat(), s)
+	if err != nil {
+		t.Valid = false
+	} else {
+		t.Valid = true
+	}
+	return nil
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
@@ -85,7 +143,8 @@ func (t *Time) UnmarshalJSON(data []byte) error {
 	switch x := v.(type) {
 	case string:
 		var ti time.Time
-		if err = ti.UnmarshalJSON(data); err != nil {
+		ti, err = time.Parse(`"`+GetFormat()+`"`, string(data))
+		if err != nil {
 			return err
 		}
 		*t = TimeFrom(ti)
@@ -96,7 +155,7 @@ func (t *Time) UnmarshalJSON(data []byte) error {
 		if !tiOK || !validOK {
 			return fmt.Errorf(`json: unmarshalling object into Go value of type null.Time requires key "Time" to be of type string and key "Valid" to be of type bool; found %T and %T, respectively`, x["Time"], x["Valid"])
 		}
-		err = t.Time.UnmarshalText([]byte(ti))
+		err = t.UnmarshalText([]byte(ti))
 		t.Valid = valid
 		return err
 	case nil:
@@ -112,7 +171,10 @@ func (t Time) MarshalText() ([]byte, error) {
 	if !t.Valid {
 		ti = time.Time{}
 	}
-	return ti.MarshalText()
+	f := GetFormat()
+	b := make([]byte, 0, len(f))
+	//return ti.MarshalText()
+	return ti.AppendFormat(b, f), nil
 }
 
 func (t *Time) UnmarshalText(text []byte) error {
@@ -121,9 +183,13 @@ func (t *Time) UnmarshalText(text []byte) error {
 		t.Valid = false
 		return nil
 	}
-	if err := t.Time.UnmarshalText(text); err != nil {
+
+	var err error
+	t.Time, err = time.Parse(GetFormat(), str)
+	if err != nil {
 		return err
 	}
+
 	t.Valid = true
 	return nil
 }

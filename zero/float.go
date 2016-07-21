@@ -3,6 +3,7 @@ package zero
 import (
 	"database/sql"
 	"encoding/json"
+	"encoding/xml"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -78,6 +79,22 @@ func (f *Float) UnmarshalText(text []byte) error {
 	return err
 }
 
+// UnmarshalXML implments the xml.Unmarshaler interface
+func (f *Float) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
+
+	var x *float64
+	if err := d.DecodeElement(&x, &start); err != nil {
+		return err
+	}
+	if x != nil {
+		f.Float64 = *x
+		f.Valid = f.Float64 != 0
+	} else {
+		f.Valid = false
+	}
+	return nil
+}
+
 // MarshalJSON implements json.Marshaler.
 // It will encode null if this Float is null.
 func (f Float) MarshalJSON() ([]byte, error) {
@@ -96,6 +113,15 @@ func (f Float) MarshalText() ([]byte, error) {
 		n = 0
 	}
 	return []byte(strconv.FormatFloat(n, 'f', -1, 64)), nil
+}
+
+// MarshalXML implements the xml.Marshaler interface
+func (f Float) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
+	n := f.Float64
+	if !f.Valid {
+		n = 0
+	}
+	return e.EncodeElement(n, start)
 }
 
 // SetValid changes this Float's value and also sets it to be non-null.

@@ -7,22 +7,33 @@ import (
 )
 
 var (
-	timeString    = "2012-12-21T21:21:21Z"
-	timeJSON      = []byte(`"` + timeString + `"`)
-	zeroTimeStr   = "0001-01-01T00:00:00Z"
-	zeroTimeJSON  = []byte(`"0001-01-01T00:00:00Z"`)
+	timeString   = "2012-12-21T21:21:21Z"
+	timeJSON     = []byte(`"` + timeString + `"`)
+	zeroTimeStr  = "0001-01-01T00:00:00Z"
+	zeroTimeJSON = []byte(`"` + zeroTimeStr + `"`)
+	timeValue, _ = time.Parse(time.RFC3339, timeString)
+	timeObject   = []byte(`{"Time":"` + timeString + `","Valid":true}`)
+	nullObject   = []byte(`{"Time":"` + zeroTimeStr + `","Valid":false}`)
+
 	blankTimeJSON = []byte(`null`)
-	timeValue, _  = time.Parse(time.RFC3339, timeString)
-	timeObject    = []byte(`{"Time":"2012-12-21T21:21:21Z","Valid":true}`)
-	nullObject    = []byte(`{"Time":"0001-01-01T00:00:00Z","Valid":false}`)
 	badObject     = []byte(`{"hello": "world"}`)
+
+	customTimeFormat   = "2006-01-02T15:04:05Z0700"
+	customTimeString   = "2012-12-21T21:21:21-0200"
+	customTimeJSON     = []byte(`"` + customTimeString + `"`)
+	customZeroTimeStr  = "0001-01-01T00:00:00Z"
+	customZeroTimeJSON = []byte(`"` + customZeroTimeStr + `"`)
+	customTimeValue, _ = time.Parse(customTimeFormat, customTimeString)
+	customTimeObject   = []byte(`{"Time":"` + customTimeString + `","Valid":true}`)
+	customNullObject   = []byte(`{"Time":"` + customZeroTimeStr + `","Valid":false}`)
 )
 
-func TestUnmarshalTimeJSON(t *testing.T) {
+func testUnmarshalTimeJSON(t *testing.T, format string, to []byte, value time.Time, zeroT []byte) {
+	SetFormat(format)
 	var ti Time
-	err := json.Unmarshal(timeObject, &ti)
+	err := json.Unmarshal(to, &ti)
 	maybePanic(err)
-	assertTime(t, ti, "UnmarshalJSON() json")
+	assertTime(t, ti, "UnmarshalJSON() json", value)
 
 	var blank Time
 	err = json.Unmarshal(blankTimeJSON, &blank)
@@ -30,14 +41,14 @@ func TestUnmarshalTimeJSON(t *testing.T) {
 	assertNullTime(t, blank, "blank time json")
 
 	var zero Time
-	err = json.Unmarshal(zeroTimeJSON, &zero)
+	err = json.Unmarshal(zeroT, &zero)
 	maybePanic(err)
 	assertNullTime(t, zero, "zero time json")
 
 	var fromObject Time
-	err = json.Unmarshal(timeObject, &fromObject)
+	err = json.Unmarshal(to, &fromObject)
 	maybePanic(err)
-	assertTime(t, fromObject, "map time json")
+	assertTime(t, fromObject, "map time json", value)
 
 	var null Time
 	err = json.Unmarshal(nullObject, &null)
@@ -78,28 +89,47 @@ func TestUnmarshalTimeJSON(t *testing.T) {
 	assertNullTime(t, wrongString, "wrong string object json")
 }
 
-func TestMarshalTime(t *testing.T) {
-	ti := TimeFrom(timeValue)
+func TestUnmarshalTimeJSON(t *testing.T) {
+	testUnmarshalTimeJSON(t, time.RFC3339Nano, timeObject, timeValue, zeroTimeJSON)
+}
+
+func CustomTestUnmarshalTimeJSON(t *testing.T) {
+	testUnmarshalTimeJSON(t, customTimeFormat, customTimeObject, customTimeValue, customZeroTimeJSON)
+}
+
+func testMarshalTime(t *testing.T, format string, value time.Time, tJson []byte, zTJson []byte) {
+	SetFormat(format)
+
+	ti := TimeFrom(value)
 	data, err := json.Marshal(ti)
 	maybePanic(err)
-	assertJSONEquals(t, data, string(timeJSON), "non-empty json marshal")
+	assertJSONEquals(t, data, string(tJson), "non-empty json marshal")
 
 	null := TimeFromPtr(nil)
 	data, err = json.Marshal(null)
 	maybePanic(err)
-	assertJSONEquals(t, data, string(zeroTimeJSON), "empty json marshal")
+	assertJSONEquals(t, data, string(zTJson), "empty json marshal")
 }
 
-func TestUnmarshalTimeText(t *testing.T) {
-	ti := TimeFrom(timeValue)
+func TestMarshalTime(t *testing.T) {
+	testMarshalTime(t, time.RFC3339Nano, timeValue, timeJSON, zeroTimeJSON)
+}
+
+func CustomTestMarshalTime(t *testing.T) {
+	testMarshalTime(t, customTimeFormat, customTimeValue, customTimeJSON, customZeroTimeJSON)
+}
+
+func testUnmarshalTimeText(t *testing.T, format string, value time.Time, tS string, zeroTStr string) {
+	SetFormat(format)
+	ti := TimeFrom(value)
 	txt, err := ti.MarshalText()
 	maybePanic(err)
-	assertJSONEquals(t, txt, timeString, "marshal text")
+	assertJSONEquals(t, txt, tS, "marshal text")
 
 	var unmarshal Time
 	err = unmarshal.UnmarshalText(txt)
 	maybePanic(err)
-	assertTime(t, unmarshal, "unmarshal text")
+	assertTime(t, unmarshal, "unmarshal text", value)
 
 	var null Time
 	err = null.UnmarshalText(nullJSON)
@@ -107,7 +137,7 @@ func TestUnmarshalTimeText(t *testing.T) {
 	assertNullTime(t, null, "unmarshal null text")
 	txt, err = null.MarshalText()
 	maybePanic(err)
-	assertJSONEquals(t, txt, zeroTimeStr, "marshal null text")
+	assertJSONEquals(t, txt, zeroTStr, "marshal null text")
 
 	var invalid Time
 	err = invalid.UnmarshalText([]byte("hello world"))
@@ -117,36 +147,72 @@ func TestUnmarshalTimeText(t *testing.T) {
 	assertNullTime(t, invalid, "bad string")
 }
 
-func TestTimeFrom(t *testing.T) {
-	ti := TimeFrom(timeValue)
-	assertTime(t, ti, "TimeFrom() time.Time")
+func TestUnmarshalTimeText(t *testing.T) {
+	testUnmarshalTimeText(t, time.RFC3339Nano, timeValue, timeString, zeroTimeStr)
+}
+
+func CustomTestUnmarshalTimeText(t *testing.T) {
+	testUnmarshalTimeText(t, customTimeFormat, customTimeValue, customTimeString, customZeroTimeStr)
+}
+
+func testTimeFrom(t *testing.T, format string, value time.Time) {
+	SetFormat(format)
+	ti := TimeFrom(value)
+	assertTime(t, ti, "TimeFrom() time.Time", value)
 
 	var nt time.Time
 	null := TimeFrom(nt)
 	assertNullTime(t, null, "TimeFrom() empty time.Time")
 }
 
-func TestTimeFromPtr(t *testing.T) {
-	ti := TimeFromPtr(&timeValue)
-	assertTime(t, ti, "TimeFromPtr() time")
+func TestTimeFrom(t *testing.T) {
+	testTimeFrom(t, time.RFC3339Nano, timeValue)
+}
+
+func CustomTestTimeFrom(t *testing.T) {
+	testTimeFrom(t, customTimeFormat, customTimeValue)
+}
+
+func testTimeFromPtr(t *testing.T, format string, value time.Time) {
+	SetFormat(format)
+	ti := TimeFromPtr(&value)
+	assertTime(t, ti, "TimeFromPtr() time", value)
 
 	null := TimeFromPtr(nil)
 	assertNullTime(t, null, "TimeFromPtr(nil)")
 }
 
-func TestTimeSetValid(t *testing.T) {
+func TestTimeFromPtr(t *testing.T) {
+	testTimeFromPtr(t, time.RFC3339Nano, timeValue)
+}
+
+func CustomTestTimeFromPtr(t *testing.T) {
+	testTimeFromPtr(t, customTimeFormat, customTimeValue)
+}
+
+func testTimeSetValid(t *testing.T, format string, value time.Time) {
+	SetFormat(format)
 	var ti time.Time
 	change := TimeFrom(ti)
 	assertNullTime(t, change, "SetValid()")
-	change.SetValid(timeValue)
-	assertTime(t, change, "SetValid()")
+	change.SetValid(value)
+	assertTime(t, change, "SetValid()", value)
 }
 
-func TestTimePointer(t *testing.T) {
-	ti := TimeFrom(timeValue)
+func TestTimeSetValid(t *testing.T) {
+	testTimeSetValid(t, time.RFC3339Nano, timeValue)
+}
+
+func CustomTestTimeSetValid(t *testing.T) {
+	testTimeSetValid(t, customTimeFormat, customTimeValue)
+}
+
+func testTimePointer(t *testing.T, format string, value time.Time) {
+	SetFormat(format)
+	ti := TimeFrom(value)
 	ptr := ti.Ptr()
-	if *ptr != timeValue {
-		t.Errorf("bad %s time: %#v ≠ %v\n", "pointer", ptr, timeValue)
+	if *ptr != value {
+		t.Errorf("bad %s time: %#v ≠ %v\n", "pointer", ptr, value)
 	}
 
 	var nt time.Time
@@ -157,11 +223,20 @@ func TestTimePointer(t *testing.T) {
 	}
 }
 
-func TestTimeScan(t *testing.T) {
+func TestTimePointer(t *testing.T) {
+	testTimePointer(t, time.RFC3339Nano, timeValue)
+}
+
+func CustomTestTimePointer(t *testing.T) {
+	testTimePointer(t, customTimeFormat, customTimeValue)
+}
+
+func testTimeScan(t *testing.T, format string, value time.Time) {
+	SetFormat(format)
 	var ti Time
-	err := ti.Scan(timeValue)
+	err := ti.Scan(value)
 	maybePanic(err)
-	assertTime(t, ti, "scanned time")
+	assertTime(t, ti, "scanned time", value)
 
 	var null Time
 	err = null.Scan(nil)
@@ -176,12 +251,21 @@ func TestTimeScan(t *testing.T) {
 	assertNullTime(t, wrong, "scanned wrong")
 }
 
-func TestTimeValue(t *testing.T) {
-	ti := TimeFrom(timeValue)
+func TestTimeScan(t *testing.T) {
+	testTimeScan(t, time.RFC3339Nano, timeValue)
+}
+
+func CustomTestTimeScan(t *testing.T) {
+	testTimeScan(t, customTimeFormat, customTimeValue)
+}
+
+func testTimeValue(t *testing.T, format string, value time.Time) {
+	SetFormat(format)
+	ti := TimeFrom(value)
 	v, err := ti.Value()
 	maybePanic(err)
-	if ti.Time != timeValue {
-		t.Errorf("bad time.Time value: %v ≠ %v", ti.Time, timeValue)
+	if ti.Time != value {
+		t.Errorf("bad time.Time value: %v ≠ %v", ti.Time, value)
 	}
 
 	var nt time.Time
@@ -193,9 +277,17 @@ func TestTimeValue(t *testing.T) {
 	}
 }
 
-func assertTime(t *testing.T, ti Time, from string) {
-	if ti.Time != timeValue {
-		t.Errorf("bad %v time: %v ≠ %v\n", from, ti.Time, timeValue)
+func TestTimeValue(t *testing.T) {
+	testTimeValue(t, time.RFC3339Nano, timeValue)
+}
+
+func CustomTestTimeValue(t *testing.T) {
+	testTimeValue(t, customTimeFormat, customTimeValue)
+}
+
+func assertTime(t *testing.T, ti Time, from string, val time.Time) {
+	if !ti.Time.Equal(val) {
+		t.Errorf("bad %v time: %v ≠ %v\n", from, ti.Time, val)
 	}
 	if !ti.Valid {
 		t.Error(from, "is invalid, but should be valid")

@@ -7,6 +7,7 @@ package null
 import (
 	"database/sql"
 	"encoding/json"
+	"encoding/xml"
 	"fmt"
 	"reflect"
 )
@@ -87,6 +88,30 @@ func (s String) MarshalText() ([]byte, error) {
 func (s *String) UnmarshalText(text []byte) error {
 	s.String = string(text)
 	s.Valid = s.String != ""
+	return nil
+}
+
+// MarshalXML implements the xml.Marshaler interface
+func (s String) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
+	if s.Valid {
+		return e.EncodeElement(s.String, start)
+	}
+	return e.EncodeElement(nil, start)
+}
+
+// UnmarshalXML implments the xml.Unmarshaler interface
+func (s *String) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
+
+	var x *string
+	if err := d.DecodeElement(&x, &start); err != nil {
+		return err
+	}
+	if x != nil {
+		s.Valid = true
+		s.String = *x
+	} else {
+		s.Valid = false
+	}
 	return nil
 }
 

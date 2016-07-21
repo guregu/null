@@ -3,6 +3,7 @@ package null
 import (
 	"database/sql"
 	"encoding/json"
+	"encoding/xml"
 	"errors"
 	"fmt"
 	"reflect"
@@ -63,6 +64,22 @@ func (b *Bool) UnmarshalJSON(data []byte) error {
 	return err
 }
 
+// UnmarshalXML implments the xml.Unmarshaler interface
+func (b *Bool) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
+
+	var x *bool
+	if err := d.DecodeElement(&x, &start); err != nil {
+		return err
+	}
+	if x != nil {
+		b.Valid = true
+		b.Bool = *x
+	} else {
+		b.Valid = false
+	}
+	return nil
+}
+
 // UnmarshalText implements encoding.TextUnmarshaler.
 // It will unmarshal to a null Bool if the input is a blank or not an integer.
 // It will return an error if the input is not an integer, blank, or "null".
@@ -106,6 +123,14 @@ func (b Bool) MarshalText() ([]byte, error) {
 		return []byte("false"), nil
 	}
 	return []byte("true"), nil
+}
+
+// MarshalXML implements the xml.Marshaler interface
+func (b Bool) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
+	if b.Valid {
+		return e.EncodeElement(b.Bool, start)
+	}
+	return e.EncodeElement(nil, start)
 }
 
 // SetValid changes this Bool's value and also sets it to be non-null.

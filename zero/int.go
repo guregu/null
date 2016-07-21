@@ -3,6 +3,7 @@ package zero
 import (
 	"database/sql"
 	"encoding/json"
+	"encoding/xml"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -80,6 +81,22 @@ func (i *Int) UnmarshalText(text []byte) error {
 	return err
 }
 
+// UnmarshalXML implments the xml.Unmarshaler interface
+func (i *Int) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
+
+	var x *int64
+	if err := d.DecodeElement(&x, &start); err != nil {
+		return err
+	}
+	if x != nil {
+		i.Int64 = *x
+		i.Valid = i.Int64 != 0
+	} else {
+		i.Valid = false
+	}
+	return nil
+}
+
 // MarshalJSON implements json.Marshaler.
 // It will encode 0 if this Int is null.
 func (i Int) MarshalJSON() ([]byte, error) {
@@ -88,6 +105,15 @@ func (i Int) MarshalJSON() ([]byte, error) {
 		n = 0
 	}
 	return []byte(strconv.FormatInt(n, 10)), nil
+}
+
+// MarshalXML implements the xml.Marshaler interface
+func (i Int) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
+	n := i.Int64
+	if !i.Valid {
+		n = 0
+	}
+	return e.EncodeElement(n, start)
 }
 
 // MarshalText implements encoding.TextMarshaler.
