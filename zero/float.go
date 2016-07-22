@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
-	"gopkg.in/mgo.v2/bson"
+	"math/rand"
 	"reflect"
 	"strconv"
+
+	"gopkg.in/mgo.v2/bson"
 )
 
 // Float is a nullable float64. Zero input will be considered null.
@@ -156,10 +158,16 @@ func (f Float) GetValue() reflect.Value {
 	return reflect.ValueOf(0)
 }
 
+// LoremDecode implements lorem.Decoder
+func (f *Float) LoremDecode(tag, example string) error {
+	f.SetValid(rand.Float64())
+	return nil
+}
+
 // SetValid changes this Float's value and also sets it to be non-null.
 func (f *Float) SetValid(v float64) {
 	f.Float64 = v
-	f.Valid = true
+	f.Valid = v != 0
 }
 
 // Ptr returns a poFloater to this Float's value, or a nil poFloater if this Float is null.

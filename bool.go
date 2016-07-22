@@ -6,8 +6,10 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
-	"gopkg.in/mgo.v2/bson"
+	"math/rand"
 	"reflect"
+
+	"gopkg.in/mgo.v2/bson"
 )
 
 // Bool is a nullable bool.
@@ -163,6 +165,12 @@ func (b Bool) GetValue() reflect.Value {
 	}
 	// or just nil?
 	return reflect.ValueOf(nil)
+}
+
+// LoremDecode implements lorem.Decoder
+func (b *Bool) LoremDecode(tag, example string) error {
+	b.SetValid(rand.Int()%2 == 0)
+	return nil
 }
 
 // SetValid changes this Bool's value and also sets it to be non-null.

@@ -9,8 +9,9 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
-	"gopkg.in/mgo.v2/bson"
 	"reflect"
+
+	"gopkg.in/mgo.v2/bson"
 )
 
 // String is a nullable string.
@@ -130,10 +131,16 @@ func (s String) GetValue() reflect.Value {
 	return reflect.ValueOf("")
 }
 
+// LoremDecode implements lorem.Decoder
+func (s *String) LoremDecode(tag, example string) error {
+	s.SetValid(example)
+	return nil
+}
+
 // SetValid changes this String's value and also sets it to be non-null.
 func (s *String) SetValid(v string) {
 	s.String = v
-	s.Valid = true
+	s.Valid = v != ""
 }
 
 // Ptr returns a pointer to this String's value, or a nil pointer if this String is null.

@@ -5,10 +5,12 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
-	"gopkg.in/mgo.v2/bson"
+	"math/rand"
 	"reflect"
 	"sync"
 	"time"
+
+	"gopkg.in/mgo.v2/bson"
 )
 
 // holds the format so we are thread safe
@@ -224,11 +226,19 @@ func (t Time) GetValue() reflect.Value {
 	return reflect.ValueOf(time.Time{})
 }
 
+// LoremDecode implements lorem.Decoder
+func (t *Time) LoremDecode(tag, example string) error {
+	// fill ourselves with a random time
+	// so now we can set valid right or not
+	t.SetValid(time.Unix(rand.Int63(), 0))
+	return nil
+}
+
 // SetValid changes this Time's value and
 // sets it to be non-null.
 func (t *Time) SetValid(v time.Time) {
 	t.Time = v
-	t.Valid = true
+	t.Valid = !v.IsZero()
 }
 
 // Ptr returns a pointer to this Time's value,

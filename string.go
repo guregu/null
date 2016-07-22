@@ -9,8 +9,9 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
-	"gopkg.in/mgo.v2/bson"
 	"reflect"
+
+	"gopkg.in/mgo.v2/bson"
 )
 
 // String is a nullable string. It supports SQL and JSON serialization.
@@ -145,6 +146,12 @@ func (s String) GetValue() reflect.Value {
 	}
 	// or just nil?
 	return reflect.ValueOf(nil)
+}
+
+// LoremDecode implements lorem.Decoder
+func (s *String) LoremDecode(tag, example string) error {
+	s.SetValid(example)
+	return nil
 }
 
 // SetValid changes this String's value and also sets it to be non-null.

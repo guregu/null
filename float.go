@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
-	"gopkg.in/mgo.v2/bson"
+	"math/rand"
 	"reflect"
 	"strconv"
+
+	"gopkg.in/mgo.v2/bson"
 )
 
 // Float is a nullable float64.
@@ -151,6 +153,12 @@ func (f Float) GetValue() reflect.Value {
 	}
 	// or just nil?
 	return reflect.ValueOf(nil)
+}
+
+// LoremDecode implements lorem.Decoder
+func (f *Float) LoremDecode(tag, example string) error {
+	f.SetValid(rand.Float64())
+	return nil
 }
 
 // SetValid changes this Float's value and also sets it to be non-null.

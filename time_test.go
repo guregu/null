@@ -122,13 +122,13 @@ func TestUnmarshalCustomTimeText(t *testing.T) {
 	testUnmarshalTimeText(t, customTimeFormat, customTimeString, customTimeValue)
 }
 
-func testMarshalTime(t *testing.T, format string, value time.Time, tJson []byte) {
+func testMarshalTime(t *testing.T, format string, value time.Time, tJSON []byte) {
 	SetFormat(format)
 
 	ti := TimeFrom(value)
 	data, err := json.Marshal(ti)
 	maybePanic(err)
-	assertJSONEquals(t, data, string(tJson), "non-empty json marshal")
+	assertJSONEquals(t, data, string(tJSON), "non-empty json marshal")
 
 	ti.Valid = false
 	data, err = json.Marshal(ti)

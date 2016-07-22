@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
-	"gopkg.in/mgo.v2/bson"
+	"math/rand"
 	"reflect"
 	"strconv"
+
+	"gopkg.in/mgo.v2/bson"
 )
 
 // Int is an nullable int64.
@@ -152,6 +154,12 @@ func (i Int) GetValue() reflect.Value {
 	}
 	// or just nil?
 	return reflect.ValueOf(nil)
+}
+
+// LoremDecode implements lorem.Decoder
+func (i *Int) LoremDecode(tag, example string) error {
+	i.SetValid(rand.Int63())
+	return nil
 }
 
 // SetValid changes this Int's value and also sets it to be non-null.
