@@ -149,6 +149,14 @@ func (b *Bool) SetBSON(raw bson.Raw) error {
 	return nil
 }
 
+// GetValue implements the compare.Valuable interface
+func (b Bool) GetValue() reflect.Value {
+	if b.Valid {
+		return reflect.ValueOf(b.Bool)
+	}
+	return reflect.ValueOf(false)
+}
+
 // SetValid changes this Bool's value and also sets it to be non-null.
 func (b *Bool) SetValid(v bool) {
 	b.Bool = v

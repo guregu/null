@@ -216,6 +216,14 @@ func (t *Time) SetBSON(raw bson.Raw) error {
 	return nil
 }
 
+// GetValue implements the compare.Valuable interface
+func (t Time) GetValue() reflect.Value {
+	if t.Valid {
+		return reflect.ValueOf(t.Time)
+	}
+	return reflect.ValueOf(time.Time{})
+}
+
 // SetValid changes this Time's value and
 // sets it to be non-null.
 func (t *Time) SetValid(v time.Time) {

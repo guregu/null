@@ -144,6 +144,15 @@ func (f *Float) SetBSON(raw bson.Raw) error {
 	return nil
 }
 
+// GetValue implements the compare.Valuable interface
+func (f Float) GetValue() reflect.Value {
+	if f.Valid {
+		return reflect.ValueOf(f.Float64)
+	}
+	// or just nil?
+	return reflect.ValueOf(nil)
+}
+
 // SetValid changes this Float's value and also sets it to be non-null.
 func (f *Float) SetValid(n float64) {
 	f.Float64 = n

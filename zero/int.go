@@ -150,6 +150,15 @@ func (i *Int) SetBSON(raw bson.Raw) error {
 	return nil
 }
 
+// GetValue implements the compare.Valuable interface
+func (i Int) GetValue() reflect.Value {
+	if i.Valid {
+		return reflect.ValueOf(i.Int64)
+	}
+	// or just nil?
+	return reflect.ValueOf(0)
+}
+
 // SetValid changes this Int's value and also sets it to be non-null.
 func (i *Int) SetValid(n int64) {
 	i.Int64 = n

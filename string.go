@@ -138,6 +138,15 @@ func (s *String) SetBSON(raw bson.Raw) error {
 	return nil
 }
 
+// GetValue implements the compare.Valuable interface
+func (s String) GetValue() reflect.Value {
+	if s.Valid {
+		return reflect.ValueOf(s.String)
+	}
+	// or just nil?
+	return reflect.ValueOf(nil)
+}
+
 // SetValid changes this String's value and also sets it to be non-null.
 func (s *String) SetValid(v string) {
 	s.String = v
