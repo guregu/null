@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"gopkg.in/mgo.v2/bson"
+	"gopkg.in/pg.v4/types"
 )
 
 // holds the format so we are thread safe
@@ -52,10 +53,13 @@ func (t *Time) Scan(value interface{}) error {
 	case nil:
 		t.Valid = false
 		return nil
+	case []byte:
+		b, _ := value.([]byte)
+		t.Time, err = types.ParseTime(b)
 	default:
 		err = fmt.Errorf("null: cannot scan type %T into null.Time: %v", value, value)
 	}
-	t.Valid = err == nil
+	t.Valid = err == nil && !t.Time.IsZero()
 	return err
 }
 
