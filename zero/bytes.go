@@ -1,4 +1,4 @@
-package null
+package zero
 
 import (
 	"database/sql/driver"
@@ -29,14 +29,14 @@ func NewBytes(b []byte, valid bool) Bytes {
 	}
 }
 
-// BytesFrom creates a new Bytes that will be invalid if nil.
+// BytesFrom creates a new Bytes that will be null if len zero.
 func BytesFrom(b []byte) Bytes {
-	return NewBytes(b, b != nil)
+	return NewBytes(b, len(b) != 0)
 }
 
-// BytesFromPtr creates a new Bytes that will be invalid if nil.
+// BytesFromPtr creates a new Bytes that be null if len zero.
 func BytesFromPtr(b *[]byte) Bytes {
-	if b == nil {
+	if b == nil || len(*b) == 0 {
 		return NewBytes(nil, false)
 	}
 	n := NewBytes(*b, true)
@@ -49,11 +49,11 @@ func BytesFromPtr(b *[]byte) Bytes {
 func (b *Bytes) UnmarshalJSON(data []byte) error {
 	if data == nil || len(data) == 0 {
 		b.Bytes = []byte("null")
+		b.Valid = false
 	} else {
 		b.Bytes = append(b.Bytes[0:0], data...)
+		b.Valid = true
 	}
-
-	b.Valid = true
 
 	return nil
 }
@@ -75,7 +75,7 @@ func (b *Bytes) UnmarshalText(text []byte) error {
 // MarshalJSON implements json.Marshaler.
 // It will encode null if the Bytes is nil.
 func (b Bytes) MarshalJSON() ([]byte, error) {
-	if len(b.Bytes) == 0 || b.Bytes == nil {
+	if !b.Valid {
 		return []byte("null"), nil
 	}
 	return b.Bytes, nil
@@ -106,7 +106,7 @@ func (b Bytes) Ptr() *[]byte {
 
 // IsZero returns true for null or zero Bytes's, for future omitempty support (Go 1.4?)
 func (b Bytes) IsZero() bool {
-	return !b.Valid
+	return !b.Valid || b.Bytes == nil || len(b.Bytes) == 0
 }
 
 // Scan implements the Scanner interface.

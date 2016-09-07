@@ -1,4 +1,4 @@
-package null
+package zero
 
 import (
 	"bytes"
@@ -20,8 +20,8 @@ func TestBytesFrom(t *testing.T) {
 	}
 
 	zero = BytesFrom([]byte{})
-	if !zero.Valid {
-		t.Error("BytesFrom([]byte{})", "is invalid, but should be valid")
+	if zero.Valid {
+		t.Error("BytesFrom([]byte{})", "is valid, but should be invalid")
 	}
 }
 
@@ -43,8 +43,8 @@ func TestUnmarshalBytes(t *testing.T) {
 
 	var ni Bytes
 	err = ni.UnmarshalJSON([]byte{})
-	if ni.Valid == false {
-		t.Errorf("expected Valid to be true, got false")
+	if ni.Valid == true {
+		t.Errorf("expected Valid to be false, got true")
 	}
 	if !bytes.Equal(ni.Bytes, []byte("null")) {
 		t.Errorf("Expected Bytes to be nil slice, but was not: %#v %#v", ni.Bytes, []byte(`null`))
@@ -52,8 +52,8 @@ func TestUnmarshalBytes(t *testing.T) {
 
 	var null Bytes
 	err = null.UnmarshalJSON(nil)
-	if null.Valid == false {
-		t.Errorf("expected Valid to be true, got false")
+	if null.Valid == true {
+		t.Errorf("expected Valid to be false, got true")
 	}
 	if !bytes.Equal(null.Bytes, []byte(`null`)) {
 		t.Errorf("Expected Bytes to be []byte nil, but was not: %#v %#v", null.Bytes, []byte(`null`))
@@ -124,8 +124,13 @@ func TestBytesIsZero(t *testing.T) {
 	}
 
 	zero := NewBytes(nil, true)
-	if zero.IsZero() {
-		t.Errorf("IsZero() should be false")
+	if !zero.IsZero() {
+		t.Errorf("IsZero() should be true")
+	}
+
+	nz := NewBytes([]byte("thing"), true)
+	if nz.IsZero() {
+		t.Error("IsZero() should be false")
 	}
 }
 
