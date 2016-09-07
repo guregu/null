@@ -1,5 +1,5 @@
 ## null-extended [![GoDoc](https://godoc.org/github.com/nullbio/null?status.svg)](https://godoc.org/github.com/nullbio/null) [![Coverage](http://gocover.io/_badge/github.com/nullbio/null)](http://gocover.io/github.com/nullbio/null)
-`import "gopkg.in/nullbio/null.v4"`
+`import "gopkg.in/nullbio/null.v5"`
 
 null-extended is a library with reasonable options for dealing with nullable SQL and JSON values
 
@@ -13,7 +13,19 @@ All types implement `sql.Scanner` and `driver.Valuer`, so you can use this libra
 
 ### null package
 
-`import "gopkg.in/nullbio/null.v4"`
+`import "gopkg.in/nullbio/null.v5"`
+
+#### null.JSON
+Nullable []byte.
+
+Will marshal to JSON null if Invalid. []byte{} input will not produce an Invalid JSON, but []byte(nil) will. This should be used for storing raw JSON in the database.
+
+Also has `null.JSON.Marshal` and `null.JSON.Unmarshal` helpers to marshal and unmarshal foreign objects.
+
+#### null.Bytes
+Nullable []byte.
+
+Will marshal to JSON null if Invalid. []]byte{} input will not produce an Invalid Bytes, but []byte(nil) will. This should be used for storing binary data (bytea in PSQL for example) in the database.
 
 #### null.String
 Nullable string.
@@ -91,7 +103,19 @@ Marshals to JSON null if SQL source data is null. Zero input will not produce a 
 
 ### zero package
 
-`import "gopkg.in/nullbio/null.v4/zero"`
+`import "gopkg.in/nullbio/null.v5/zero"`
+
+#### zero.JSON
+Nullable []byte.
+
+Will marshal to JSON null if Invalid. []byte{} and []byte(nil) will produce an Invalid JSON. This should be used for storing raw JSON in the database.
+
+Also has `null.JSON.Marshal` and `null.JSON.Unmarshal` helpers to marshal and unmarshal foreign objects.
+
+#### zero.Bytes
+Nullable []byte.
+
+Will marshal to JSON null if Invalid. []byte{} and []byte(nil) will produce an Invalid Bytes. This should be used for storing binary data (bytea in PSQL for example) in the database.
 
 #### zero.String
 Nullable string.
