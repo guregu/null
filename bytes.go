@@ -44,27 +44,25 @@ func BytesFromPtr(b *[]byte) Bytes {
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
-// Bytes UnmarshalJSON is different in that it only
-// unmarshals sql.NullBytes defined as JSON objects,
-// It supports all JSON types.
-// It also supports unmarshalling a sql.NullBytes.
+// If data is len 0 or nil, it will unmarshal to JSON null.
+// If not, it will copy your data slice into Bytes.
 func (b *Bytes) UnmarshalJSON(data []byte) error {
 	if data == nil || len(data) == 0 {
-		b.Bytes = nil
-		b.Valid = false
+		b.Bytes = []byte("null")
 	} else {
 		b.Bytes = append(b.Bytes[0:0], data...)
-		b.Valid = true
 	}
+
+	b.Valid = true
 
 	return nil
 }
 
 // UnmarshalText implements encoding.TextUnmarshaler.
-// It will unmarshal to a null Bytes if the input is blank.
-// It will return an error if the input is not an integer, blank, or "null".
+// It will unmarshal to nil if the text is nil or len 0.
 func (b *Bytes) UnmarshalText(text []byte) error {
 	if text == nil || len(text) == 0 {
+		b.Bytes = nil
 		b.Valid = false
 	} else {
 		b.Bytes = append(b.Bytes[0:0], text...)
@@ -75,9 +73,9 @@ func (b *Bytes) UnmarshalText(text []byte) error {
 }
 
 // MarshalJSON implements json.Marshaler.
-// It will encode null if the Bytes is invalid.
+// It will encode null if the Bytes is nil.
 func (b Bytes) MarshalJSON() ([]byte, error) {
-	if !b.Valid {
+	if len(b.Bytes) == 0 || b.Bytes == nil {
 		return []byte("null"), nil
 	}
 	return b.Bytes, nil

@@ -2,6 +2,8 @@ package null
 
 import (
 	"database/sql/driver"
+	"encoding/json"
+	"errors"
 
 	"gopkg.in/nullbio/null.v4/convert"
 )
@@ -43,28 +45,45 @@ func JSONFromPtr(b *[]byte) JSON {
 	return n
 }
 
+// Unmarshal will unmarshal your JSON stored in
+// your JSON object and store the result in the
+// value pointed to by dest.
+func (j JSON) Unmarshal(dest interface{}) error {
+	if dest == nil {
+		return errors.New("destination is nil, not a valid pointer to an object")
+	}
+
+	// Call our implementation of
+	// JSON MarshalJSON through json.Marshal
+	// to get the value of the JSON object
+	res, err := json.Marshal(j)
+	if err != nil {
+		return err
+	}
+
+	return json.Unmarshal(res, dest)
+}
+
 // UnmarshalJSON implements json.Unmarshaler.
-// JSON UnmarshalJSON is different in that it only
-// unmarshals sql.NullJSON defined as JSON objects,
-// It supports all JSON types.
-// It also supports unmarshalling a sql.NullJSON.
+// If data is len 0 or nil, it will unmarshal to JSON null.
+// If not, it will copy your data slice into JSON.
 func (j *JSON) UnmarshalJSON(data []byte) error {
 	if data == nil || len(data) == 0 {
-		j.JSON = nil
-		j.Valid = false
+		j.JSON = []byte("null")
 	} else {
 		j.JSON = append(j.JSON[0:0], data...)
-		j.Valid = true
 	}
+
+	j.Valid = true
 
 	return nil
 }
 
 // UnmarshalText implements encoding.TextUnmarshaler.
-// It will unmarshal to a null JSON if the input is blank.
-// It will return an error if the input is not an integer, blank, or "null".
+// It will unmarshal to nil if the text is nil or len 0.
 func (j *JSON) UnmarshalText(text []byte) error {
 	if text == nil || len(text) == 0 {
+		j.JSON = nil
 		j.Valid = false
 	} else {
 		j.JSON = append(j.JSON[0:0], text...)
@@ -74,10 +93,24 @@ func (j *JSON) UnmarshalText(text []byte) error {
 	return nil
 }
 
+// Marshal will marshal the passed in object,
+// and store it in the JSON member on the JSON object.
+func (j *JSON) Marshal(obj interface{}) error {
+	res, err := json.Marshal(obj)
+	if err != nil {
+		return err
+	}
+
+	// Call our implementation of
+	// JSON UnmarshalJSON through json.Unmarshal
+	// to set the result to the JSON object
+	return json.Unmarshal(res, j)
+}
+
 // MarshalJSON implements json.Marshaler.
-// It will encode null if the JSON is invalid.
+// It will encode null if the JSON is nil.
 func (j JSON) MarshalJSON() ([]byte, error) {
-	if !j.Valid {
+	if len(j.JSON) == 0 || j.JSON == nil {
 		return []byte("null"), nil
 	}
 	return j.JSON, nil

@@ -30,6 +30,74 @@ func TestJSONFromPtr(t *testing.T) {
 	assertNullJSON(t, null, "JSONFromPtr(nil)")
 }
 
+type Test struct {
+	Name string
+	Age  int
+}
+
+func TestMarshal(t *testing.T) {
+	var i JSON
+
+	test := &Test{Name: "hello", Age: 15}
+
+	err := i.Marshal(test)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if !bytes.Equal(i.JSON, []byte(`{"Name":"hello","Age":15}`)) {
+		t.Errorf("Mismatch between received and expected, got: %s", string(i.JSON))
+	}
+	if i.Valid == false {
+		t.Error("Expected valid true, got Valid false")
+	}
+
+	err = i.Marshal(nil)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if !bytes.Equal(i.JSON, []byte("null")) {
+		t.Errorf("Expected null, but got %s", string(i.JSON))
+	}
+	if i.Valid == false {
+		t.Error("Expected Valid true, got Valid false")
+	}
+}
+
+func TestUnmarshal(t *testing.T) {
+	var i JSON
+
+	test := &Test{}
+
+	err := i.Unmarshal(test)
+	if err != nil {
+		t.Error(err)
+	}
+
+	x := &Test{Name: "hello", Age: 15}
+	err = i.Marshal(x)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if !bytes.Equal(i.JSON, []byte(`{"Name":"hello","Age":15}`)) {
+		t.Errorf("Mismatch between received and expected, got: %s", string(i.JSON))
+	}
+
+	err = i.Unmarshal(test)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if test.Age != 15 {
+		t.Errorf("Expected 15, got %d", test.Age)
+	}
+	if test.Name != "hello" {
+		t.Errorf("Expected name, got %s", test.Name)
+	}
+}
+
 func TestUnmarshalJSON(t *testing.T) {
 	var i JSON
 	err := json.Unmarshal(jsonJSON, &i)
@@ -38,19 +106,19 @@ func TestUnmarshalJSON(t *testing.T) {
 
 	var ni JSON
 	err = ni.UnmarshalJSON([]byte{})
-	if ni.Valid == true {
-		t.Errorf("expected Valid to be false, got true")
+	if ni.Valid == false {
+		t.Errorf("expected Valid to be true, got false")
 	}
-	if !bytes.Equal(ni.JSON, []byte(nil)) {
-		t.Errorf("Expected JSON to be nil slice, but was not: %#v %#v", ni.JSON, []byte(nil))
+	if !bytes.Equal(ni.JSON, []byte(`null`)) {
+		t.Errorf("Expected JSON to be null slice, but was not: %#v %#v", ni.JSON, []byte(nil))
 	}
 
 	var null JSON
-	err = ni.UnmarshalJSON(nil)
-	if ni.Valid == true {
-		t.Errorf("expected Valid to be false, got true")
+	err = null.UnmarshalJSON(nil)
+	if ni.Valid == false {
+		t.Errorf("expected Valid to be true, got false")
 	}
-	if !bytes.Equal(null.JSON, []byte(nil)) {
+	if !bytes.Equal(null.JSON, []byte(`null`)) {
 		t.Errorf("Expected JSON to be []byte nil, but was not: %#v %#v", null.JSON, []byte(nil))
 	}
 }

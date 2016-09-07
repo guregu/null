@@ -38,20 +38,20 @@ func TestUnmarshalBytes(t *testing.T) {
 
 	var ni Bytes
 	err = ni.UnmarshalJSON([]byte{})
-	if ni.Valid == true {
-		t.Errorf("expected Valid to be false, got true")
+	if ni.Valid == false {
+		t.Errorf("expected Valid to be true, got false")
 	}
-	if !bytes.Equal(ni.Bytes, []byte(nil)) {
-		t.Errorf("Expected Bytes to be nil slice, but was not: %#v %#v", ni.Bytes, []byte(nil))
+	if !bytes.Equal(ni.Bytes, []byte("null")) {
+		t.Errorf("Expected Bytes to be nil slice, but was not: %#v %#v", ni.Bytes, []byte(`null`))
 	}
 
 	var null Bytes
-	err = ni.UnmarshalJSON(nil)
-	if ni.Valid == true {
-		t.Errorf("expected Valid to be false, got true")
+	err = null.UnmarshalJSON(nil)
+	if null.Valid == false {
+		t.Errorf("expected Valid to be true, got false")
 	}
-	if !bytes.Equal(null.Bytes, []byte(nil)) {
-		t.Errorf("Expected Bytes to be []byte nil, but was not: %#v %#v", null.Bytes, []byte(nil))
+	if !bytes.Equal(null.Bytes, []byte(`null`)) {
+		t.Errorf("Expected Bytes to be []byte nil, but was not: %#v %#v", null.Bytes, []byte(`null`))
 	}
 }
 
