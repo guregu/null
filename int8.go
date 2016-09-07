@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"strconv"
 
-	"gopkg.in/nullbio/null.v4/convert"
+	"gopkg.in/nullbio/null.v5/convert"
 )
 
 // NullInt8 is a replica of sql.NullInt64 for int8 types.

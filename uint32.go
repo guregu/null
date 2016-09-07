@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"strconv"
 
-	"gopkg.in/nullbio/null.v4/convert"
+	"gopkg.in/nullbio/null.v5/convert"
 )
 
 // NullUint32 is a replica of sql.NullInt64 for uint32 types.

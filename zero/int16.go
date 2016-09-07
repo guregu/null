@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"strconv"
 
-	"gopkg.in/nullbio/null.v4/convert"
+	"gopkg.in/nullbio/null.v5/convert"
 )
 
 type NullInt16 struct {

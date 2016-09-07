@@ -3,7 +3,7 @@ package null
 import (
 	"database/sql/driver"
 
-	"gopkg.in/nullbio/null.v4/convert"
+	"gopkg.in/nullbio/null.v5/convert"
 )
 
 // NullBytes is a nullable byte slice.

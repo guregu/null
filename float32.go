@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"strconv"
 
-	"gopkg.in/nullbio/null.v4/convert"
+	"gopkg.in/nullbio/null.v5/convert"
 )
 
 // NullFloat32 is a replica of sql.NullFloat64 for float32 types.

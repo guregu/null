@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 
-	"gopkg.in/nullbio/null.v4/convert"
+	"gopkg.in/nullbio/null.v5/convert"
 )
 
 // NullJSON is a nullable byte slice.
