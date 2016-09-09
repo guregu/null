@@ -36,13 +36,36 @@ func GetFormat() string {
 	return theFormat.format
 }
 
-// Time is a nullable time.Time.
+// Time is a zeroable time.Time.
 // JSON marshals to the zero value for time.Time if null.
 // Considered to be null to SQL if zero.
 type Time struct {
 	Time  time.Time
 	Valid bool
 }
+
+///////////////////////////////
+// PG interfaces
+///////////////////////////////
+
+// IsZero implements the orm.isZeroer interface
+func (t Time) IsZero() bool {
+	return !t.Valid
+}
+
+// AppendValue implements the types.ValueAppender interface
+func (t Time) AppendValue(b []byte, quote int) ([]byte, error) {
+	if !t.Valid {
+		// zero time is a null time
+		return types.AppendNull(b, quote), nil
+	}
+	// will always render a non zero time
+	return types.AppendTime(b, t.Time, quote), nil
+}
+
+///////////////////////////////
+// sql interfaces
+///////////////////////////////
 
 // Scan implements Scanner interface.
 func (t *Time) Scan(value interface{}) error {

@@ -45,7 +45,29 @@ type Time struct {
 	Valid bool
 }
 
-// Scan implements the Scanner interface.
+///////////////////////////////
+// PG interfaces
+///////////////////////////////
+
+// IsZero implements the orm.isZeroer interface
+func (t Time) IsZero() bool {
+	return !t.Valid
+}
+
+// AppendValue implements the types.ValueAppender interface
+func (t Time) AppendValue(b []byte, quote int) ([]byte, error) {
+	if !t.Valid {
+		return types.AppendNull(b, quote), nil
+	}
+	// may write a zero time
+	return types.AppendTime(b, t.Time, quote), nil
+}
+
+///////////////////////////////
+// sql interfaces
+///////////////////////////////
+
+// Scan implements the sql.Scanner interface.
 func (t *Time) Scan(value interface{}) error {
 	var err error
 	switch x := value.(type) {
@@ -72,6 +94,10 @@ func (t Time) Value() (driver.Value, error) {
 	return t.Time, nil
 }
 
+///////////////////////////////
+// methods
+///////////////////////////////
+
 // NewTime creates a new Time.
 func NewTime(t time.Time, valid bool) Time {
 	return Time{
@@ -92,6 +118,24 @@ func TimeFromPtr(t *time.Time) Time {
 	}
 	return NewTime(*t, true)
 }
+
+// SetValid changes this Time's value and sets it to be non-null.
+func (t *Time) SetValid(v time.Time) {
+	t.Time = v
+	t.Valid = true
+}
+
+// Ptr returns a pointer to this Time's value, or a nil pointer if this Time is null.
+func (t Time) Ptr() *time.Time {
+	if !t.Valid {
+		return nil
+	}
+	return &t.Time
+}
+
+///////////////////////////////
+// json
+///////////////////////////////
 
 // MarshalJSON implements json.Marshaler.
 // It will encode null if this time is null.
@@ -148,6 +192,10 @@ func (t *Time) UnmarshalJSON(data []byte) error {
 	return err
 }
 
+///////////////////////////////
+// xml
+///////////////////////////////
+
 // MarshalXML implements the xml.Marshaler interface
 func (t Time) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
 	if t.Valid {
@@ -174,6 +222,10 @@ func (t *Time) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 	return nil
 }
 
+///////////////////////////////
+// bson
+///////////////////////////////
+
 // GetBSON implements bson.Getter.
 func (t Time) GetBSON() (interface{}, error) {
 	if t.Valid {
@@ -195,6 +247,10 @@ func (t *Time) SetBSON(raw bson.Raw) error {
 	}
 	return nil
 }
+
+///////////////////////////////
+// text
+///////////////////////////////
 
 // MarshalText implements the encoding.TextMarshaler interface.
 func (t Time) MarshalText() ([]byte, error) {
@@ -228,6 +284,10 @@ func (t *Time) UnmarshalText(text []byte) error {
 	return nil
 }
 
+///////////////////////////////
+// compare
+///////////////////////////////
+
 // GetValue implements the compare.Valuable interface
 func (t Time) GetValue() reflect.Value {
 	if t.Valid {
@@ -237,24 +297,14 @@ func (t Time) GetValue() reflect.Value {
 	return reflect.ValueOf(nil)
 }
 
+///////////////////////////////
+// lorem
+///////////////////////////////
+
 // LoremDecode implements lorem.Decoder
 func (t *Time) LoremDecode(tag, example string) error {
 	// fill ourselves with a random time
 	// so now we can set valid right or not
 	t.SetValid(time.Unix(rand.Int63(), 0))
 	return nil
-}
-
-// SetValid changes this Time's value and sets it to be non-null.
-func (t *Time) SetValid(v time.Time) {
-	t.Time = v
-	t.Valid = true
-}
-
-// Ptr returns a pointer to this Time's value, or a nil pointer if this Time is null.
-func (t Time) Ptr() *time.Time {
-	if !t.Valid {
-		return nil
-	}
-	return &t.Time
 }

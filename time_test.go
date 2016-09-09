@@ -256,6 +256,9 @@ func TestCustomTimeScanValue(t *testing.T) {
 }
 
 func assertTime(t *testing.T, ti Time, from string, val time.Time) {
+	if ti.IsZero() != val.IsZero() {
+		t.Errorf("%v IsZero() != %v\n", ti, val)
+	}
 	if !ti.Time.Equal(val) {
 		t.Errorf("bad %v time: %v ≠ %v\n", from, ti.Time, val)
 	}
@@ -267,5 +270,8 @@ func assertTime(t *testing.T, ti Time, from string, val time.Time) {
 func assertNullTime(t *testing.T, ti Time, from string) {
 	if ti.Valid {
 		t.Error(from, "is valid, but should be invalid")
+	}
+	if !ti.IsZero() {
+		t.Error(from, "is not zero, but should be zero")
 	}
 }
