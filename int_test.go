@@ -6,8 +6,7 @@ import (
 )
 
 var (
-	intJSON     = []byte(`12345`)
-	nullIntJSON = []byte(`{"Int":12345,"Valid":true}`)
+	intJSON = []byte(`12345`)
 )
 
 func TestIntFrom(t *testing.T) {
@@ -35,11 +34,6 @@ func TestUnmarshalInt(t *testing.T) {
 	err := json.Unmarshal(intJSON, &i)
 	maybePanic(err)
 	assertInt(t, i, "int json")
-
-	var ni Int
-	err = json.Unmarshal(nullIntJSON, &ni)
-	maybePanic(err)
-	assertInt(t, ni, "sq.NullInt json")
 
 	var null Int
 	err = json.Unmarshal(nullJSON, &null)

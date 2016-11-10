@@ -6,8 +6,7 @@ import (
 )
 
 var (
-	uint64JSON     = []byte(`18446744073709551614`)
-	nullUint64JSON = []byte(`{"Uint64":18446744073709551614,"Valid":true}`)
+	uint64JSON = []byte(`18446744073709551614`)
 )
 
 func TestUint64From(t *testing.T) {
@@ -35,11 +34,6 @@ func TestUnmarshalUint64(t *testing.T) {
 	err := json.Unmarshal(uint64JSON, &i)
 	maybePanic(err)
 	assertUint64(t, i, "uint64 json")
-
-	var ni Uint64
-	err = json.Unmarshal(nullUint64JSON, &ni)
-	maybePanic(err)
-	assertUint64(t, ni, "sq.NullUint64 json")
 
 	var null Uint64
 	err = json.Unmarshal(nullJSON, &null)

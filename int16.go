@@ -1,35 +1,27 @@
 package null
 
 import (
+	"bytes"
 	"database/sql/driver"
 	"encoding/json"
 	"fmt"
-	"reflect"
+	"math"
 	"strconv"
 
 	"gopkg.in/nullbio/null.v5/convert"
 )
 
-// NullInt16 is a replica of sql.NullInt64 for int16 types.
-type NullInt16 struct {
+// Int16 is an nullable int16.
+type Int16 struct {
 	Int16 int16
 	Valid bool
-}
-
-// Int16 is an nullable int16.
-// It does not consider zero values to be null.
-// It will decode to null, not zero, if null.
-type Int16 struct {
-	NullInt16
 }
 
 // NewInt16 creates a new Int16
 func NewInt16(i int16, valid bool) Int16 {
 	return Int16{
-		NullInt16: NullInt16{
-			Int16: i,
-			Valid: valid,
-		},
+		Int16: i,
+		Valid: valid,
 	}
 }
 
@@ -47,34 +39,28 @@ func Int16FromPtr(i *int16) Int16 {
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
-// It supports number and null input.
-// 0 will not be considered a null Int16.
-// It also supports unmarshalling a sql.NullInt16.
 func (i *Int16) UnmarshalJSON(data []byte) error {
-	var err error
-	var v interface{}
-	if err = json.Unmarshal(data, &v); err != nil {
+	if bytes.Equal(data, NullBytes) {
+		i.Valid = false
+		i.Int16 = 0
+		return nil
+	}
+
+	var x int64
+	if err := json.Unmarshal(data, &x); err != nil {
 		return err
 	}
-	switch v.(type) {
-	case float64:
-		// Unmarshal again, directly to int16, to avoid intermediate float64
-		err = json.Unmarshal(data, &i.Int16)
-	case map[string]interface{}:
-		err = json.Unmarshal(data, &i.NullInt16)
-	case nil:
-		i.Valid = false
-		return nil
-	default:
-		err = fmt.Errorf("json: cannot unmarshal %v into Go value of type null.Int16", reflect.TypeOf(v).Name())
+
+	if x > math.MaxInt16 {
+		return fmt.Errorf("json: %d overflows max int16 value", x)
 	}
-	i.Valid = err == nil
-	return err
+
+	i.Int16 = int16(x)
+	i.Valid = true
+	return nil
 }
 
 // UnmarshalText implements encoding.TextUnmarshaler.
-// It will unmarshal to a null Int16 if the input is a blank or not an integer.
-// It will return an error if the input is not an integer, blank, or "null".
 func (i *Int16) UnmarshalText(text []byte) error {
 	str := string(text)
 	if str == "" || str == "null" {
@@ -91,7 +77,6 @@ func (i *Int16) UnmarshalText(text []byte) error {
 }
 
 // MarshalJSON implements json.Marshaler.
-// It will encode null if this Int16 is null.
 func (i Int16) MarshalJSON() ([]byte, error) {
 	if !i.Valid {
 		return []byte("null"), nil
@@ -100,7 +85,6 @@ func (i Int16) MarshalJSON() ([]byte, error) {
 }
 
 // MarshalText implements encoding.TextMarshaler.
-// It will encode a blank string if this Int16 is null.
 func (i Int16) MarshalText() ([]byte, error) {
 	if !i.Valid {
 		return []byte{}, nil
@@ -123,25 +107,24 @@ func (i Int16) Ptr() *int16 {
 }
 
 // IsZero returns true for invalid Int16's, for future omitempty support (Go 1.4?)
-// A non-null Int16 with a 0 value will not be considered zero.
 func (i Int16) IsZero() bool {
 	return !i.Valid
 }
 
 // Scan implements the Scanner interface.
-func (n *NullInt16) Scan(value interface{}) error {
+func (i *Int16) Scan(value interface{}) error {
 	if value == nil {
-		n.Int16, n.Valid = 0, false
+		i.Int16, i.Valid = 0, false
 		return nil
 	}
-	n.Valid = true
-	return convert.ConvertAssign(&n.Int16, value)
+	i.Valid = true
+	return convert.ConvertAssign(&i.Int16, value)
 }
 
 // Value implements the driver Valuer interface.
-func (n NullInt16) Value() (driver.Value, error) {
-	if !n.Valid {
+func (i Int16) Value() (driver.Value, error) {
+	if !i.Valid {
 		return nil, nil
 	}
-	return int64(n.Int16), nil
+	return int64(i.Int16), nil
 }

@@ -8,8 +8,7 @@ import (
 )
 
 var (
-	uint32JSON     = []byte(`4294967294`)
-	nullUint32JSON = []byte(`{"Uint32":4294967294,"Valid":true}`)
+	uint32JSON = []byte(`4294967294`)
 )
 
 func TestUint32From(t *testing.T) {
@@ -37,11 +36,6 @@ func TestUnmarshalUint32(t *testing.T) {
 	err := json.Unmarshal(uint32JSON, &i)
 	maybePanic(err)
 	assertUint32(t, i, "uint32 json")
-
-	var ni Uint32
-	err = json.Unmarshal(nullUint32JSON, &ni)
-	maybePanic(err)
-	assertUint32(t, ni, "sq.NullUint32 json")
 
 	var null Uint32
 	err = json.Unmarshal(nullJSON, &null)

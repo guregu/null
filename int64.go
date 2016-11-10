@@ -1,27 +1,25 @@
 package null
 
 import (
-	"database/sql"
+	"bytes"
+	"database/sql/driver"
 	"encoding/json"
-	"fmt"
-	"reflect"
 	"strconv"
+
+	"github.com/nullbio/null/convert"
 )
 
 // Int64 is an nullable int64.
-// It does not consider zero values to be null.
-// It will decode to null, not zero, if null.
 type Int64 struct {
-	sql.NullInt64
+	Int64 int64
+	Valid bool
 }
 
 // NewInt64 creates a new Int64
 func NewInt64(i int64, valid bool) Int64 {
 	return Int64{
-		NullInt64: sql.NullInt64{
-			Int64: i,
-			Valid: valid,
-		},
+		Int64: i,
+		Valid: valid,
 	}
 }
 
@@ -39,34 +37,22 @@ func Int64FromPtr(i *int64) Int64 {
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
-// It supports number and null input.
-// 0 will not be considered a null Int64.
-// It also supports unmarshalling a sql.NullInt64.
 func (i *Int64) UnmarshalJSON(data []byte) error {
-	var err error
-	var v interface{}
-	if err = json.Unmarshal(data, &v); err != nil {
+	if bytes.Equal(data, NullBytes) {
+		i.Valid = false
+		i.Int64 = 0
+		return nil
+	}
+
+	if err := json.Unmarshal(data, &i.Int64); err != nil {
 		return err
 	}
-	switch v.(type) {
-	case float64:
-		// Unmarshal again, directly to int64, to avoid intermediate float64
-		err = json.Unmarshal(data, &i.Int64)
-	case map[string]interface{}:
-		err = json.Unmarshal(data, &i.NullInt64)
-	case nil:
-		i.Valid = false
-		return nil
-	default:
-		err = fmt.Errorf("json: cannot unmarshal %v into Go value of type null.Int64", reflect.TypeOf(v).Name())
-	}
-	i.Valid = err == nil
-	return err
+
+	i.Valid = true
+	return nil
 }
 
 // UnmarshalText implements encoding.TextUnmarshaler.
-// It will unmarshal to a null Int64 if the input is a blank or not an integer.
-// It will return an error if the input is not an integer, blank, or "null".
 func (i *Int64) UnmarshalText(text []byte) error {
 	str := string(text)
 	if str == "" || str == "null" {
@@ -80,7 +66,6 @@ func (i *Int64) UnmarshalText(text []byte) error {
 }
 
 // MarshalJSON implements json.Marshaler.
-// It will encode null if this Int64 is null.
 func (i Int64) MarshalJSON() ([]byte, error) {
 	if !i.Valid {
 		return []byte("null"), nil
@@ -89,7 +74,6 @@ func (i Int64) MarshalJSON() ([]byte, error) {
 }
 
 // MarshalText implements encoding.TextMarshaler.
-// It will encode a blank string if this Int64 is null.
 func (i Int64) MarshalText() ([]byte, error) {
 	if !i.Valid {
 		return []byte{}, nil
@@ -112,7 +96,24 @@ func (i Int64) Ptr() *int64 {
 }
 
 // IsZero returns true for invalid Int64's, for future omitempty support (Go 1.4?)
-// A non-null Int64 with a 0 value will not be considered zero.
 func (i Int64) IsZero() bool {
 	return !i.Valid
+}
+
+// Scan implements the Scanner interface.
+func (i *Int64) Scan(value interface{}) error {
+	if value == nil {
+		i.Int64, i.Valid = 0, false
+		return nil
+	}
+	i.Valid = true
+	return convert.ConvertAssign(&i.Int64, value)
+}
+
+// Value implements the driver Valuer interface.
+func (i Int64) Value() (driver.Value, error) {
+	if !i.Valid {
+		return nil, nil
+	}
+	return i.Int64, nil
 }

@@ -58,7 +58,6 @@ func (j JSON) Unmarshal(dest interface{}) error {
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
-// If not, it will copy your data slice into JSON.
 func (j *JSON) UnmarshalJSON(data []byte) error {
 	if data == nil {
 		return fmt.Errorf("json: cannot unmarshal nil into Go value of type null.JSON")
@@ -78,7 +77,6 @@ func (j *JSON) UnmarshalJSON(data []byte) error {
 }
 
 // UnmarshalText implements encoding.TextUnmarshaler.
-// It will unmarshal to nil if the text is nil or len 0.
 func (j *JSON) UnmarshalText(text []byte) error {
 	if text == nil || len(text) == 0 {
 		j.JSON = nil
@@ -106,7 +104,6 @@ func (j *JSON) Marshal(obj interface{}) error {
 }
 
 // MarshalJSON implements json.Marshaler.
-// It will encode null if the JSON is nil.
 func (j JSON) MarshalJSON() ([]byte, error) {
 	if len(j.JSON) == 0 || j.JSON == nil {
 		return []byte("null"), nil
@@ -115,7 +112,6 @@ func (j JSON) MarshalJSON() ([]byte, error) {
 }
 
 // MarshalText implements encoding.TextMarshaler.
-// It will encode nil if the JSON is invalid.
 func (j JSON) MarshalText() ([]byte, error) {
 	if !j.Valid {
 		return nil, nil

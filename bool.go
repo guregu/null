@@ -37,9 +37,6 @@ func BoolFromPtr(b *bool) Bool {
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
-// It supports number and null input.
-// 0 will not be considered a null Bool.
-// It also supports unmarshalling a sql.NullBool.
 func (b *Bool) UnmarshalJSON(data []byte) error {
 	if bytes.Equal(data, NullBytes) {
 		b.Bool = false
@@ -56,8 +53,6 @@ func (b *Bool) UnmarshalJSON(data []byte) error {
 }
 
 // UnmarshalText implements encoding.TextUnmarshaler.
-// It will unmarshal to a null Bool if the input is a blank or not an integer.
-// It will return an error if the input is not an integer, blank, or "null".
 func (b *Bool) UnmarshalText(text []byte) error {
 	str := string(text)
 	switch str {
@@ -77,7 +72,6 @@ func (b *Bool) UnmarshalText(text []byte) error {
 }
 
 // MarshalJSON implements json.Marshaler.
-// It will encode null if this Bool is null.
 func (b Bool) MarshalJSON() ([]byte, error) {
 	if !b.Valid {
 		return []byte("null"), nil
@@ -89,7 +83,6 @@ func (b Bool) MarshalJSON() ([]byte, error) {
 }
 
 // MarshalText implements encoding.TextMarshaler.
-// It will encode a blank string if this Bool is null.
 func (b Bool) MarshalText() ([]byte, error) {
 	if !b.Valid {
 		return []byte{}, nil
@@ -115,7 +108,6 @@ func (b Bool) Ptr() *bool {
 }
 
 // IsZero returns true for invalid Bools, for future omitempty support (Go 1.4?)
-// A non-null Bool with a 0 value will not be considered zero.
 func (b Bool) IsZero() bool {
 	return !b.Valid
 }

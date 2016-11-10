@@ -1,20 +1,17 @@
-// Package null contains SQL types that consider zero input and null input as separate values,
-// with convenient support for JSON and text marshaling.
-// Types in this package will always encode to their null value if null.
-// Use the zero subpackage if you want zero values and null to be treated the same.
 package null
 
 import (
-	"database/sql"
+	"bytes"
+	"database/sql/driver"
 	"encoding/json"
-	"fmt"
-	"reflect"
+
+	"github.com/nullbio/null/convert"
 )
 
 // String is a nullable string. It supports SQL and JSON serialization.
-// It will marshal to null if null. Blank string input will be considered null.
 type String struct {
-	sql.NullString
+	String string
+	Valid  bool
 }
 
 // StringFrom creates a new String that will never be blank.
@@ -33,39 +30,28 @@ func StringFromPtr(s *string) String {
 // NewString creates a new String
 func NewString(s string, valid bool) String {
 	return String{
-		NullString: sql.NullString{
-			String: s,
-			Valid:  valid,
-		},
+		String: s,
+		Valid:  valid,
 	}
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
-// It supports string and null input. Blank string input does not produce a null String.
-// It also supports unmarshalling a sql.NullString.
 func (s *String) UnmarshalJSON(data []byte) error {
-	var err error
-	var v interface{}
-	if err = json.Unmarshal(data, &v); err != nil {
-		return err
-	}
-	switch x := v.(type) {
-	case string:
-		s.String = x
-	case map[string]interface{}:
-		err = json.Unmarshal(data, &s.NullString)
-	case nil:
+	if bytes.Equal(data, NullBytes) {
+		s.String = ""
 		s.Valid = false
 		return nil
-	default:
-		err = fmt.Errorf("json: cannot unmarshal %v into Go value of type null.String", reflect.TypeOf(v).Name())
 	}
-	s.Valid = err == nil
-	return err
+
+	if err := json.Unmarshal(data, &s.String); err != nil {
+		return err
+	}
+
+	s.Valid = true
+	return nil
 }
 
 // MarshalJSON implements json.Marshaler.
-// It will encode null if this String is null.
 func (s String) MarshalJSON() ([]byte, error) {
 	if !s.Valid {
 		return []byte("null"), nil
@@ -74,7 +60,6 @@ func (s String) MarshalJSON() ([]byte, error) {
 }
 
 // MarshalText implements encoding.TextMarshaler.
-// It will encode a blank string when this String is null.
 func (s String) MarshalText() ([]byte, error) {
 	if !s.Valid {
 		return []byte{}, nil
@@ -83,7 +68,6 @@ func (s String) MarshalText() ([]byte, error) {
 }
 
 // UnmarshalText implements encoding.TextUnmarshaler.
-// It will unmarshal to a null String if the input is a blank string.
 func (s *String) UnmarshalText(text []byte) error {
 	s.String = string(text)
 	s.Valid = s.String != ""
@@ -107,4 +91,22 @@ func (s String) Ptr() *string {
 // IsZero returns true for null strings, for potential future omitempty support.
 func (s String) IsZero() bool {
 	return !s.Valid
+}
+
+// Scan implements the Scanner interface.
+func (s *String) Scan(value interface{}) error {
+	if value == nil {
+		s.String, s.Valid = "", false
+		return nil
+	}
+	s.Valid = true
+	return convert.ConvertAssign(&s.String, value)
+}
+
+// Value implements the driver Valuer interface.
+func (s String) Value() (driver.Value, error) {
+	if !s.Valid {
+		return nil, nil
+	}
+	return s.String, nil
 }

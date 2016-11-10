@@ -1,35 +1,27 @@
 package null
 
 import (
+	"bytes"
 	"database/sql/driver"
 	"encoding/json"
 	"fmt"
-	"reflect"
+	"math"
 	"strconv"
 
 	"gopkg.in/nullbio/null.v5/convert"
 )
 
-// NullInt32 is a replica of sql.NullInt64 for int32 types.
-type NullInt32 struct {
+// Int32 is an nullable int32.
+type Int32 struct {
 	Int32 int32
 	Valid bool
-}
-
-// Int32 is an nullable int32.
-// It does not consider zero values to be null.
-// It will decode to null, not zero, if null.
-type Int32 struct {
-	NullInt32
 }
 
 // NewInt32 creates a new Int32
 func NewInt32(i int32, valid bool) Int32 {
 	return Int32{
-		NullInt32: NullInt32{
-			Int32: i,
-			Valid: valid,
-		},
+		Int32: i,
+		Valid: valid,
 	}
 }
 
@@ -47,34 +39,28 @@ func Int32FromPtr(i *int32) Int32 {
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
-// It supports number and null input.
-// 0 will not be considered a null Int32.
-// It also supports unmarshalling a sql.NullInt32.
 func (i *Int32) UnmarshalJSON(data []byte) error {
-	var err error
-	var v interface{}
-	if err = json.Unmarshal(data, &v); err != nil {
+	if bytes.Equal(data, NullBytes) {
+		i.Valid = false
+		i.Int32 = 0
+		return nil
+	}
+
+	var x int64
+	if err := json.Unmarshal(data, &x); err != nil {
 		return err
 	}
-	switch v.(type) {
-	case float64:
-		// Unmarshal again, directly to int32, to avoid intermediate float64
-		err = json.Unmarshal(data, &i.Int32)
-	case map[string]interface{}:
-		err = json.Unmarshal(data, &i.NullInt32)
-	case nil:
-		i.Valid = false
-		return nil
-	default:
-		err = fmt.Errorf("json: cannot unmarshal %v into Go value of type null.Int32", reflect.TypeOf(v).Name())
+
+	if x > math.MaxInt32 {
+		return fmt.Errorf("json: %d overflows max int32 value", x)
 	}
-	i.Valid = err == nil
-	return err
+
+	i.Int32 = int32(x)
+	i.Valid = true
+	return nil
 }
 
 // UnmarshalText implements encoding.TextUnmarshaler.
-// It will unmarshal to a null Int32 if the input is a blank or not an integer.
-// It will return an error if the input is not an integer, blank, or "null".
 func (i *Int32) UnmarshalText(text []byte) error {
 	str := string(text)
 	if str == "" || str == "null" {
@@ -91,7 +77,6 @@ func (i *Int32) UnmarshalText(text []byte) error {
 }
 
 // MarshalJSON implements json.Marshaler.
-// It will encode null if this Int32 is null.
 func (i Int32) MarshalJSON() ([]byte, error) {
 	if !i.Valid {
 		return []byte("null"), nil
@@ -100,7 +85,6 @@ func (i Int32) MarshalJSON() ([]byte, error) {
 }
 
 // MarshalText implements encoding.TextMarshaler.
-// It will encode a blank string if this Int32 is null.
 func (i Int32) MarshalText() ([]byte, error) {
 	if !i.Valid {
 		return []byte{}, nil
@@ -123,25 +107,24 @@ func (i Int32) Ptr() *int32 {
 }
 
 // IsZero returns true for invalid Int32's, for future omitempty support (Go 1.4?)
-// A non-null Int32 with a 0 value will not be considered zero.
 func (i Int32) IsZero() bool {
 	return !i.Valid
 }
 
 // Scan implements the Scanner interface.
-func (n *NullInt32) Scan(value interface{}) error {
+func (i *Int32) Scan(value interface{}) error {
 	if value == nil {
-		n.Int32, n.Valid = 0, false
+		i.Int32, i.Valid = 0, false
 		return nil
 	}
-	n.Valid = true
-	return convert.ConvertAssign(&n.Int32, value)
+	i.Valid = true
+	return convert.ConvertAssign(&i.Int32, value)
 }
 
 // Value implements the driver Valuer interface.
-func (n NullInt32) Value() (driver.Value, error) {
-	if !n.Valid {
+func (i Int32) Value() (driver.Value, error) {
+	if !i.Valid {
 		return nil, nil
 	}
-	return int64(n.Int32), nil
+	return int64(i.Int32), nil
 }

@@ -40,8 +40,6 @@ func BytesFromPtr(b *[]byte) Bytes {
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
-// If data is len 0 or nil, it will unmarshal to JSON null.
-// If not, it will copy your data slice into Bytes.
 func (b *Bytes) UnmarshalJSON(data []byte) error {
 	if bytes.Equal(data, NullBytes) {
 		b.Valid = false
@@ -60,7 +58,6 @@ func (b *Bytes) UnmarshalJSON(data []byte) error {
 }
 
 // UnmarshalText implements encoding.TextUnmarshaler.
-// It will unmarshal to nil if the text is nil or len 0.
 func (b *Bytes) UnmarshalText(text []byte) error {
 	if text == nil || len(text) == 0 {
 		b.Bytes = nil
@@ -74,7 +71,6 @@ func (b *Bytes) UnmarshalText(text []byte) error {
 }
 
 // MarshalJSON implements json.Marshaler.
-// It will encode null if the Bytes is nil.
 func (b Bytes) MarshalJSON() ([]byte, error) {
 	if len(b.Bytes) == 0 || b.Bytes == nil {
 		return []byte("null"), nil
@@ -83,7 +79,6 @@ func (b Bytes) MarshalJSON() ([]byte, error) {
 }
 
 // MarshalText implements encoding.TextMarshaler.
-// It will encode nil if the Bytes is invalid.
 func (b Bytes) MarshalText() ([]byte, error) {
 	if !b.Valid {
 		return nil, nil

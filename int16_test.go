@@ -2,14 +2,14 @@ package null
 
 import (
 	"encoding/json"
+	"fmt"
 	"math"
 	"strconv"
 	"testing"
 )
 
 var (
-	int16JSON     = []byte(`32766`)
-	nullInt16JSON = []byte(`{"Int16":32766,"Valid":true}`)
+	int16JSON = []byte(`32766`)
 )
 
 func TestInt16From(t *testing.T) {
@@ -37,11 +37,6 @@ func TestUnmarshalInt16(t *testing.T) {
 	err := json.Unmarshal(int16JSON, &i)
 	maybePanic(err)
 	assertInt16(t, i, "int16 json")
-
-	var ni Int16
-	err = json.Unmarshal(nullInt16JSON, &ni)
-	maybePanic(err)
-	assertInt16(t, ni, "sq.NullInt16 json")
 
 	var null Int16
 	err = json.Unmarshal(nullJSON, &null)
@@ -78,10 +73,11 @@ func TestUnmarshalInt16Overflow(t *testing.T) {
 	var i Int16
 	err := json.Unmarshal([]byte(strconv.FormatUint(uint64(int16Overflow), 10)), &i)
 	maybePanic(err)
-
+	fmt.Println(i)
 	// Attempt to overflow
 	int16Overflow++
 	err = json.Unmarshal([]byte(strconv.FormatUint(uint64(int16Overflow), 10)), &i)
+	fmt.Println(i)
 	if err == nil {
 		panic("err should be present; decoded value overflows int16")
 	}
