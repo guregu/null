@@ -10,8 +10,6 @@ import (
 )
 
 // Bool is a nullable bool.
-// It does not consider false values to be null.
-// It will decode to null, not false, if null.
 type Bool struct {
 	Bool  bool
 	Valid bool
