@@ -11,7 +11,7 @@ var (
 )
 
 func TestBytesFrom(t *testing.T) {
-	i := BytesFrom([]byte(`"hello"`))
+	i := BytesFrom([]byte(`hello`))
 	assertBytes(t, i, "BytesFrom()")
 
 	zero := BytesFrom(nil)
@@ -26,7 +26,7 @@ func TestBytesFrom(t *testing.T) {
 }
 
 func TestBytesFromPtr(t *testing.T) {
-	n := []byte(`"hello"`)
+	n := []byte(`hello`)
 	iptr := &n
 	i := BytesFromPtr(iptr)
 	assertBytes(t, i, "BytesFromPtr()")
@@ -43,26 +43,23 @@ func TestUnmarshalBytes(t *testing.T) {
 
 	var ni Bytes
 	err = ni.UnmarshalJSON([]byte{})
-	if ni.Valid == false {
-		t.Errorf("expected Valid to be true, got false")
-	}
-	if !bytes.Equal(ni.Bytes, []byte("null")) {
-		t.Errorf("Expected Bytes to be nil slice, but was not: %#v %#v", ni.Bytes, []byte(`null`))
+	if err == nil {
+		t.Errorf("Expected error")
 	}
 
 	var null Bytes
-	err = null.UnmarshalJSON(nil)
-	if null.Valid == false {
-		t.Errorf("expected Valid to be true, got false")
+	err = null.UnmarshalJSON([]byte("null"))
+	if null.Valid == true {
+		t.Errorf("expected Valid to be false, got true")
 	}
-	if !bytes.Equal(null.Bytes, []byte(`null`)) {
-		t.Errorf("Expected Bytes to be []byte nil, but was not: %#v %#v", null.Bytes, []byte(`null`))
+	if null.Bytes != nil {
+		t.Errorf("Expected Bytes to be nil, but was not: %#v %#v", null.Bytes, []byte(`null`))
 	}
 }
 
 func TestTextUnmarshalBytes(t *testing.T) {
 	var i Bytes
-	err := i.UnmarshalText([]byte(`"hello"`))
+	err := i.UnmarshalText([]byte(`hello`))
 	maybePanic(err)
 	assertBytes(t, i, "UnmarshalText() []byte")
 
@@ -132,15 +129,15 @@ func TestBytesIsZero(t *testing.T) {
 func TestBytesSetValid(t *testing.T) {
 	change := NewBytes(nil, false)
 	assertNullBytes(t, change, "SetValid()")
-	change.SetValid([]byte(`"hello"`))
+	change.SetValid([]byte(`hello`))
 	assertBytes(t, change, "SetValid()")
 }
 
 func TestBytesScan(t *testing.T) {
 	var i Bytes
-	err := i.Scan(`"hello"`)
+	err := i.Scan(`hello`)
 	maybePanic(err)
-	assertBytes(t, i, "scanned []byte")
+	assertBytes(t, i, "Scan() []byte")
 
 	var null Bytes
 	err = null.Scan(nil)
@@ -149,8 +146,8 @@ func TestBytesScan(t *testing.T) {
 }
 
 func assertBytes(t *testing.T, i Bytes, from string) {
-	if !bytes.Equal(i.Bytes, []byte(`"hello"`)) {
-		t.Errorf("bad %s []byte: %#v ≠ %#v\n", from, string(i.Bytes), string([]byte(`"hello"`)))
+	if !bytes.Equal(i.Bytes, []byte("hello")) {
+		t.Errorf("bad %s []byte: %v ≠ %v\n", from, string(i.Bytes), string([]byte(`hello`)))
 	}
 	if !i.Valid {
 		t.Error(from, "is invalid, but should be valid")

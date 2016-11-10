@@ -1,27 +1,27 @@
 package null
 
 import (
-	"database/sql"
+	"bytes"
+	"database/sql/driver"
 	"encoding/json"
 	"errors"
-	"fmt"
-	"reflect"
+
+	"github.com/nullbio/null/convert"
 )
 
 // Bool is a nullable bool.
 // It does not consider false values to be null.
 // It will decode to null, not false, if null.
 type Bool struct {
-	sql.NullBool
+	Bool  bool
+	Valid bool
 }
 
 // NewBool creates a new Bool
 func NewBool(b bool, valid bool) Bool {
 	return Bool{
-		NullBool: sql.NullBool{
-			Bool:  b,
-			Valid: valid,
-		},
+		Bool:  b,
+		Valid: valid,
 	}
 }
 
@@ -43,24 +43,18 @@ func BoolFromPtr(b *bool) Bool {
 // 0 will not be considered a null Bool.
 // It also supports unmarshalling a sql.NullBool.
 func (b *Bool) UnmarshalJSON(data []byte) error {
-	var err error
-	var v interface{}
-	if err = json.Unmarshal(data, &v); err != nil {
-		return err
-	}
-	switch x := v.(type) {
-	case bool:
-		b.Bool = x
-	case map[string]interface{}:
-		err = json.Unmarshal(data, &b.NullBool)
-	case nil:
+	if bytes.Equal(data, NullBytes) {
+		b.Bool = false
 		b.Valid = false
 		return nil
-	default:
-		err = fmt.Errorf("json: cannot unmarshal %v into Go value of type null.Bool", reflect.TypeOf(v).Name())
 	}
-	b.Valid = err == nil
-	return err
+
+	if err := json.Unmarshal(data, &b.Bool); err != nil {
+		return err
+	}
+
+	b.Valid = true
+	return nil
 }
 
 // UnmarshalText implements encoding.TextUnmarshaler.
@@ -126,4 +120,22 @@ func (b Bool) Ptr() *bool {
 // A non-null Bool with a 0 value will not be considered zero.
 func (b Bool) IsZero() bool {
 	return !b.Valid
+}
+
+// Scan implements the Scanner interface.
+func (b *Bool) Scan(value interface{}) error {
+	if value == nil {
+		b.Bool, b.Valid = false, false
+		return nil
+	}
+	b.Valid = true
+	return convert.ConvertAssign(&b.Bool, value)
+}
+
+// Value implements the driver Valuer interface.
+func (b Bool) Value() (driver.Value, error) {
+	if !b.Valid {
+		return nil, nil
+	}
+	return b.Bool, nil
 }

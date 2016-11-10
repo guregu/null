@@ -65,8 +65,8 @@ func TestMarshal(t *testing.T) {
 	if !bytes.Equal(i.JSON, []byte("null")) {
 		t.Errorf("Expected null, but got %s", string(i.JSON))
 	}
-	if i.Valid == false {
-		t.Error("Expected Valid true, got Valid false")
+	if i.Valid == true {
+		t.Error("Expected Valid false, got Valid true")
 	}
 }
 
@@ -114,8 +114,8 @@ func TestUnmarshalJSON(t *testing.T) {
 	if ni.Valid == false {
 		t.Errorf("expected Valid to be true, got false")
 	}
-	if !bytes.Equal(ni.JSON, []byte(`null`)) {
-		t.Errorf("Expected JSON to be null slice, but was not: %#v %#v", ni.JSON, []byte(nil))
+	if !bytes.Equal(ni.JSON, nil) {
+		t.Errorf("Expected JSON to be nil, but was not: %#v %#v", ni.JSON, []byte(nil))
 	}
 
 	var null JSON
@@ -123,7 +123,7 @@ func TestUnmarshalJSON(t *testing.T) {
 	if ni.Valid == false {
 		t.Errorf("expected Valid to be true, got false")
 	}
-	if !bytes.Equal(null.JSON, []byte(`null`)) {
+	if !bytes.Equal(null.JSON, nil) {
 		t.Errorf("Expected JSON to be []byte nil, but was not: %#v %#v", null.JSON, []byte(nil))
 	}
 }

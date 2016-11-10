@@ -1,31 +1,27 @@
 package null
 
 import (
+	"bytes"
 	"database/sql/driver"
+	"encoding/json"
 
 	"gopkg.in/nullbio/null.v5/convert"
 )
 
-// NullBytes is a nullable byte slice.
-type NullBytes struct {
-	Bytes []byte
-	Valid bool
-}
+// NullBytes is a global byte slice of JSON null
+var NullBytes = []byte("null")
 
 // Bytes is a nullable []byte.
-// JSON marshals to zero if null.
-// Considered null to SQL if zero.
 type Bytes struct {
-	NullBytes
+	Bytes []byte
+	Valid bool
 }
 
 // NewBytes creates a new Bytes
 func NewBytes(b []byte, valid bool) Bytes {
 	return Bytes{
-		NullBytes: NullBytes{
-			Bytes: b,
-			Valid: valid,
-		},
+		Bytes: b,
+		Valid: valid,
 	}
 }
 
@@ -47,14 +43,19 @@ func BytesFromPtr(b *[]byte) Bytes {
 // If data is len 0 or nil, it will unmarshal to JSON null.
 // If not, it will copy your data slice into Bytes.
 func (b *Bytes) UnmarshalJSON(data []byte) error {
-	if data == nil || len(data) == 0 {
-		b.Bytes = []byte("null")
-	} else {
-		b.Bytes = append(b.Bytes[0:0], data...)
+	if bytes.Equal(data, NullBytes) {
+		b.Valid = false
+		b.Bytes = nil
+		return nil
 	}
 
-	b.Valid = true
+	var s string
+	if err := json.Unmarshal(data, &s); err != nil {
+		return err
+	}
 
+	b.Bytes = []byte(s)
+	b.Valid = true
 	return nil
 }
 
@@ -110,19 +111,19 @@ func (b Bytes) IsZero() bool {
 }
 
 // Scan implements the Scanner interface.
-func (n *NullBytes) Scan(value interface{}) error {
+func (b *Bytes) Scan(value interface{}) error {
 	if value == nil {
-		n.Bytes, n.Valid = []byte{}, false
+		b.Bytes, b.Valid = []byte{}, false
 		return nil
 	}
-	n.Valid = true
-	return convert.ConvertAssign(&n.Bytes, value)
+	b.Valid = true
+	return convert.ConvertAssign(&b.Bytes, value)
 }
 
 // Value implements the driver Valuer interface.
-func (n NullBytes) Value() (driver.Value, error) {
-	if !n.Valid {
+func (b Bytes) Value() (driver.Value, error) {
+	if !b.Valid {
 		return nil, nil
 	}
-	return n.Bytes, nil
+	return b.Bytes, nil
 }
