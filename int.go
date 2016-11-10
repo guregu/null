@@ -56,8 +56,7 @@ func (i *Int) UnmarshalJSON(data []byte) error {
 
 // UnmarshalText implements encoding.TextUnmarshaler.
 func (i *Int) UnmarshalText(text []byte) error {
-	str := string(text)
-	if str == "" || str == "null" {
+	if len(text) == 0 || bytes.Equal(text, NullBytes) {
 		i.Valid = false
 		return nil
 	}
@@ -73,7 +72,7 @@ func (i *Int) UnmarshalText(text []byte) error {
 // MarshalJSON implements json.Marshaler.
 func (i Int) MarshalJSON() ([]byte, error) {
 	if !i.Valid {
-		return []byte("null"), nil
+		return NullBytes, nil
 	}
 	return []byte(strconv.FormatInt(int64(i.Int), 10)), nil
 }

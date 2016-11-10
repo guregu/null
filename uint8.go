@@ -62,8 +62,7 @@ func (u *Uint8) UnmarshalJSON(data []byte) error {
 
 // UnmarshalText implements encoding.TextUnmarshaler.
 func (u *Uint8) UnmarshalText(text []byte) error {
-	str := string(text)
-	if str == "" || str == "null" {
+	if len(text) == 0 || bytes.Equal(text, NullBytes) {
 		u.Valid = false
 		return nil
 	}
@@ -79,7 +78,7 @@ func (u *Uint8) UnmarshalText(text []byte) error {
 // MarshalJSON implements json.Marshaler.
 func (u Uint8) MarshalJSON() ([]byte, error) {
 	if !u.Valid {
-		return []byte("null"), nil
+		return NullBytes, nil
 	}
 	return []byte(strconv.FormatUint(uint64(u.Uint8), 10)), nil
 }
@@ -122,9 +121,9 @@ func (u *Uint8) Scan(value interface{}) error {
 }
 
 // Value implements the driver Valuer interface.
-func (n Uint8) Value() (driver.Value, error) {
-	if !n.Valid {
+func (u Uint8) Value() (driver.Value, error) {
+	if !u.Valid {
 		return nil, nil
 	}
-	return int64(n.Uint8), nil
+	return int64(u.Uint8), nil
 }

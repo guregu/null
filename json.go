@@ -64,7 +64,7 @@ func (j *JSON) UnmarshalJSON(data []byte) error {
 	}
 
 	if bytes.Equal(data, NullBytes) {
-		j.JSON = []byte("null")
+		j.JSON = NullBytes
 		j.Valid = false
 		return nil
 	}
@@ -106,7 +106,7 @@ func (j *JSON) Marshal(obj interface{}) error {
 // MarshalJSON implements json.Marshaler.
 func (j JSON) MarshalJSON() ([]byte, error) {
 	if len(j.JSON) == 0 || j.JSON == nil {
-		return []byte("null"), nil
+		return NullBytes, nil
 	}
 	return j.JSON, nil
 }

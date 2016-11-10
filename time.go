@@ -37,7 +37,7 @@ func TimeFromPtr(t *time.Time) Time {
 // MarshalJSON implements json.Marshaler.
 func (t Time) MarshalJSON() ([]byte, error) {
 	if !t.Valid {
-		return []byte("null"), nil
+		return NullBytes, nil
 	}
 	return t.Time.MarshalJSON()
 }
@@ -61,15 +61,14 @@ func (t *Time) UnmarshalJSON(data []byte) error {
 // MarshalText implements encoding.TextMarshaler.
 func (t Time) MarshalText() ([]byte, error) {
 	if !t.Valid {
-		return []byte("null"), nil
+		return NullBytes, nil
 	}
 	return t.Time.MarshalText()
 }
 
 // UnmarshalText implements encoding.TextUnmarshaler.
 func (t *Time) UnmarshalText(text []byte) error {
-	str := string(text)
-	if str == "" || str == "null" {
+	if len(text) == 0 || bytes.Equal(text, NullBytes) {
 		t.Valid = false
 		return nil
 	}

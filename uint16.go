@@ -62,8 +62,7 @@ func (u *Uint16) UnmarshalJSON(data []byte) error {
 
 // UnmarshalText implements encoding.TextUnmarshaler.
 func (u *Uint16) UnmarshalText(text []byte) error {
-	str := string(text)
-	if str == "" || str == "null" {
+	if len(text) == 0 || bytes.Equal(text, NullBytes) {
 		u.Valid = false
 		return nil
 	}
@@ -79,7 +78,7 @@ func (u *Uint16) UnmarshalText(text []byte) error {
 // MarshalJSON implements json.Marshaler.
 func (u Uint16) MarshalJSON() ([]byte, error) {
 	if !u.Valid {
-		return []byte("null"), nil
+		return NullBytes, nil
 	}
 	return []byte(strconv.FormatUint(uint64(u.Uint16), 10)), nil
 }
