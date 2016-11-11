@@ -58,14 +58,6 @@ func TestUnmarshalTimeText(t *testing.T) {
 	maybePanic(err)
 	assertTime(t, unmarshal, "unmarshal text")
 
-	var null Time
-	err = null.UnmarshalText(nullJSON)
-	maybePanic(err)
-	assertNullTime(t, null, "unmarshal null text")
-	txt, err = null.MarshalText()
-	maybePanic(err)
-	assertJSONEquals(t, txt, string(nullJSON), "marshal null text")
-
 	var invalid Time
 	err = invalid.UnmarshalText([]byte("hello world"))
 	if err == nil {

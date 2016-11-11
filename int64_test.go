@@ -91,11 +91,6 @@ func TestTextUnmarshalInt64(t *testing.T) {
 	err = blank.UnmarshalText([]byte(""))
 	maybePanic(err)
 	assertNullInt64(t, blank, "UnmarshalText() empty int64")
-
-	var null Int64
-	err = null.UnmarshalText([]byte("null"))
-	maybePanic(err)
-	assertNullInt64(t, null, `UnmarshalText() "null"`)
 }
 
 func TestMarshalInt64(t *testing.T) {

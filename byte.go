@@ -53,14 +53,14 @@ func (b *Byte) UnmarshalJSON(data []byte) error {
 		return errors.New("json: cannot convert to byte, text len is greater than one")
 	}
 
-	b.Byte = []byte(x)[0]
+	b.Byte = x[0]
 	b.Valid = true
 	return nil
 }
 
 // UnmarshalText implements encoding.TextUnmarshaler.
 func (b *Byte) UnmarshalText(text []byte) error {
-	if len(text) == 0 {
+	if text == nil || len(text) == 0 {
 		b.Valid = false
 		return nil
 	}
@@ -79,7 +79,7 @@ func (b Byte) MarshalJSON() ([]byte, error) {
 	if !b.Valid {
 		return NullBytes, nil
 	}
-	return []byte{b.Byte}, nil
+	return []byte{'"', b.Byte, '"'}, nil
 }
 
 // MarshalText implements encoding.TextMarshaler.

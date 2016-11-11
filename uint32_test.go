@@ -91,11 +91,6 @@ func TestTextUnmarshalUint32(t *testing.T) {
 	err = blank.UnmarshalText([]byte(""))
 	maybePanic(err)
 	assertNullUint32(t, blank, "UnmarshalText() empty uint32")
-
-	var null Uint32
-	err = null.UnmarshalText([]byte("null"))
-	maybePanic(err)
-	assertNullUint32(t, null, `UnmarshalText() "null"`)
 }
 
 func TestMarshalUint32(t *testing.T) {

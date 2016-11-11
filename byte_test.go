@@ -10,7 +10,7 @@ var (
 )
 
 func TestByteFrom(t *testing.T) {
-	i := ByteFrom(12345)
+	i := ByteFrom('b')
 	assertByte(t, i, "ByteFrom()")
 
 	zero := ByteFrom(0)
@@ -20,7 +20,7 @@ func TestByteFrom(t *testing.T) {
 }
 
 func TestByteFromPtr(t *testing.T) {
-	n := int(12345)
+	n := byte('b')
 	iptr := &n
 	i := ByteFromPtr(iptr)
 	assertByte(t, i, "ByteFromPtr()")
@@ -30,13 +30,8 @@ func TestByteFromPtr(t *testing.T) {
 }
 
 func TestUnmarshalByte(t *testing.T) {
-	var i Byte
-	err := json.Unmarshal(intJSON, &i)
-	maybePanic(err)
-	assertByte(t, i, "int json")
-
 	var null Byte
-	err = json.Unmarshal(nullJSON, &null)
+	err := json.Unmarshal(nullJSON, &null)
 	maybePanic(err)
 	assertNullByte(t, null, "null json")
 
@@ -65,7 +60,7 @@ func TestUnmarshalNonByteegerNumber(t *testing.T) {
 
 func TestTextUnmarshalByte(t *testing.T) {
 	var i Byte
-	err := i.UnmarshalText([]byte("12345"))
+	err := i.UnmarshalText([]byte("b"))
 	maybePanic(err)
 	assertByte(t, i, "UnmarshalText() int")
 
@@ -73,18 +68,13 @@ func TestTextUnmarshalByte(t *testing.T) {
 	err = blank.UnmarshalText([]byte(""))
 	maybePanic(err)
 	assertNullByte(t, blank, "UnmarshalText() empty int")
-
-	var null Byte
-	err = null.UnmarshalText([]byte("null"))
-	maybePanic(err)
-	assertNullByte(t, null, `UnmarshalText() "null"`)
 }
 
 func TestMarshalByte(t *testing.T) {
-	i := ByteFrom(12345)
+	i := ByteFrom('b')
 	data, err := json.Marshal(i)
 	maybePanic(err)
-	assertJSONEquals(t, data, "12345", "non-empty json marshal")
+	assertJSONEquals(t, data, `"b"`, "non-empty json marshal")
 
 	// invalid values should be encoded as null
 	null := NewByte(0, false)
@@ -94,10 +84,10 @@ func TestMarshalByte(t *testing.T) {
 }
 
 func TestMarshalByteText(t *testing.T) {
-	i := ByteFrom(12345)
+	i := ByteFrom('b')
 	data, err := i.MarshalText()
 	maybePanic(err)
-	assertJSONEquals(t, data, "12345", "non-empty text marshal")
+	assertJSONEquals(t, data, "b", "non-empty text marshal")
 
 	// invalid values should be encoded as null
 	null := NewByte(0, false)
@@ -107,10 +97,10 @@ func TestMarshalByteText(t *testing.T) {
 }
 
 func TestBytePointer(t *testing.T) {
-	i := ByteFrom(12345)
+	i := ByteFrom('b')
 	ptr := i.Ptr()
-	if *ptr != 12345 {
-		t.Errorf("bad %s int: %#v ≠ %d\n", "pointer", ptr, 12345)
+	if *ptr != 'b' {
+		t.Errorf("bad %s int: %#v ≠ %d\n", "pointer", ptr, 'b')
 	}
 
 	null := NewByte(0, false)
@@ -121,7 +111,7 @@ func TestBytePointer(t *testing.T) {
 }
 
 func TestByteIsZero(t *testing.T) {
-	i := ByteFrom(12345)
+	i := ByteFrom('b')
 	if i.IsZero() {
 		t.Errorf("IsZero() should be false")
 	}
@@ -140,13 +130,13 @@ func TestByteIsZero(t *testing.T) {
 func TestByteSetValid(t *testing.T) {
 	change := NewByte(0, false)
 	assertNullByte(t, change, "SetValid()")
-	change.SetValid(12345)
+	change.SetValid('b')
 	assertByte(t, change, "SetValid()")
 }
 
 func TestByteScan(t *testing.T) {
 	var i Byte
-	err := i.Scan(12345)
+	err := i.Scan('b')
 	maybePanic(err)
 	assertByte(t, i, "scanned int")
 
@@ -157,8 +147,8 @@ func TestByteScan(t *testing.T) {
 }
 
 func assertByte(t *testing.T, i Byte, from string) {
-	if i.Byte != 12345 {
-		t.Errorf("bad %s int: %d ≠ %d\n", from, i.Byte, 12345)
+	if i.Byte != 'b' {
+		t.Errorf("bad %s int: %d ≠ %d\n", from, i.Byte, 'b')
 	}
 	if !i.Valid {
 		t.Error(from, "is invalid, but should be valid")

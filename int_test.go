@@ -73,11 +73,6 @@ func TestTextUnmarshalInt(t *testing.T) {
 	err = blank.UnmarshalText([]byte(""))
 	maybePanic(err)
 	assertNullInt(t, blank, "UnmarshalText() empty int")
-
-	var null Int
-	err = null.UnmarshalText([]byte("null"))
-	maybePanic(err)
-	assertNullInt(t, null, `UnmarshalText() "null"`)
 }
 
 func TestMarshalInt(t *testing.T) {

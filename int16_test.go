@@ -2,7 +2,6 @@ package null
 
 import (
 	"encoding/json"
-	"fmt"
 	"math"
 	"strconv"
 	"testing"
@@ -73,11 +72,9 @@ func TestUnmarshalInt16Overflow(t *testing.T) {
 	var i Int16
 	err := json.Unmarshal([]byte(strconv.FormatUint(uint64(int16Overflow), 10)), &i)
 	maybePanic(err)
-	fmt.Println(i)
 	// Attempt to overflow
 	int16Overflow++
 	err = json.Unmarshal([]byte(strconv.FormatUint(uint64(int16Overflow), 10)), &i)
-	fmt.Println(i)
 	if err == nil {
 		panic("err should be present; decoded value overflows int16")
 	}
@@ -93,11 +90,6 @@ func TestTextUnmarshalInt16(t *testing.T) {
 	err = blank.UnmarshalText([]byte(""))
 	maybePanic(err)
 	assertNullInt16(t, blank, "UnmarshalText() empty int16")
-
-	var null Int16
-	err = null.UnmarshalText([]byte("null"))
-	maybePanic(err)
-	assertNullInt16(t, null, `UnmarshalText() "null"`)
 }
 
 func TestMarshalInt16(t *testing.T) {

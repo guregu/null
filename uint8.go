@@ -62,7 +62,7 @@ func (u *Uint8) UnmarshalJSON(data []byte) error {
 
 // UnmarshalText implements encoding.TextUnmarshaler.
 func (u *Uint8) UnmarshalText(text []byte) error {
-	if len(text) == 0 || bytes.Equal(text, NullBytes) {
+	if text == nil || len(text) == 0 {
 		u.Valid = false
 		return nil
 	}

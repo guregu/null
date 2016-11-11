@@ -73,11 +73,6 @@ func TestTextUnmarshalUint64(t *testing.T) {
 	err = blank.UnmarshalText([]byte(""))
 	maybePanic(err)
 	assertNullUint64(t, blank, "UnmarshalText() empty uint64")
-
-	var null Uint64
-	err = null.UnmarshalText([]byte("null"))
-	maybePanic(err)
-	assertNullUint64(t, null, `UnmarshalText() "null"`)
 }
 
 func TestMarshalUint64(t *testing.T) {

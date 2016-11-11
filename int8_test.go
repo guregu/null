@@ -91,11 +91,6 @@ func TestTextUnmarshalInt8(t *testing.T) {
 	err = blank.UnmarshalText([]byte(""))
 	maybePanic(err)
 	assertNullInt8(t, blank, "UnmarshalText() empty int8")
-
-	var null Int8
-	err = null.UnmarshalText([]byte("null"))
-	maybePanic(err)
-	assertNullInt8(t, null, `UnmarshalText() "null"`)
 }
 
 func TestMarshalInt8(t *testing.T) {
