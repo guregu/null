@@ -1,5 +1,5 @@
 ## null-extended [![GoDoc](https://godoc.org/github.com/nullbio/null?status.svg)](https://godoc.org/github.com/nullbio/null) [![Coverage](http://gocover.io/_badge/github.com/nullbio/null)](http://gocover.io/github.com/nullbio/null)
-`import "gopkg.in/nullbio/null.v5"`
+`import "gopkg.in/nullbio/null.v6"`
 
 null-extended is a library with reasonable options for dealing with nullable SQL and JSON values
 
@@ -13,7 +13,7 @@ All types implement `sql.Scanner` and `driver.Valuer`, so you can use this libra
 
 ### null package
 
-`import "gopkg.in/nullbio/null.v5"`
+`import "gopkg.in/nullbio/null.v6"`
 
 #### null.JSON
 Nullable []byte.
@@ -100,96 +100,6 @@ Marshals to JSON null if SQL source data is null. Zero input will not produce a 
 Nullable uint64.
 
 Marshals to JSON null if SQL source data is null. Zero input will not produce a null Uint64. Can unmarshal from `null.NullUint64` JSON input.
-
-### zero package
-
-`import "gopkg.in/nullbio/null.v5/zero"`
-
-#### zero.JSON
-Nullable []byte.
-
-Will marshal to JSON null if Invalid. []byte{} and []byte(nil) will produce an Invalid JSON. This should be used for storing raw JSON in the database.
-
-Also has `null.JSON.Marshal` and `null.JSON.Unmarshal` helpers to marshal and unmarshal foreign objects.
-
-#### zero.Bytes
-Nullable []byte.
-
-Will marshal to JSON null if Invalid. []byte{} and []byte(nil) will produce an Invalid Bytes. This should be used for storing binary data (bytea in PSQL for example) in the database.
-
-#### zero.String
-Nullable string.
-
-Will marshal to a blank string if null. Blank string input produces a null String. Null values and zero values are considered equivalent. Can unmarshal from `sql.NullString` JSON input.
-
-#### zero.Bool
-Nullable bool.
-
-Will marshal to false if null. `false` produces a null Float. Null values and zero values are considered equivalent. Can unmarshal from `sql.NullBool` JSON input.
-
-#### zero.Time
-
-Will marshal to the zero time if null. Uses `time.Time`'s marshaler. Can unmarshal from `pq.NullTime` and similar JSON input.
-
-#### zero.Float32
-Nullable float32.
-
-Will marshal to 0 if null. 0.0 produces a null Float32. Null values and zero values are considered equivalent. Can unmarshal from `zero.NullFloat32` JSON input.
-
-#### zero.Float64
-Nullable float64.
-
-Will marshal to 0 if null. 0.0 produces a null Float64. Null values and zero values are considered equivalent. Can unmarshal from `sql.NullFloat64` JSON input.
-
-#### zero.Int
-Nullable int.
-
-Will marshal to 0 if null. 0 produces a null Int. Null values and zero values are considered equivalent. Can unmarshal from `zero.NullInt` JSON input.
-
-#### zero.Int8
-Nullable int8.
-
-Will marshal to 0 if null. 0 produces a null Int8. Null values and zero values are considered equivalent. Can unmarshal from `zero.NullInt8` JSON input.
-
-#### zero.Int16
-Nullable int16.
-
-Will marshal to 0 if null. 0 produces a null Int16. Null values and zero values are considered equivalent. Can unmarshal from `zero.NullInt16` JSON input.
-
-#### zero.Int32
-Nullable int32.
-
-Will marshal to 0 if null. 0 produces a null Int32. Null values and zero values are considered equivalent. Can unmarshal from `zero.NullInt32` JSON input.
-
-#### zero.Int64
-Nullable int64.
-
-Will marshal to 0 if null. 0 produces a null Int64. Null values and zero values are considered equivalent. Can unmarshal from `sql.NullInt64` JSON input.
-
-#### zero.Uint
-Nullable uint.
-
-Will marshal to 0 if null. 0 produces a null Uint. Null values and zero values are considered equivalent. Can unmarshal from `zero.NullUint` JSON input.
-
-#### zero.Uint8
-Nullable uint8.
-
-Will marshal to 0 if null. 0 produces a null Uint8. Null values and zero values are considered equivalent. Can unmarshal from `zero.NullUint8` JSON input.
-
-#### zero.Uint16
-Nullable uint16.
-
-Will marshal to 0 if null. 0 produces a null Uint16. Null values and zero values are considered equivalent. Can unmarshal from `zero.NullUint16` JSON input.
-
-#### zero.Uint32
-Nullable uint32.
-
-Will marshal to 0 if null. 0 produces a null Uint32. Null values and zero values are considered equivalent. Can unmarshal from `zero.NullUint32` JSON input.
-
-#### zero.Uint64
-Nullable uint64.
-
-Will marshal to 0 if null. 0 produces a null Uint64. Null values and zero values are considered equivalent. Can unmarshal from `zero.NullUint64` JSON input.
 
 ### Bugs
 `json`'s `",omitempty"` struct tag does not work correctly right now. It will never omit a null or empty String. This might be [fixed eventually](https://github.com/golang/go/issues/4357).
