@@ -136,7 +136,7 @@ func TestByteSetValid(t *testing.T) {
 
 func TestByteScan(t *testing.T) {
 	var i Byte
-	err := i.Scan('b')
+	err := i.Scan("b")
 	maybePanic(err)
 	assertByte(t, i, "scanned int")
 

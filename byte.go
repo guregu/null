@@ -5,8 +5,6 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
-
-	"gopkg.in/nullbio/null.v6/convert"
 )
 
 // Byte is an nullable int.
@@ -115,8 +113,17 @@ func (b *Byte) Scan(value interface{}) error {
 		b.Byte, b.Valid = 0, false
 		return nil
 	}
+
+	val := value.(string)
+	if len(val) == 0 {
+		b.Valid = false
+		b.Byte = 0
+		return nil
+	}
+
 	b.Valid = true
-	return convert.ConvertAssign(&b.Byte, value)
+	b.Byte = byte(val[0])
+	return nil
 }
 
 // Value implements the driver Valuer interface.
