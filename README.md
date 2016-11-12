@@ -1,13 +1,16 @@
 ## null-extended [![GoDoc](https://godoc.org/github.com/nullbio/null?status.svg)](https://godoc.org/github.com/nullbio/null) [![Coverage](http://gocover.io/_badge/github.com/nullbio/null)](http://gocover.io/github.com/nullbio/null)
+
+Install:
+
+`go get -u "gopkg.in/nullbio/null.v6"`
+
+---
+
 `import "gopkg.in/nullbio/null.v6"`
 
 null-extended is a library with reasonable options for dealing with nullable SQL and JSON values
 
-There are two packages: `null` and its subpackage `zero`.
-
-Types in `null` will only be considered null on null input, and will JSON encode to `null`. If you need zero and null be considered separate values, use these.
-
-Types in `zero` are treated like zero values in Go: blank string input will produce a null `zero.String`, and null Strings will JSON encode to `""`. Zero values of these types will be considered null to SQL. If you need zero and null treated the same, use these.
+Types in `null` will only be considered null on null input, and will JSON encode to `null`.
 
 All types implement `sql.Scanner` and `driver.Valuer`, so you can use this library in place of `sql.NullXXX`. All types also implement: `encoding.TextMarshaler`, `encoding.TextUnmarshaler`, `json.Marshaler`, `json.Unmarshaler` and `sql.Scanner`.
 
