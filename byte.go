@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 
-	"gopkg.in/nullbio/null.v5/convert"
+	"gopkg.in/nullbio/null.v6/convert"
 )
 
 // Byte is an nullable int.

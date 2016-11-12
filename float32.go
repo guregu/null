@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"strconv"
 
-	"gopkg.in/nullbio/null.v5/convert"
+	"gopkg.in/nullbio/null.v6/convert"
 )
 
 // Float32 is a nullable float32.

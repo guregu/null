@@ -8,7 +8,7 @@ import (
 	"math"
 	"strconv"
 
-	"gopkg.in/nullbio/null.v5/convert"
+	"gopkg.in/nullbio/null.v6/convert"
 )
 
 // Uint16 is an nullable uint16.

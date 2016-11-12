@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"strconv"
 
-	"gopkg.in/nullbio/null.v5/convert"
+	"gopkg.in/nullbio/null.v6/convert"
 )
 
 // Uint64 is an nullable uint64.

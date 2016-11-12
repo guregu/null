@@ -7,7 +7,7 @@ import (
 	"errors"
 	"fmt"
 
-	"gopkg.in/nullbio/null.v5/convert"
+	"gopkg.in/nullbio/null.v6/convert"
 )
 
 // JSON is a nullable []byte.
