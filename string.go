@@ -5,7 +5,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 
-	"github.com/nullbio/null/convert"
+	"gopkg.in/nullbio/null.v6/convert"
 )
 
 // String is a nullable string. It supports SQL and JSON serialization.

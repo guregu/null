@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"strconv"
 
-	"github.com/nullbio/null/convert"
+	"gopkg.in/nullbio/null.v6/convert"
 )
 
 // Int64 is an nullable int64.
