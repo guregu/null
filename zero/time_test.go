@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"testing"
 	"time"
+
+	"github.com/axiomzen/null/format"
 )
 
 var (
@@ -28,8 +30,8 @@ var (
 	customNullObject   = []byte(`{"Time":"` + customZeroTimeStr + `","Valid":false}`)
 )
 
-func testUnmarshalTimeJSON(t *testing.T, format string, to []byte, value time.Time, zeroT []byte) {
-	SetFormat(format)
+func testUnmarshalTimeJSON(t *testing.T, f string, to []byte, value time.Time, zeroT []byte) {
+	format.SetTimeFormat(f)
 	var ti Time
 	err := json.Unmarshal(to, &ti)
 	maybePanic(err)
@@ -97,18 +99,18 @@ func CustomTestUnmarshalTimeJSON(t *testing.T) {
 	testUnmarshalTimeJSON(t, customTimeFormat, customTimeObject, customTimeValue, customZeroTimeJSON)
 }
 
-func testMarshalTime(t *testing.T, format string, value time.Time, tJson []byte, zTJson []byte) {
-	SetFormat(format)
+func testMarshalTime(t *testing.T, f string, value time.Time, tJSON []byte, zTJSON []byte) {
+	format.SetTimeFormat(f)
 
 	ti := TimeFrom(value)
 	data, err := json.Marshal(ti)
 	maybePanic(err)
-	assertJSONEquals(t, data, string(tJson), "non-empty json marshal")
+	assertJSONEquals(t, data, string(tJSON), "non-empty json marshal")
 
 	null := TimeFromPtr(nil)
 	data, err = json.Marshal(null)
 	maybePanic(err)
-	assertJSONEquals(t, data, string(zTJson), "empty json marshal")
+	assertJSONEquals(t, data, string(zTJSON), "empty json marshal")
 }
 
 func TestMarshalTime(t *testing.T) {
@@ -119,8 +121,8 @@ func CustomTestMarshalTime(t *testing.T) {
 	testMarshalTime(t, customTimeFormat, customTimeValue, customTimeJSON, customZeroTimeJSON)
 }
 
-func testUnmarshalTimeText(t *testing.T, format string, value time.Time, tS string, zeroTStr string) {
-	SetFormat(format)
+func testUnmarshalTimeText(t *testing.T, f string, value time.Time, tS string, zeroTStr string) {
+	format.SetTimeFormat(f)
 	ti := TimeFrom(value)
 	txt, err := ti.MarshalText()
 	maybePanic(err)
@@ -155,8 +157,8 @@ func CustomTestUnmarshalTimeText(t *testing.T) {
 	testUnmarshalTimeText(t, customTimeFormat, customTimeValue, customTimeString, customZeroTimeStr)
 }
 
-func testTimeFrom(t *testing.T, format string, value time.Time) {
-	SetFormat(format)
+func testTimeFrom(t *testing.T, f string, value time.Time) {
+	format.SetTimeFormat(f)
 	ti := TimeFrom(value)
 	assertTime(t, ti, "TimeFrom() time.Time", value)
 
@@ -173,8 +175,8 @@ func CustomTestTimeFrom(t *testing.T) {
 	testTimeFrom(t, customTimeFormat, customTimeValue)
 }
 
-func testTimeFromPtr(t *testing.T, format string, value time.Time) {
-	SetFormat(format)
+func testTimeFromPtr(t *testing.T, f string, value time.Time) {
+	format.SetTimeFormat(f)
 	ti := TimeFromPtr(&value)
 	assertTime(t, ti, "TimeFromPtr() time", value)
 
@@ -190,8 +192,8 @@ func CustomTestTimeFromPtr(t *testing.T) {
 	testTimeFromPtr(t, customTimeFormat, customTimeValue)
 }
 
-func testTimeSetValid(t *testing.T, format string, value time.Time) {
-	SetFormat(format)
+func testTimeSetValid(t *testing.T, f string, value time.Time) {
+	format.SetTimeFormat(f)
 	var ti time.Time
 	change := TimeFrom(ti)
 	assertNullTime(t, change, "SetValid()")
@@ -207,8 +209,8 @@ func CustomTestTimeSetValid(t *testing.T) {
 	testTimeSetValid(t, customTimeFormat, customTimeValue)
 }
 
-func testTimePointer(t *testing.T, format string, value time.Time) {
-	SetFormat(format)
+func testTimePointer(t *testing.T, f string, value time.Time) {
+	format.SetTimeFormat(f)
 	ti := TimeFrom(value)
 	ptr := ti.Ptr()
 	if *ptr != value {
@@ -231,8 +233,8 @@ func CustomTestTimePointer(t *testing.T) {
 	testTimePointer(t, customTimeFormat, customTimeValue)
 }
 
-func testTimeScan(t *testing.T, format string, value time.Time) {
-	SetFormat(format)
+func testTimeScan(t *testing.T, f string, value time.Time) {
+	format.SetTimeFormat(f)
 	var ti Time
 	err := ti.Scan(value)
 	maybePanic(err)
@@ -259,8 +261,8 @@ func CustomTestTimeScan(t *testing.T) {
 	testTimeScan(t, customTimeFormat, customTimeValue)
 }
 
-func testTimeValue(t *testing.T, format string, value time.Time) {
-	SetFormat(format)
+func testTimeValue(t *testing.T, f string, value time.Time) {
+	format.SetTimeFormat(f)
 	ti := TimeFrom(value)
 	v, err := ti.Value()
 	maybePanic(err)

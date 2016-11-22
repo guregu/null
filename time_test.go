@@ -5,6 +5,8 @@ import (
 	//"fmt"
 	"testing"
 	"time"
+
+	"github.com/axiomzen/null/format"
 )
 
 var (
@@ -31,8 +33,8 @@ var (
 	//customNullObject   = []byte(`{"Time":"0001-01-01T00:00:00+00:00","Valid":false}`)
 )
 
-func testUnmarshalTimeJSON(t *testing.T, format string, jsonStr []byte, value time.Time, to []byte) {
-	SetFormat(format)
+func testUnmarshalTimeJSON(t *testing.T, f string, jsonStr []byte, value time.Time, to []byte) {
+	format.SetTimeFormat(f)
 
 	var ti Time
 	err := json.Unmarshal(jsonStr, &ti)
@@ -84,9 +86,9 @@ func TestUnmarshalCustomTimeJSON(t *testing.T) {
 	testUnmarshalTimeJSON(t, customTimeFormat, customTimeJSON, customTimeValue, customTimeObject)
 }
 
-//t *testing.T, format string, jsonStr []byte, value time.Time, to []byte
-func testUnmarshalTimeText(t *testing.T, format string, timeStr string, value time.Time) {
-	SetFormat(format)
+//t *testing.T, f string, jsonStr []byte, value time.Time, to []byte
+func testUnmarshalTimeText(t *testing.T, f string, timeStr string, value time.Time) {
+	format.SetTimeFormat(f)
 
 	ti := TimeFrom(value)
 	txt, err := ti.MarshalText()
@@ -122,8 +124,8 @@ func TestUnmarshalCustomTimeText(t *testing.T) {
 	testUnmarshalTimeText(t, customTimeFormat, customTimeString, customTimeValue)
 }
 
-func testMarshalTime(t *testing.T, format string, value time.Time, tJSON []byte) {
-	SetFormat(format)
+func testMarshalTime(t *testing.T, f string, value time.Time, tJSON []byte) {
+	format.SetTimeFormat(f)
 
 	ti := TimeFrom(value)
 	data, err := json.Marshal(ti)
@@ -144,8 +146,8 @@ func TestMarshalCustomTime(t *testing.T) {
 	testMarshalTime(t, customTimeFormat, customTimeValue, customTimeJSON)
 }
 
-func testTimeFrom(t *testing.T, format string, value time.Time) {
-	SetFormat(format)
+func testTimeFrom(t *testing.T, f string, value time.Time) {
+	format.SetTimeFormat(f)
 
 	ti := TimeFrom(value)
 	assertTime(t, ti, "TimeFrom() time.Time", value)
@@ -159,8 +161,8 @@ func TestCustomTimeFrom(t *testing.T) {
 	testTimeFrom(t, customTimeFormat, customTimeValue)
 }
 
-func testTimeFromPtr(t *testing.T, format string, value time.Time) {
-	SetFormat(format)
+func testTimeFromPtr(t *testing.T, f string, value time.Time) {
+	format.SetTimeFormat(f)
 
 	ti := TimeFromPtr(&value)
 	assertTime(t, ti, "TimeFromPtr() time", value)
@@ -177,8 +179,8 @@ func TestCustomTimeFromPtr(t *testing.T) {
 	testTimeFromPtr(t, customTimeFormat, customTimeValue)
 }
 
-func testTimeSetValid(t *testing.T, format string, value time.Time) {
-	SetFormat(format)
+func testTimeSetValid(t *testing.T, f string, value time.Time) {
+	format.SetTimeFormat(f)
 
 	var ti time.Time
 	change := NewTime(ti, false)
@@ -195,8 +197,8 @@ func TestCustomTimeSetValid(t *testing.T) {
 	testTimeSetValid(t, customTimeFormat, customTimeValue)
 }
 
-func testTimePointer(t *testing.T, format string, value time.Time) {
-	SetFormat(format)
+func testTimePointer(t *testing.T, f string, value time.Time) {
+	format.SetTimeFormat(f)
 
 	ti := TimeFrom(value)
 	ptr := ti.Ptr()
@@ -220,8 +222,8 @@ func TestCustomTimePointer(t *testing.T) {
 	testTimePointer(t, customTimeFormat, customTimeValue)
 }
 
-func testTimeScanValue(t *testing.T, format string, value time.Time) {
-	SetFormat(format)
+func testTimeScanValue(t *testing.T, f string, value time.Time) {
+	format.SetTimeFormat(f)
 
 	var ti Time
 	err := ti.Scan(value)
