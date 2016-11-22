@@ -7,36 +7,13 @@ import (
 	"fmt"
 	"math/rand"
 	"reflect"
-	"sync"
 	"time"
+
+	"github.com/axiomzen/null/format"
 
 	"gopkg.in/mgo.v2/bson"
 	"gopkg.in/pg.v4/types"
 )
-
-// holds the format so we are thread safe
-type formatHolder struct {
-	sync.RWMutex
-	format string
-}
-
-var theFormat = &formatHolder{format: time.RFC3339Nano}
-
-// SetFormat sets the format for the class
-func SetFormat(f string) {
-	theFormat.Lock()
-	theFormat.format = f
-	theFormat.Unlock()
-}
-
-// GetFormat gets the format for the class
-func GetFormat() string {
-	theFormat.RLock()
-	defer theFormat.RUnlock()
-	return theFormat.format
-}
-
-//const defaultFormat = time.RFC3339Nano
 
 // Time is a nullable time.Time. It supports SQL and JSON serialization.
 // It will marshal to null if null.
@@ -145,7 +122,7 @@ func (t Time) MarshalJSON() ([]byte, error) {
 		return []byte("null"), nil
 	}
 	//return t.Time.MarshalJSON()
-	f := GetFormat()
+	f := format.GetTimeFormat()
 	b := make([]byte, 0, len(f)+2)
 	b = append(b, '"')
 	b = t.Time.AppendFormat(b, f)
@@ -166,7 +143,7 @@ func (t *Time) UnmarshalJSON(data []byte) error {
 	case string:
 		//err = t.Time.UnmarshalJSON(data)
 		//RFC3339
-		t.Time, err = time.Parse(`"`+GetFormat()+`"`, string(data))
+		t.Time, err = time.Parse(`"`+format.GetTimeFormat()+`"`, string(data))
 		t.Valid = err == nil
 		return err
 	case map[string]interface{}:
@@ -200,7 +177,7 @@ func (t *Time) UnmarshalJSON(data []byte) error {
 func (t Time) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
 	if t.Valid {
 		// to string?
-		return e.EncodeElement(t.Time.Format(GetFormat()), start)
+		return e.EncodeElement(t.Time.Format(format.GetTimeFormat()), start)
 	}
 	return e.EncodeElement(nil, start)
 }
@@ -213,7 +190,7 @@ func (t *Time) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 	if err != nil {
 		return err
 	}
-	t.Time, err = time.Parse(GetFormat(), s)
+	t.Time, err = time.Parse(format.GetTimeFormat(), s)
 	if err != nil {
 		t.Valid = false
 	} else {
@@ -258,7 +235,7 @@ func (t Time) MarshalText() ([]byte, error) {
 		return []byte("null"), nil
 	}
 	//return t.Time.MarshalText()
-	f := GetFormat()
+	f := format.GetTimeFormat()
 	b := make([]byte, 0, len(f))
 	return t.Time.AppendFormat(b, f), nil
 }
@@ -275,7 +252,7 @@ func (t *Time) UnmarshalText(text []byte) error {
 	// }
 	// Fractional seconds are handled implicitly by Parse.
 	var err error
-	t.Time, err = time.Parse(GetFormat(), str)
+	t.Time, err = time.Parse(format.GetTimeFormat(), str)
 	if err != nil {
 		return err
 	}
