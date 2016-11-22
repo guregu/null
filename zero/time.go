@@ -3,18 +3,48 @@ package zero
 import (
 	"database/sql/driver"
 	"encoding/json"
+	"encoding/xml"
 	"fmt"
+	"math/rand"
 	"reflect"
 	"time"
+
+	"github.com/axiomzen/null/format"
+
+	"gopkg.in/mgo.v2/bson"
+	"gopkg.in/pg.v4/types"
 )
 
-// Time is a nullable time.Time.
+// Time is a zeroable time.Time.
 // JSON marshals to the zero value for time.Time if null.
 // Considered to be null to SQL if zero.
 type Time struct {
 	Time  time.Time
 	Valid bool
 }
+
+///////////////////////////////
+// PG interfaces
+///////////////////////////////
+
+// IsZero implements the orm.isZeroer interface
+func (t Time) IsZero() bool {
+	return !t.Valid
+}
+
+// AppendValue implements the types.ValueAppender interface
+func (t Time) AppendValue(b []byte, quote int) ([]byte, error) {
+	if !t.Valid {
+		// zero time is a null time
+		return types.AppendNull(b, quote), nil
+	}
+	// will always render a non zero time
+	return types.AppendTime(b, t.Time, quote), nil
+}
+
+///////////////////////////////
+// sql interfaces
+///////////////////////////////
 
 // Scan implements Scanner interface.
 func (t *Time) Scan(value interface{}) error {
@@ -25,10 +55,13 @@ func (t *Time) Scan(value interface{}) error {
 	case nil:
 		t.Valid = false
 		return nil
+	case []byte:
+		b, _ := value.([]byte)
+		t.Time, err = types.ParseTime(b)
 	default:
 		err = fmt.Errorf("null: cannot scan type %T into null.Time: %v", value, value)
 	}
-	t.Valid = err == nil
+	t.Valid = err == nil && !t.Time.IsZero()
 	return err
 }
 
@@ -67,10 +100,18 @@ func TimeFromPtr(t *time.Time) Time {
 // It will encode the zero value of time.Time
 // if this time is invalid.
 func (t Time) MarshalJSON() ([]byte, error) {
-	if !t.Valid {
-		return (time.Time{}).MarshalJSON()
+
+	f := format.GetTimeFormat()
+	b := make([]byte, 0, len(f)+2)
+	b = append(b, '"')
+	if t.Valid {
+		b = t.Time.AppendFormat(b, f)
+	} else {
+		b = (time.Time{}).AppendFormat(b, f)
 	}
-	return t.Time.MarshalJSON()
+
+	b = append(b, '"')
+	return b, nil
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
@@ -85,7 +126,8 @@ func (t *Time) UnmarshalJSON(data []byte) error {
 	switch x := v.(type) {
 	case string:
 		var ti time.Time
-		if err = ti.UnmarshalJSON(data); err != nil {
+		ti, err = time.Parse(`"`+format.GetTimeFormat()+`"`, string(data))
+		if err != nil {
 			return err
 		}
 		*t = TimeFrom(ti)
@@ -96,7 +138,7 @@ func (t *Time) UnmarshalJSON(data []byte) error {
 		if !tiOK || !validOK {
 			return fmt.Errorf(`json: unmarshalling object into Go value of type null.Time requires key "Time" to be of type string and key "Valid" to be of type bool; found %T and %T, respectively`, x["Time"], x["Valid"])
 		}
-		err = t.Time.UnmarshalText([]byte(ti))
+		err = t.UnmarshalText([]byte(ti))
 		t.Valid = valid
 		return err
 	case nil:
@@ -107,24 +149,96 @@ func (t *Time) UnmarshalJSON(data []byte) error {
 	}
 }
 
+// MarshalXML implements the xml.Marshaler interface
+func (t Time) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
+	if t.Valid {
+		// to string?
+		return e.EncodeElement(t.Time.Format(format.GetTimeFormat()), start)
+	}
+	return e.EncodeElement((time.Time{}).Format(format.GetTimeFormat()), start)
+}
+
+// UnmarshalXML implments the xml.Unmarshaler interface
+func (t *Time) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
+
+	var s string
+	err := d.DecodeElement(&s, &start)
+	if err != nil {
+		return err
+	}
+	t.Time, err = time.Parse(format.GetTimeFormat(), s)
+	if err != nil {
+		t.Valid = false
+	} else {
+		t.Valid = true
+	}
+	return nil
+}
+
+// MarshalText implements encoding.TextMarshaler.
 func (t Time) MarshalText() ([]byte, error) {
 	ti := t.Time
 	if !t.Valid {
 		ti = time.Time{}
 	}
-	return ti.MarshalText()
+	f := format.GetTimeFormat()
+	b := make([]byte, 0, len(f))
+	//return ti.MarshalText()
+	return ti.AppendFormat(b, f), nil
 }
 
+// UnmarshalText implements encoding.TextUnmarshaler.
 func (t *Time) UnmarshalText(text []byte) error {
 	str := string(text)
 	if str == "" || str == "null" {
 		t.Valid = false
 		return nil
 	}
-	if err := t.Time.UnmarshalText(text); err != nil {
+
+	var err error
+	t.Time, err = time.Parse(format.GetTimeFormat(), str)
+	if err != nil {
 		return err
 	}
+
 	t.Valid = true
+	return nil
+}
+
+// GetBSON implements bson.Getter.
+func (t Time) GetBSON() (interface{}, error) {
+	if t.Valid {
+		return t.Time, nil
+	}
+	return time.Time{}, nil
+}
+
+// SetBSON implements bson.Setter.
+func (t *Time) SetBSON(raw bson.Raw) error {
+	var ti time.Time
+	err := raw.Unmarshal(&ti)
+
+	if err == nil {
+		*t = Time{Time: ti, Valid: !ti.IsZero()}
+	} else {
+		*t = Time{Valid: false}
+	}
+	return nil
+}
+
+// GetValue implements the compare.Valuable interface
+func (t Time) GetValue() reflect.Value {
+	if t.Valid {
+		return reflect.ValueOf(t.Time)
+	}
+	return reflect.ValueOf(time.Time{})
+}
+
+// LoremDecode implements lorem.Decoder
+func (t *Time) LoremDecode(tag, example string) error {
+	// fill ourselves with a random time
+	// so now we can set valid right or not
+	t.SetValid(time.Unix(rand.Int63(), 0))
 	return nil
 }
 
@@ -132,7 +246,7 @@ func (t *Time) UnmarshalText(text []byte) error {
 // sets it to be non-null.
 func (t *Time) SetValid(v time.Time) {
 	t.Time = v
-	t.Valid = true
+	t.Valid = !v.IsZero()
 }
 
 // Ptr returns a pointer to this Time's value,

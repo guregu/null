@@ -7,8 +7,11 @@ package null
 import (
 	"database/sql"
 	"encoding/json"
+	"encoding/xml"
 	"fmt"
 	"reflect"
+
+	"gopkg.in/mgo.v2/bson"
 )
 
 // String is a nullable string. It supports SQL and JSON serialization.
@@ -87,6 +90,67 @@ func (s String) MarshalText() ([]byte, error) {
 func (s *String) UnmarshalText(text []byte) error {
 	s.String = string(text)
 	s.Valid = s.String != ""
+	return nil
+}
+
+// MarshalXML implements the xml.Marshaler interface
+func (s String) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
+	if s.Valid {
+		return e.EncodeElement(s.String, start)
+	}
+	return e.EncodeElement(nil, start)
+}
+
+// UnmarshalXML implments the xml.Unmarshaler interface
+func (s *String) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
+
+	var x *string
+	if err := d.DecodeElement(&x, &start); err != nil {
+		return err
+	}
+	if x != nil {
+		s.Valid = true
+		s.String = *x
+	} else {
+		s.Valid = false
+	}
+	return nil
+}
+
+// GetBSON implements bson.Getter.
+func (s String) GetBSON() (interface{}, error) {
+	if s.Valid {
+		return s.String, nil
+	}
+	// TODO: do we need a nil pointer to a string?
+	return nil, nil
+}
+
+// SetBSON implements bson.Setter.
+func (s *String) SetBSON(raw bson.Raw) error {
+	var str string
+	err := raw.Unmarshal(&str)
+
+	if err == nil {
+		*s = String{sql.NullString{String: str, Valid: true}}
+	} else {
+		*s = String{sql.NullString{Valid: false}}
+	}
+	return nil
+}
+
+// GetValue implements the compare.Valuable interface
+func (s String) GetValue() reflect.Value {
+	if s.Valid {
+		return reflect.ValueOf(s.String)
+	}
+	// or just nil?
+	return reflect.ValueOf(nil)
+}
+
+// LoremDecode implements lorem.Decoder
+func (s *String) LoremDecode(tag, example string) error {
+	s.SetValid(example)
 	return nil
 }
 

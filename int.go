@@ -3,9 +3,13 @@ package null
 import (
 	"database/sql"
 	"encoding/json"
+	"encoding/xml"
 	"fmt"
+	"math/rand"
 	"reflect"
 	"strconv"
+
+	"gopkg.in/mgo.v2/bson"
 )
 
 // Int is an nullable int64.
@@ -64,6 +68,22 @@ func (i *Int) UnmarshalJSON(data []byte) error {
 	return err
 }
 
+// UnmarshalXML implments the xml.Unmarshaler interface
+func (i *Int) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
+
+	var x *int64
+	if err := d.DecodeElement(&x, &start); err != nil {
+		return err
+	}
+	if x != nil {
+		i.Valid = true
+		i.Int64 = *x
+	} else {
+		i.Valid = false
+	}
+	return nil
+}
+
 // UnmarshalText implements encoding.TextUnmarshaler.
 // It will unmarshal to a null Int if the input is a blank or not an integer.
 // It will return an error if the input is not an integer, blank, or "null".
@@ -88,6 +108,14 @@ func (i Int) MarshalJSON() ([]byte, error) {
 	return []byte(strconv.FormatInt(i.Int64, 10)), nil
 }
 
+// MarshalXML implements the xml.Marshaler interface
+func (i Int) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
+	if i.Valid {
+		return e.EncodeElement(i.Int64, start)
+	}
+	return e.EncodeElement(nil, start)
+}
+
 // MarshalText implements encoding.TextMarshaler.
 // It will encode a blank string if this Int is null.
 func (i Int) MarshalText() ([]byte, error) {
@@ -95,6 +123,43 @@ func (i Int) MarshalText() ([]byte, error) {
 		return []byte{}, nil
 	}
 	return []byte(strconv.FormatInt(i.Int64, 10)), nil
+}
+
+// GetBSON implements bson.Getter.
+func (i Int) GetBSON() (interface{}, error) {
+	if i.Valid {
+		return i.Int64, nil
+	}
+	// TODO: do we need a nil pointer to a string?
+	return nil, nil
+}
+
+// SetBSON implements bson.Setter.
+func (i *Int) SetBSON(raw bson.Raw) error {
+	var ii int64
+	err := raw.Unmarshal(&ii)
+
+	if err == nil {
+		*i = Int{sql.NullInt64{Int64: ii, Valid: true}}
+	} else {
+		*i = Int{sql.NullInt64{Valid: false}}
+	}
+	return nil
+}
+
+// GetValue implements the compare.Valuable interface
+func (i Int) GetValue() reflect.Value {
+	if i.Valid {
+		return reflect.ValueOf(i.Int64)
+	}
+	// or just nil?
+	return reflect.ValueOf(nil)
+}
+
+// LoremDecode implements lorem.Decoder
+func (i *Int) LoremDecode(tag, example string) error {
+	i.SetValid(rand.Int63())
+	return nil
 }
 
 // SetValid changes this Int's value and also sets it to be non-null.

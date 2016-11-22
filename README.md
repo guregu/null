@@ -1,5 +1,5 @@
-## null [![GoDoc](https://godoc.org/github.com/guregu/null?status.svg)](https://godoc.org/github.com/guregu/null) [![Coverage](http://gocover.io/_badge/github.com/guregu/null)](http://gocover.io/github.com/guregu/null)
-`import "gopkg.in/guregu/null.v3"`
+## null [![GoDoc](https://godoc.org/github.com/axiomzen/null?status.svg)](https://godoc.org/github.com/axiomzen/null) [![Coverage](http://gocover.io/_badge/github.com/axiomzen/null)](http://gocover.io/github.com/axiomzen/null)
+`import "gopkg.in/axiomzen/null.v3"`
 
 null is a library with reasonable options for dealing with nullable SQL and JSON values
 
@@ -9,11 +9,11 @@ Types in `null` will only be considered null on null input, and will JSON encode
 
 Types in `zero` are treated like zero values in Go: blank string input will produce a null `zero.String`, and null Strings will JSON encode to `""`. Zero values of these types will be considered null to SQL. If you need zero and null treated the same, use these.
 
-All types implement `sql.Scanner` and `driver.Valuer`, so you can use this library in place of `sql.NullXXX`. All types also implement: `encoding.TextMarshaler`, `encoding.TextUnmarshaler`, `json.Marshaler`, and `json.Unmarshaler`. 
+All types implement `sql.Scanner` and `driver.Valuer`, so you can use this library in place of `sql.NullXXX`. All types also implement: `encoding.TextMarshaler`, `encoding.TextUnmarshaler`, `json.Marshaler`, `json.Unmarshaler`, `xml.MarshalXML`, `xml.UnmarshalXML`, `bson.GetBSON`, and `bson.SetBSON`. 
 
 ### null package
 
-`import "gopkg.in/guregu/null.v3"`
+`import "gopkg.in/axiomzen/null.v3"`
 
 #### null.String
 Nullable string.
@@ -41,7 +41,7 @@ Marshals to JSON null if SQL source data is null. Uses `time.Time`'s marshaler. 
 
 ### zero package
 
-`import "gopkg.in/guregu/null.v3/zero"`
+`import "gopkg.in/axiomzen/null.v3/zero"`
 
 #### zero.String
 Nullable string.
