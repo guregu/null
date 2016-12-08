@@ -8,69 +8,69 @@ import (
 )
 
 var (
-	intJSON     = []byte(`12345`)
-	nullIntJSON = []byte(`{"Int64":12345,"Valid":true}`)
-	zeroJSON    = []byte(`0`)
+	int64JSON     = []byte(`12345`)
+	nullInt64JSON = []byte(`{"Int64":12345,"Valid":true}`)
+	zeroJSON      = []byte(`0`)
 )
 
-func TestIntFrom(t *testing.T) {
-	i := IntFrom(12345)
-	assertInt(t, i, "IntFrom()")
+func TestInt64From(t *testing.T) {
+	i := Int64From(12345)
+	assertInt64(t, i, "Int64From())")
 
-	zero := IntFrom(0)
+	zero := Int64From(0)
 	if zero.Valid {
-		t.Error("IntFrom(0)", "is valid, but should be invalid")
+		t.Error("Int64From(0)", "is valid, but should be invalid")
 	}
 }
 
-func TestIntFromPtr(t *testing.T) {
+func TestInt64FromPtr(t *testing.T) {
 	n := int64(12345)
 	iptr := &n
-	i := IntFromPtr(iptr)
-	assertInt(t, i, "IntFromPtr()")
+	i := Int64FromPtr(iptr)
+	assertInt64(t, i, "Int64FromPtr())")
 
-	null := IntFromPtr(nil)
-	assertNullInt(t, null, "IntFromPtr(nil)")
+	null := Int64FromPtr(nil)
+	assertNullInt64(t, null, "Int64FromPtr(nil)")
 }
 
-func TestUnmarshalInt(t *testing.T) {
-	var i Int
-	err := json.Unmarshal(intJSON, &i)
+func TestUnmarshalInt64(t *testing.T) {
+	var i Int64
+	err := json.Unmarshal(int64JSON, &i)
 	maybePanic(err)
-	assertInt(t, i, "int json")
+	assertInt64(t, i, "int json")
 
-	var ni Int
-	err = json.Unmarshal(nullIntJSON, &ni)
+	var ni Int64
+	err = json.Unmarshal(nullInt64JSON, &ni)
 	maybePanic(err)
-	assertInt(t, ni, "sql.NullInt64 json")
+	assertInt64(t, ni, "sql.NullInt64 json")
 
-	var zero Int
+	var zero Int64
 	err = json.Unmarshal(zeroJSON, &zero)
 	maybePanic(err)
-	assertNullInt(t, zero, "zero json")
+	assertNullInt64(t, zero, "zero json")
 
-	var null Int
+	var null Int64
 	err = json.Unmarshal(nullJSON, &null)
 	maybePanic(err)
-	assertNullInt(t, null, "null json")
+	assertNullInt64(t, null, "null json")
 
-	var badType Int
+	var badType Int64
 	err = json.Unmarshal(boolJSON, &badType)
 	if err == nil {
 		panic("err should not be nil")
 	}
-	assertNullInt(t, badType, "wrong type json")
+	assertNullInt64(t, badType, "wrong type json")
 
-	var invalid Int
+	var invalid Int64
 	err = invalid.UnmarshalJSON(invalidJSON)
 	if _, ok := err.(*json.SyntaxError); !ok {
 		t.Errorf("expected json.SyntaxError, not %T", err)
 	}
-	assertNullInt(t, invalid, "invalid json")
+	assertNullInt64(t, invalid, "invalid json")
 }
 
-func TestUnmarshalNonIntegerNumber(t *testing.T) {
-	var i Int
+func TestUnmarshalNonIntegerNumber64(t *testing.T) {
+	var i Int64
 	err := json.Unmarshal(floatJSON, &i)
 	if err == nil {
 		panic("err should be present; non-integer number coerced to int")
@@ -81,7 +81,7 @@ func TestUnmarshalInt64Overflow(t *testing.T) {
 	int64Overflow := uint64(math.MaxInt64)
 
 	// Max int64 should decode successfully
-	var i Int
+	var i Int64
 	err := json.Unmarshal([]byte(strconv.FormatUint(int64Overflow, 10)), &i)
 	maybePanic(err)
 
@@ -93,105 +93,105 @@ func TestUnmarshalInt64Overflow(t *testing.T) {
 	}
 }
 
-func TestTextUnmarshalInt(t *testing.T) {
-	var i Int
+func TestTextUnmarshalInt64(t *testing.T) {
+	var i Int64
 	err := i.UnmarshalText([]byte("12345"))
 	maybePanic(err)
-	assertInt(t, i, "UnmarshalText() int")
+	assertInt64(t, i, "UnmarshalText() int")
 
-	var zero Int
+	var zero Int64
 	err = zero.UnmarshalText([]byte("0"))
 	maybePanic(err)
-	assertNullInt(t, zero, "UnmarshalText() zero int")
+	assertNullInt64(t, zero, "UnmarshalText() zero int")
 
-	var blank Int
+	var blank Int64
 	err = blank.UnmarshalText([]byte(""))
 	maybePanic(err)
-	assertNullInt(t, blank, "UnmarshalText() empty int")
+	assertNullInt64(t, blank, "UnmarshalText() empty int")
 
-	var null Int
+	var null Int64
 	err = null.UnmarshalText([]byte("null"))
 	maybePanic(err)
-	assertNullInt(t, null, `UnmarshalText() "null"`)
+	assertNullInt64(t, null, `UnmarshalText() "null"`)
 }
 
-func TestMarshalInt(t *testing.T) {
-	i := IntFrom(12345)
+func TestMarshalInt64(t *testing.T) {
+	i := Int64From(12345)
 	data, err := json.Marshal(i)
 	maybePanic(err)
 	assertJSONEquals(t, data, "12345", "non-empty json marshal")
 
 	// invalid values should be encoded as 0
-	null := NewInt(0, false)
+	null := NewInt64(0, false)
 	data, err = json.Marshal(null)
 	maybePanic(err)
 	assertJSONEquals(t, data, "0", "null json marshal")
 }
 
-func TestMarshalIntText(t *testing.T) {
-	i := IntFrom(12345)
+func TestMarshalInt64Text(t *testing.T) {
+	i := Int64From(12345)
 	data, err := i.MarshalText()
 	maybePanic(err)
 	assertJSONEquals(t, data, "12345", "non-empty text marshal")
 
 	// invalid values should be encoded as zero
-	null := NewInt(0, false)
+	null := NewInt64(0, false)
 	data, err = null.MarshalText()
 	maybePanic(err)
 	assertJSONEquals(t, data, "0", "null text marshal")
 }
 
-func TestIntPointer(t *testing.T) {
-	i := IntFrom(12345)
+func TestInt64Pointer(t *testing.T) {
+	i := Int64From(12345)
 	ptr := i.Ptr()
 	if *ptr != 12345 {
 		t.Errorf("bad %s int: %#v ≠ %d\n", "pointer", ptr, 12345)
 	}
 
-	null := NewInt(0, false)
+	null := NewInt64(0, false)
 	ptr = null.Ptr()
 	if ptr != nil {
 		t.Errorf("bad %s int: %#v ≠ %s\n", "nil pointer", ptr, "nil")
 	}
 }
 
-func TestIntIsZero(t *testing.T) {
-	i := IntFrom(12345)
+func TestInt64IsZero(t *testing.T) {
+	i := Int64From(12345)
 	if i.IsZero() {
 		t.Errorf("IsZero() should be false")
 	}
 
-	null := NewInt(0, false)
+	null := NewInt64(0, false)
 	if !null.IsZero() {
 		t.Errorf("IsZero() should be true")
 	}
 
-	zero := NewInt(0, true)
+	zero := NewInt64(0, true)
 	if !zero.IsZero() {
 		t.Errorf("IsZero() should be true")
 	}
 }
 
-func TestIntScan(t *testing.T) {
-	var i Int
+func TestInt64Scan(t *testing.T) {
+	var i Int64
 	err := i.Scan(12345)
 	maybePanic(err)
-	assertInt(t, i, "scanned int")
+	assertInt64(t, i, "scanned int")
 
-	var null Int
+	var null Int64
 	err = null.Scan(nil)
 	maybePanic(err)
-	assertNullInt(t, null, "scanned null")
+	assertNullInt64(t, null, "scanned null")
 }
 
-func TestIntSetValid(t *testing.T) {
-	change := NewInt(0, false)
-	assertNullInt(t, change, "SetValid()")
+func TestInt64SetValid(t *testing.T) {
+	change := NewInt64(0, false)
+	assertNullInt64(t, change, "SetValid()")
 	change.SetValid(12345)
-	assertInt(t, change, "SetValid()")
+	assertInt64(t, change, "SetValid()")
 }
 
-func assertInt(t *testing.T, i Int, from string) {
+func assertInt64(t *testing.T, i Int64, from string) {
 	if i.Int64 != 12345 {
 		t.Errorf("bad %s int: %d ≠ %d\n", from, i.Int64, 12345)
 	}
@@ -200,7 +200,7 @@ func assertInt(t *testing.T, i Int, from string) {
 	}
 }
 
-func assertNullInt(t *testing.T, i Int, from string) {
+func assertNullInt64(t *testing.T, i Int64, from string) {
 	if i.Valid {
 		t.Error(from, "is valid, but should be invalid")
 	}
