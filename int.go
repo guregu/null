@@ -1,11 +1,11 @@
 package null
 
 import (
+	"bytes"
 	"database/sql"
 	"encoding/json"
-	"fmt"
-	"reflect"
 	"strconv"
+	"unsafe"
 )
 
 // Int is an nullable int64.
@@ -38,39 +38,52 @@ func IntFromPtr(i *int64) Int {
 	return NewInt(*i, true)
 }
 
+type basicInt Int
+
+type stringInt struct {
+	Int64 string
+	Valid bool
+}
+
 // UnmarshalJSON implements json.Unmarshaler.
 // It supports number and null input.
 // 0 will not be considered a null Int.
 // It also supports unmarshalling a sql.NullInt64.
 func (i *Int) UnmarshalJSON(data []byte) error {
 	var err error
-	var v interface{}
-	if err = json.Unmarshal(data, &v); err != nil {
-		return err
-	}
-	switch vi := v.(type) {
-	case float64:
-		// Unmarshal again, directly to int64, to avoid intermediate float64
-		err = json.Unmarshal(data, &i.Int64)
-	case map[string]interface{}:
-		err = json.Unmarshal(data, &i.NullInt64)
-	case nil:
+	// Golden path is being passed a integer or null
+	if bytes.Compare(data, []byte("null")) == 0 {
 		i.Valid = false
 		return nil
-	case string:
-		// Big Query deliberately encodes integers as strings. If we can decode
-		// an integer from this string do so.
-		var intVal int
-		intVal, err = strconv.Atoi(vi)
-		if err != nil {
-			err = fmt.Errorf("json: cannot unmarshal string (%s) into Go value of type null.Int. %v", vi, err)
-			break
-		}
-		i.Int64 = int64(intVal)
-	default:
-		err = fmt.Errorf("json: cannot unmarshal %v into Go value of type null.Int", reflect.TypeOf(v).Name())
 	}
-	i.Valid = err == nil
+	// BQ sends numbers as strings. We can strip quotes on simple strings
+	if data[0] == '"' {
+		data = bytes.Trim(data, `"`)
+	}
+	if data[0] == '{' {
+		// We've been sent a structure. This is not our main-line as we encode
+		// to a simple int
+		var ii basicInt
+		err = json.Unmarshal(data, &ii)
+		if err != nil {
+			// Try a string version
+			var si stringInt
+			err = json.Unmarshal(data, &si)
+			if err == nil {
+				i.Valid = si.Valid
+				if si.Valid {
+					i.Int64, err = strconv.ParseInt(si.Int64, 10, 64)
+					i.Valid = (err == nil)
+				}
+			}
+		} else {
+			*i = Int(ii)
+		}
+	} else {
+		i.Int64, err = strconv.ParseInt(*(*string)(unsafe.Pointer(&data)), 10, 64)
+		i.Valid = (err == nil)
+	}
+
 	return err
 }
 

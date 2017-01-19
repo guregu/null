@@ -6,8 +6,10 @@ import (
 )
 
 var (
-	floatJSON     = []byte(`1.2345`)
-	nullFloatJSON = []byte(`{"Float64":1.2345,"Valid":true}`)
+	floatJSON           = []byte(`1.2345`)
+	floatJSONString     = []byte(`"1.2345"`)
+	nullFloatJSON       = []byte(`{"Float64":1.2345,"Valid":true}`)
+	nullFloatJSONString = []byte(`{"Float64":"1.2345","Valid":true}`)
 )
 
 func TestFloatFrom(t *testing.T) {
@@ -41,6 +43,14 @@ func TestUnmarshalFloat(t *testing.T) {
 	maybePanic(err)
 	assertFloat(t, nf, "sq.NullFloat64 json")
 
+	err = json.Unmarshal(floatJSONString, &f)
+	maybePanic(err)
+	assertFloat(t, f, "float json string")
+
+	err = json.Unmarshal(nullFloatJSONString, &nf)
+	maybePanic(err)
+	assertFloat(t, nf, "sq.NullFloat64 json string")
+
 	var null Float
 	err = json.Unmarshal(nullJSON, &null)
 	maybePanic(err)
@@ -54,9 +64,54 @@ func TestUnmarshalFloat(t *testing.T) {
 	assertNullFloat(t, badType, "wrong type json")
 
 	var invalid Float
-	err = invalid.UnmarshalJSON(invalidJSON)
+	err = json.Unmarshal(invalidJSON, &invalid)
 	if _, ok := err.(*json.SyntaxError); !ok {
 		t.Errorf("expected json.SyntaxError, not %T", err)
+	}
+}
+
+func BenchmarkFloatUnmarshalJSON(b *testing.B) {
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		var v Float
+		err := json.Unmarshal(nullFloatJSON, &v)
+		maybePanic(err)
+	}
+}
+
+func BenchmarkFloatUnmarshalJSONString(b *testing.B) {
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		var v Float
+		err := json.Unmarshal(nullFloatJSONString, &v)
+		maybePanic(err)
+	}
+}
+
+func BenchmarkFloatUnmarshalJSONSimpleString(b *testing.B) {
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		var v Float
+		err := json.Unmarshal(floatJSONString, &v)
+		maybePanic(err)
+	}
+}
+
+func BenchmarkFloatUnmarshalJSONSimple(b *testing.B) {
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		var v Float
+		err := json.Unmarshal(floatJSON, &v)
+		maybePanic(err)
+	}
+}
+
+func BenchmarkFloatUnmarshalJSONNull(b *testing.B) {
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		var v Float
+		err := json.Unmarshal(nullJSON, &v)
+		maybePanic(err)
 	}
 }
 

@@ -8,8 +8,10 @@ import (
 )
 
 var (
-	intJSON     = []byte(`12345`)
-	nullIntJSON = []byte(`{"Int64":12345,"Valid":true}`)
+	intJSON           = []byte(`12345`)
+	intJSONString     = []byte(`"12345"`)
+	nullIntJSON       = []byte(`  { "Int64":12345,"Valid":true}`)
+	nullIntJSONString = []byte(`{"Int64":  "12345","Valid":true}`)
 )
 
 func TestIntFrom(t *testing.T) {
@@ -38,14 +40,18 @@ func TestUnmarshalInt(t *testing.T) {
 	maybePanic(err)
 	assertInt(t, i, "int json")
 
-	err = json.Unmarshal([]byte(`"12345"`), &i)
+	err = json.Unmarshal(intJSONString, &i)
 	maybePanic(err)
-	assertInt(t, i, "int json")
+	assertInt(t, i, "int json string")
 
 	var ni Int
 	err = json.Unmarshal(nullIntJSON, &ni)
 	maybePanic(err)
 	assertInt(t, ni, "sq.NullInt64 json")
+
+	err = json.Unmarshal(nullIntJSONString, &ni)
+	maybePanic(err)
+	assertInt(t, ni, "sq.NullInt64 json string")
 
 	var null Int
 	err = json.Unmarshal(nullJSON, &null)
@@ -60,7 +66,7 @@ func TestUnmarshalInt(t *testing.T) {
 	assertNullInt(t, badType, "wrong type json")
 
 	var invalid Int
-	err = invalid.UnmarshalJSON(invalidJSON)
+	err = json.Unmarshal(invalidJSON, &invalid)
 	if _, ok := err.(*json.SyntaxError); !ok {
 		t.Errorf("expected json.SyntaxError, not %T", err)
 	}
@@ -196,5 +202,50 @@ func assertInt(t *testing.T, i Int, from string) {
 func assertNullInt(t *testing.T, i Int, from string) {
 	if i.Valid {
 		t.Error(from, "is valid, but should be invalid")
+	}
+}
+
+func BenchmarkIntUnmarshalJSON(b *testing.B) {
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		var v Int
+		err := json.Unmarshal(nullIntJSON, &v)
+		maybePanic(err)
+	}
+}
+
+func BenchmarkIntUnmarshalJSONString(b *testing.B) {
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		var v Int
+		err := json.Unmarshal(nullIntJSONString, &v)
+		maybePanic(err)
+	}
+}
+
+func BenchmarkIntUnmarshalJSONSimpleString(b *testing.B) {
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		var v Int
+		err := json.Unmarshal(intJSONString, &v)
+		maybePanic(err)
+	}
+}
+
+func BenchmarkIntUnmarshalJSONSimple(b *testing.B) {
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		var v Int
+		err := json.Unmarshal(intJSON, &v)
+		maybePanic(err)
+	}
+}
+
+func BenchmarkIntUnmarshalJSONNull(b *testing.B) {
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		var v Int
+		err := json.Unmarshal(nullJSON, &v)
+		maybePanic(err)
 	}
 }

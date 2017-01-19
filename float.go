@@ -1,11 +1,11 @@
 package null
 
 import (
+	"bytes"
 	"database/sql"
 	"encoding/json"
-	"fmt"
-	"reflect"
 	"strconv"
+	"unsafe"
 )
 
 // Float is a nullable float64.
@@ -38,28 +38,52 @@ func FloatFromPtr(f *float64) Float {
 	return NewFloat(*f, true)
 }
 
+type basicFloat Float
+
+type stringFloat struct {
+	Float64 string
+	Valid   bool
+}
+
 // UnmarshalJSON implements json.Unmarshaler.
 // It supports number and null input.
 // 0 will not be considered a null Float.
 // It also supports unmarshalling a sql.NullFloat64.
-func (f *Float) UnmarshalJSON(data []byte) error {
+func (i *Float) UnmarshalJSON(data []byte) error {
 	var err error
-	var v interface{}
-	if err = json.Unmarshal(data, &v); err != nil {
-		return err
-	}
-	switch x := v.(type) {
-	case float64:
-		f.Float64 = float64(x)
-	case map[string]interface{}:
-		err = json.Unmarshal(data, &f.NullFloat64)
-	case nil:
-		f.Valid = false
+	// Golden path is being passed a integer or null
+	if bytes.Compare(data, []byte("null")) == 0 {
+		i.Valid = false
 		return nil
-	default:
-		err = fmt.Errorf("json: cannot unmarshal %v into Go value of type null.Float", reflect.TypeOf(v).Name())
 	}
-	f.Valid = err == nil
+	// BQ sends numbers as strings. We can strip quotes on simple strings
+	if data[0] == '"' {
+		data = bytes.Trim(data, `"`)
+	}
+	if data[0] == '{' {
+		// We've been sent a structure. This is not our main-line as we encode
+		// to a simple float
+		var ii basicFloat
+		err = json.Unmarshal(data, &ii)
+		if err != nil {
+			// Try a string version
+			var si stringFloat
+			err = json.Unmarshal(data, &si)
+			if err == nil {
+				i.Valid = si.Valid
+				if si.Valid {
+					i.Float64, err = strconv.ParseFloat(si.Float64, 64)
+					i.Valid = (err == nil)
+				}
+			}
+		} else {
+			*i = Float(ii)
+		}
+	} else {
+		i.Float64, err = strconv.ParseFloat(*(*string)(unsafe.Pointer(&data)), 64)
+		i.Valid = (err == nil)
+	}
+
 	return err
 }
 
