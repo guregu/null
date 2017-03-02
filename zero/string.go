@@ -7,8 +7,11 @@ package zero
 import (
 	"database/sql"
 	"encoding/json"
+	"encoding/xml"
 	"fmt"
 	"reflect"
+
+	"gopkg.in/mgo.v2/bson"
 )
 
 // String is a nullable string.
@@ -83,10 +86,61 @@ func (s *String) UnmarshalText(text []byte) error {
 	return nil
 }
 
+// UnmarshalXML implments the xml.Unmarshaler interface
+func (s *String) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
+
+	var x *string
+	if err := d.DecodeElement(&x, &start); err != nil {
+		return err
+	}
+	if x != nil {
+		s.String = *x
+		s.Valid = s.String != ""
+	} else {
+		s.Valid = false
+	}
+	return nil
+}
+
+// GetBSON implements bson.Getter.
+func (s String) GetBSON() (interface{}, error) {
+	if s.Valid {
+		return s.String, nil
+	}
+	return "", nil
+}
+
+// SetBSON implements bson.Setter.
+func (s *String) SetBSON(raw bson.Raw) error {
+	var str string
+	err := raw.Unmarshal(&str)
+
+	if err == nil {
+		*s = String{sql.NullString{String: str, Valid: str != ""}}
+	} else {
+		*s = String{sql.NullString{Valid: false}}
+	}
+	return nil
+}
+
+// GetValue implements the compare.Valuable interface
+func (s String) GetValue() reflect.Value {
+	if s.Valid {
+		return reflect.ValueOf(s.String)
+	}
+	return reflect.ValueOf("")
+}
+
+// LoremDecode implements lorem.Decoder
+func (s *String) LoremDecode(tag, example string) error {
+	s.SetValid(example)
+	return nil
+}
+
 // SetValid changes this String's value and also sets it to be non-null.
 func (s *String) SetValid(v string) {
 	s.String = v
-	s.Valid = true
+	s.Valid = v != ""
 }
 
 // Ptr returns a pointer to this String's value, or a nil pointer if this String is null.

@@ -3,9 +3,13 @@ package null
 import (
 	"database/sql"
 	"encoding/json"
+	"encoding/xml"
 	"fmt"
+	"math/rand"
 	"reflect"
 	"strconv"
+
+	"gopkg.in/mgo.v2/bson"
 )
 
 // Float is a nullable float64.
@@ -94,6 +98,67 @@ func (f Float) MarshalText() ([]byte, error) {
 		return []byte{}, nil
 	}
 	return []byte(strconv.FormatFloat(f.Float64, 'f', -1, 64)), nil
+}
+
+// MarshalXML implements the xml.Marshaler interface
+func (f Float) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
+	if f.Valid {
+		return e.EncodeElement(f.Float64, start)
+	}
+	return e.EncodeElement(nil, start)
+}
+
+// UnmarshalXML implments the xml.Unmarshaler interface
+func (f *Float) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
+
+	var x *float64
+	if err := d.DecodeElement(&x, &start); err != nil {
+		return err
+	}
+	if x != nil {
+		f.Valid = true
+		f.Float64 = *x
+	} else {
+		f.Valid = false
+	}
+	return nil
+}
+
+// GetBSON implements bson.Getter.
+func (f Float) GetBSON() (interface{}, error) {
+	if f.Valid {
+		return f.Float64, nil
+	}
+	// TODO: do we need a nil pointer to a string?
+	return nil, nil
+}
+
+// SetBSON implements bson.Setter.
+func (f *Float) SetBSON(raw bson.Raw) error {
+	var ff float64
+	err := raw.Unmarshal(&ff)
+
+	if err == nil {
+		*f = Float{sql.NullFloat64{Float64: ff, Valid: true}}
+	} else {
+		*f = Float{sql.NullFloat64{Valid: false}}
+	}
+	return nil
+}
+
+// GetValue implements the compare.Valuable interface
+func (f Float) GetValue() reflect.Value {
+	if f.Valid {
+		return reflect.ValueOf(f.Float64)
+	}
+	// or just nil?
+	return reflect.ValueOf(nil)
+}
+
+// LoremDecode implements lorem.Decoder
+func (f *Float) LoremDecode(tag, example string) error {
+	f.SetValid(rand.Float64())
+	return nil
 }
 
 // SetValid changes this Float's value and also sets it to be non-null.

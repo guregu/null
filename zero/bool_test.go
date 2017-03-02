@@ -60,7 +60,7 @@ func TestUnmarshalBool(t *testing.T) {
 	assertNullBool(t, invalid, "invalid json")
 
 	var badType Bool
-	err = json.Unmarshal(intJSON, &badType)
+	err = json.Unmarshal(int64JSON, &badType)
 	if err == nil {
 		panic("err should not be nil")
 	}
@@ -173,7 +173,7 @@ func TestBoolScan(t *testing.T) {
 
 func assertBool(t *testing.T, b Bool, from string) {
 	if b.Bool != true {
-		t.Errorf("bad %s bool: %d ≠ %v\n", from, b.Bool, true)
+		t.Errorf("bad %s bool: %t ≠ %v\n", from, b.Bool, true)
 	}
 	if !b.Valid {
 		t.Error(from, "is invalid, but should be valid")

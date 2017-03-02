@@ -3,9 +3,13 @@ package zero
 import (
 	"database/sql"
 	"encoding/json"
+	"encoding/xml"
 	"fmt"
+	"math/rand"
 	"reflect"
 	"strconv"
+
+	"gopkg.in/mgo.v2/bson"
 )
 
 // Float is a nullable float64. Zero input will be considered null.
@@ -78,6 +82,22 @@ func (f *Float) UnmarshalText(text []byte) error {
 	return err
 }
 
+// UnmarshalXML implments the xml.Unmarshaler interface
+func (f *Float) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
+
+	var x *float64
+	if err := d.DecodeElement(&x, &start); err != nil {
+		return err
+	}
+	if x != nil {
+		f.Float64 = *x
+		f.Valid = f.Float64 != 0
+	} else {
+		f.Valid = false
+	}
+	return nil
+}
+
 // MarshalJSON implements json.Marshaler.
 // It will encode null if this Float is null.
 func (f Float) MarshalJSON() ([]byte, error) {
@@ -98,10 +118,56 @@ func (f Float) MarshalText() ([]byte, error) {
 	return []byte(strconv.FormatFloat(n, 'f', -1, 64)), nil
 }
 
+// MarshalXML implements the xml.Marshaler interface
+func (f Float) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
+	n := f.Float64
+	if !f.Valid {
+		n = 0
+	}
+	return e.EncodeElement(n, start)
+}
+
+// GetBSON implements bson.Getter.
+func (f Float) GetBSON() (interface{}, error) {
+	ff := f.Float64
+	if !f.Valid {
+		ff = 0
+	}
+	return ff, nil
+}
+
+// SetBSON implements bson.Setter.
+func (f *Float) SetBSON(raw bson.Raw) error {
+	var ff float64
+	err := raw.Unmarshal(&ff)
+
+	if err == nil {
+		*f = Float{sql.NullFloat64{Float64: ff, Valid: ff != 0}}
+	} else {
+		*f = Float{sql.NullFloat64{Valid: false}}
+	}
+	return nil
+}
+
+// GetValue implements the compare.Valuable interface
+func (f Float) GetValue() reflect.Value {
+	if f.Valid {
+		return reflect.ValueOf(f.Float64)
+	}
+	// or just nil?
+	return reflect.ValueOf(0)
+}
+
+// LoremDecode implements lorem.Decoder
+func (f *Float) LoremDecode(tag, example string) error {
+	f.SetValid(rand.Float64())
+	return nil
+}
+
 // SetValid changes this Float's value and also sets it to be non-null.
 func (f *Float) SetValid(v float64) {
 	f.Float64 = v
-	f.Valid = true
+	f.Valid = v != 0
 }
 
 // Ptr returns a poFloater to this Float's value, or a nil poFloater if this Float is null.

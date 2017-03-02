@@ -3,9 +3,13 @@ package null
 import (
 	"database/sql"
 	"encoding/json"
+	"encoding/xml"
 	"errors"
 	"fmt"
+	"math/rand"
 	"reflect"
+
+	"gopkg.in/mgo.v2/bson"
 )
 
 // Bool is a nullable bool.
@@ -63,6 +67,22 @@ func (b *Bool) UnmarshalJSON(data []byte) error {
 	return err
 }
 
+// UnmarshalXML implments the xml.Unmarshaler interface
+func (b *Bool) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
+
+	var x *bool
+	if err := d.DecodeElement(&x, &start); err != nil {
+		return err
+	}
+	if x != nil {
+		b.Valid = true
+		b.Bool = *x
+	} else {
+		b.Valid = false
+	}
+	return nil
+}
+
 // UnmarshalText implements encoding.TextUnmarshaler.
 // It will unmarshal to a null Bool if the input is a blank or not an integer.
 // It will return an error if the input is not an integer, blank, or "null".
@@ -106,6 +126,51 @@ func (b Bool) MarshalText() ([]byte, error) {
 		return []byte("false"), nil
 	}
 	return []byte("true"), nil
+}
+
+// MarshalXML implements the xml.Marshaler interface
+func (b Bool) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
+	if b.Valid {
+		return e.EncodeElement(b.Bool, start)
+	}
+	return e.EncodeElement(nil, start)
+}
+
+// GetBSON implements bson.Getter.
+func (b Bool) GetBSON() (interface{}, error) {
+	if b.Valid {
+		return b.Bool, nil
+	}
+	// TODO: do we need a nil pointer to a string?
+	return nil, nil
+}
+
+// SetBSON implements bson.Setter.
+func (b *Bool) SetBSON(raw bson.Raw) error {
+	var bb bool
+	err := raw.Unmarshal(&bb)
+
+	if err == nil {
+		*b = Bool{sql.NullBool{Bool: bb, Valid: true}}
+	} else {
+		*b = Bool{sql.NullBool{Valid: false}}
+	}
+	return nil
+}
+
+// GetValue implements the compare.Valuable interface
+func (b Bool) GetValue() reflect.Value {
+	if b.Valid {
+		return reflect.ValueOf(b.Bool)
+	}
+	// or just nil?
+	return reflect.ValueOf(nil)
+}
+
+// LoremDecode implements lorem.Decoder
+func (b *Bool) LoremDecode(tag, example string) error {
+	b.SetValid(rand.Int()%2 == 0)
+	return nil
 }
 
 // SetValid changes this Bool's value and also sets it to be non-null.
