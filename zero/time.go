@@ -12,7 +12,7 @@ import (
 	"github.com/axiomzen/null/format"
 
 	"gopkg.in/mgo.v2/bson"
-	"gopkg.in/pg.v4/types"
+	"gopkg.in/pg.v5/types"
 )
 
 // Time is a zeroable time.Time.
