@@ -53,7 +53,13 @@ func (i *Int) UnmarshalJSON(data []byte) error {
 		// Unmarshal again, directly to int64, to avoid intermediate float64
 		err = json.Unmarshal(data, &i.Int64)
 	case string:
-		i.Int64, err = strconv.ParseInt(string(x), 10, 64)
+		str := string(x)
+		if len(str)==0 {
+			i.Valid=false
+			return nil
+		} else {
+			i.Int64, err = strconv.ParseInt(str, 10, 64)
+		}
 	case map[string]interface{}:
 		err = json.Unmarshal(data, &i.NullInt64)
 	case nil:
