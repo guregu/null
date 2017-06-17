@@ -39,9 +39,10 @@ func TestUnmarshalInt(t *testing.T) {
 	maybePanic(err)
 	assertInt(t, i, "int json")
 
-	err = json.Unmarshal(intJSON, &i)
+	var si Int
+	err = json.Unmarshal(intJSON, &si)
 	maybePanic(err)
-	assertInt(t, i, "int string json")
+	assertInt(t, si, "int string json")
 
 	var ni Int
 	err = json.Unmarshal(nullIntJSON, &ni)

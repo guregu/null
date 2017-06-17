@@ -38,9 +38,10 @@ func TestUnmarshalFloat(t *testing.T) {
 	maybePanic(err)
 	assertFloat(t, f, "float json")
 
-	err = json.Unmarshal(floatStringJSON, &f)
+	var sf Float
+	err = json.Unmarshal(floatStringJSON, &sf)
 	maybePanic(err)
-	assertFloat(t, f, "string float json")
+	assertFloat(t, sf, "string float json")
 
 	var nf Float
 	err = json.Unmarshal(nullFloatJSON, &nf)
@@ -52,9 +53,10 @@ func TestUnmarshalFloat(t *testing.T) {
 	maybePanic(err)
 	assertNullFloat(t, null, "null json")
 
-	err = json.Unmarshal(floatBlankJSON, &null)
+	var blank Float
+	err = json.Unmarshal(floatBlankJSON, &blank)
 	maybePanic(err)
-	assertNullFloat(t, null, "null blank string json")
+	assertNullFloat(t, blank, "null blank string json")
 
 	var badType Float
 	err = json.Unmarshal(boolJSON, &badType)
@@ -157,9 +159,10 @@ func TestFloatScan(t *testing.T) {
 	maybePanic(err)
 	assertFloat(t, f, "scanned float")
 
-	err = f.Scan("1.2345")
+	var sf Float
+	err = sf.Scan("1.2345")
 	maybePanic(err)
-	assertFloat(t, f, "scanned string float")
+	assertFloat(t, sf, "scanned string float")
 
 	var null Float
 	err = null.Scan(nil)
