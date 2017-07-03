@@ -31,6 +31,13 @@ func TestBoolFromPtr(t *testing.T) {
 	assertNullBool(t, null, "BoolFromPtr(nil)")
 }
 
+func TestNullBool(t *testing.T) {
+	null := NullBool()
+	if null.Valid {
+		t.Error("NullBool()", "is valid, but should be invalid")
+	}
+}
+
 func TestUnmarshalBool(t *testing.T) {
 	var b Bool
 	err := json.Unmarshal(boolJSON, &b)

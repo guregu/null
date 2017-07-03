@@ -38,6 +38,11 @@ func FloatFromPtr(f *float64) Float {
 	return NewFloat(*f, true)
 }
 
+// NullFloat creates a new invalid Float
+func NullFloat() Float {
+	return NewFloat(0, false)
+}
+
 // UnmarshalJSON implements json.Unmarshaler.
 // It supports number and null input.
 // 0 will not be considered a null Float.
