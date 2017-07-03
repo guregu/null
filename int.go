@@ -38,6 +38,11 @@ func IntFromPtr(i *int64) Int {
 	return NewInt(*i, true)
 }
 
+// NullInt creates a new invalid empty Int
+func NullInt() Int {
+	return NewInt(0, false)
+}
+
 // UnmarshalJSON implements json.Unmarshaler.
 // It supports number and null input.
 // 0 will not be considered a null Int.

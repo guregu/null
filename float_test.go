@@ -30,6 +30,13 @@ func TestFloatFromPtr(t *testing.T) {
 	assertNullFloat(t, null, "FloatFromPtr(nil)")
 }
 
+func TestNullFloat(t *testing.T) {
+	null := NullFloat()
+	if null.Valid {
+		t.Error("NullFloat()", "is valid, but should be invalid")
+	}
+}
+
 func TestUnmarshalFloat(t *testing.T) {
 	var f Float
 	err := json.Unmarshal(floatJSON, &f)

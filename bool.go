@@ -38,6 +38,11 @@ func BoolFromPtr(b *bool) Bool {
 	return NewBool(*b, true)
 }
 
+// NullBool creates a new invalid Bool
+func NullBool() Bool {
+	return NewBool(false, false)
+}
+
 // UnmarshalJSON implements json.Unmarshaler.
 // It supports number and null input.
 // 0 will not be considered a null Bool.

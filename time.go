@@ -60,6 +60,11 @@ func TimeFromPtr(t *time.Time) Time {
 	return NewTime(*t, true)
 }
 
+// NullTime creates a new invalid empty Time
+func NullTime() Time {
+	return NewTime(time.Time{}, false)
+}
+
 // MarshalJSON implements json.Marshaler.
 // It will encode null if this time is null.
 func (t Time) MarshalJSON() ([]byte, error) {

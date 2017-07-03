@@ -40,6 +40,11 @@ func NewString(s string, valid bool) String {
 	}
 }
 
+// NullString ceates new invalid empty String
+func NullString() String {
+	return NewString("", false)
+}
+
 // UnmarshalJSON implements json.Unmarshaler.
 // It supports string and null input. Blank string input does not produce a null String.
 // It also supports unmarshalling a sql.NullString.

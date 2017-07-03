@@ -38,6 +38,13 @@ func TestStringFromPtr(t *testing.T) {
 	assertNullStr(t, null, "StringFromPtr(nil)")
 }
 
+func TestNullString(t *testing.T) {
+	null := NullString()
+	if null.Valid {
+		t.Error("NullString()", "is valid, but should be invalid")
+	}
+}
+
 func TestUnmarshalString(t *testing.T) {
 	var str String
 	err := json.Unmarshal(stringJSON, &str)
