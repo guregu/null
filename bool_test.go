@@ -6,9 +6,8 @@ import (
 )
 
 var (
-	boolJSON     = []byte(`true`)
-	falseJSON    = []byte(`false`)
-	nullBoolJSON = []byte(`{"Bool":true,"Valid":true}`)
+	boolJSON  = []byte(`true`)
+	falseJSON = []byte(`false`)
 )
 
 func TestBoolFrom(t *testing.T) {
@@ -36,11 +35,6 @@ func TestUnmarshalBool(t *testing.T) {
 	err := json.Unmarshal(boolJSON, &b)
 	maybePanic(err)
 	assertBool(t, b, "bool json")
-
-	var nb Bool
-	err = json.Unmarshal(nullBoolJSON, &nb)
-	maybePanic(err)
-	assertBool(t, nb, "sq.NullBool json")
 
 	var null Bool
 	err = json.Unmarshal(nullJSON, &null)
@@ -76,11 +70,6 @@ func TestTextUnmarshalBool(t *testing.T) {
 	err = blank.UnmarshalText([]byte(""))
 	maybePanic(err)
 	assertNullBool(t, blank, "UnmarshalText() empty bool")
-
-	var null Bool
-	err = null.UnmarshalText([]byte("null"))
-	maybePanic(err)
-	assertNullBool(t, null, `UnmarshalText() "null"`)
 
 	var invalid Bool
 	err = invalid.UnmarshalText([]byte(":D"))

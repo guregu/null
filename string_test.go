@@ -8,7 +8,6 @@ import (
 var (
 	stringJSON      = []byte(`"test"`)
 	blankStringJSON = []byte(`""`)
-	nullStringJSON  = []byte(`{"String":"test","Valid":true}`)
 
 	nullJSON    = []byte(`null`)
 	invalidJSON = []byte(`:)`)
@@ -43,11 +42,6 @@ func TestUnmarshalString(t *testing.T) {
 	err := json.Unmarshal(stringJSON, &str)
 	maybePanic(err)
 	assertStr(t, str, "string json")
-
-	var ns String
-	err = json.Unmarshal(nullStringJSON, &ns)
-	maybePanic(err)
-	assertStr(t, ns, "sql.NullString json")
 
 	var blank String
 	err = json.Unmarshal(blankStringJSON, &blank)
