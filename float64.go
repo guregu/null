@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"strconv"
 
-	"gopkg.in/nullbio/null.v6/convert"
+	"gopkg.in/volatiletech/null.v6/convert"
 )
 
 // Float64 is a nullable float64.

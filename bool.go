@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 
-	"gopkg.in/nullbio/null.v6/convert"
+	"gopkg.in/volatiletech/null.v6/convert"
 )
 
 // Bool is a nullable bool.

@@ -1,4 +1,4 @@
-## null-extended [![GoDoc](https://godoc.org/github.com/nullbio/null?status.svg)](https://godoc.org/github.com/nullbio/null) [![Coverage](http://gocover.io/_badge/github.com/nullbio/null)](http://gocover.io/github.com/nullbio/null)
+## null-extended [![GoDoc](https://godoc.org/github.com/volatiletech/null?status.svg)](https://godoc.org/github.com/volatiletech/null) [![Coverage](http://gocover.io/_badge/github.com/volatiletech/null)](http://gocover.io/github.com/volatiletech/null)
 
 null-extended is a library with reasonable options for dealing with nullable SQL and JSON values
 
@@ -10,11 +10,11 @@ All types implement `sql.Scanner` and `driver.Valuer`, so you can use this libra
 
 Install:
 
-`go get -u "gopkg.in/nullbio/null.v6"`
+`go get -u "gopkg.in/volatiletech/null.v6"`
 
 ### null package
 
-`import "gopkg.in/nullbio/null.v6"`
+`import "gopkg.in/volatiletech/null.v6"`
 
 The following are all types supported in this package. All types will marshal to JSON null if Invalid or SQL source data is null.
 

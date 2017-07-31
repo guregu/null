@@ -5,7 +5,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 
-	"gopkg.in/nullbio/null.v6/convert"
+	"gopkg.in/volatiletech/null.v6/convert"
 )
 
 // String is a nullable string. It supports SQL and JSON serialization.

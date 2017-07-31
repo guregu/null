@@ -8,7 +8,7 @@ import (
 	"math"
 	"strconv"
 
-	"gopkg.in/nullbio/null.v6/convert"
+	"gopkg.in/volatiletech/null.v6/convert"
 )
 
 // Uint32 is an nullable uint32.

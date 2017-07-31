@@ -8,7 +8,7 @@ import (
 	"math"
 	"strconv"
 
-	"gopkg.in/nullbio/null.v6/convert"
+	"gopkg.in/volatiletech/null.v6/convert"
 )
 
 // Int8 is an nullable int8.
