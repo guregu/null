@@ -53,12 +53,11 @@ func (f *Float) UnmarshalJSON(data []byte) error {
 		f.Float64 = float64(x)
 	case string:
 		str := string(x)
-		if len(str)==0 {
-			f.Valid=false
+		if len(str) == 0 {
+			f.Valid = false
 			return nil
-		} else {
-			f.Float64, err = strconv.ParseFloat(str, 64)
 		}
+		f.Float64, err = strconv.ParseFloat(str, 64)
 	case map[string]interface{}:
 		err = json.Unmarshal(data, &f.NullFloat64)
 	case nil:

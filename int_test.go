@@ -8,9 +8,9 @@ import (
 )
 
 var (
-	intJSON     = []byte(`12345`)
+	intJSON       = []byte(`12345`)
 	intStringJSON = []byte(`"12345"`)
-	nullIntJSON = []byte(`{"Int64":12345,"Valid":true}`)
+	nullIntJSON   = []byte(`{"Int64":12345,"Valid":true}`)
 )
 
 func TestIntFrom(t *testing.T) {
@@ -40,14 +40,19 @@ func TestUnmarshalInt(t *testing.T) {
 	assertInt(t, i, "int json")
 
 	var si Int
-	err = json.Unmarshal(intJSON, &si)
+	err = json.Unmarshal(intStringJSON, &si)
 	maybePanic(err)
 	assertInt(t, si, "int string json")
 
 	var ni Int
 	err = json.Unmarshal(nullIntJSON, &ni)
 	maybePanic(err)
-	assertInt(t, ni, "sq.NullInt64 json")
+	assertInt(t, ni, "sql.NullInt64 json")
+
+	var bi Int
+	err = json.Unmarshal(floatBlankJSON, &bi)
+	maybePanic(err)
+	assertNullInt(t, bi, "blank json string")
 
 	var null Int
 	err = json.Unmarshal(nullJSON, &null)
