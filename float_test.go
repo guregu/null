@@ -2,6 +2,7 @@ package null
 
 import (
 	"encoding/json"
+	"math"
 	"testing"
 )
 
@@ -98,6 +99,11 @@ func TestMarshalFloat(t *testing.T) {
 	// invalid values should be encoded as null
 	null := NewFloat(0, false)
 	data, err = json.Marshal(null)
+	maybePanic(err)
+	assertJSONEquals(t, data, "null", "null json marshal")
+
+	nan := NewFloat(math.NaN(), true)
+	data, err = json.Marshal(nan)
 	maybePanic(err)
 	assertJSONEquals(t, data, "null", "null json marshal")
 }
