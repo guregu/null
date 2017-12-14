@@ -153,6 +153,18 @@ func TestFloatScan(t *testing.T) {
 	assertNullFloat(t, null, "scanned null")
 }
 
+func TestFloatValueOrZero(t *testing.T) {
+	valid := NewFloat(1.2345, true)
+	if valid.ValueOrZero() != 1.2345 {
+		t.Error("unexpected ValueOrZero", valid.ValueOrZero())
+	}
+
+	invalid := NewFloat(1.2345, false)
+	if invalid.ValueOrZero() != 0 {
+		t.Error("unexpected ValueOrZero", invalid.ValueOrZero())
+	}
+}
+
 func assertFloat(t *testing.T, f Float, from string) {
 	if f.Float64 != 1.2345 {
 		t.Errorf("bad %s float: %f ≠ %f\n", from, f.Float64, 1.2345)

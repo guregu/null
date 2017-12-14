@@ -38,8 +38,8 @@ func FloatFromPtr(f *float64) Float {
 	return NewFloat(*f, true)
 }
 
-// ToFloat converts to float64.
-func (f Float) ToFloat() float64 {
+// ValueOrZero returns the inner value if valid, otherwise zero.
+func (f Float) ValueOrZero() float64 {
 	if !f.Valid {
 		return 0
 	}

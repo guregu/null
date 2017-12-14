@@ -38,8 +38,8 @@ func BoolFromPtr(b *bool) Bool {
 	return NewBool(*b, true)
 }
 
-// ToBool converts to bool.
-func (b Bool) ToBool() bool {
+// ValueOrZero returns the inner value if valid, otherwise false.
+func (b Bool) ValueOrZero() bool {
 	return b.Valid && b.Bool
 }
 

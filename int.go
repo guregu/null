@@ -38,8 +38,8 @@ func IntFromPtr(i *int64) Int {
 	return NewInt(*i, true)
 }
 
-// ToInt converts to int64.
-func (i Int) ToInt() int64 {
+// ValueOrZero returns the inner value if valid, otherwise zero.
+func (i Int) ValueOrZero() int64 {
 	if !i.Valid {
 		return 0
 	}

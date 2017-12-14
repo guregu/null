@@ -30,8 +30,8 @@ func StringFromPtr(s *string) String {
 	return NewString(*s, true)
 }
 
-// ToString converts to string.
-func (s String) ToString() string {
+// ValueOrZero returns the inner value if valid, otherwise zero.
+func (s String) ValueOrZero() string {
 	if !s.Valid {
 		return ""
 	}
