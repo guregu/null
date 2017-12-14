@@ -2,6 +2,7 @@ package null
 
 import (
 	"encoding/json"
+	"math"
 	"testing"
 )
 
@@ -168,6 +169,20 @@ func TestFloatScan(t *testing.T) {
 	err = null.Scan(nil)
 	maybePanic(err)
 	assertNullFloat(t, null, "scanned null")
+}
+
+func TestFloatInfNaN(t *testing.T) {
+	nan := NewFloat(math.NaN(), true)
+	_, err := nan.MarshalJSON()
+	if err == nil {
+		t.Error("expected error for NaN, got nil")
+	}
+
+	inf := NewFloat(math.Inf(1), true)
+	_, err = inf.MarshalJSON()
+	if err == nil {
+		t.Error("expected error for Inf, got nil")
+	}
 }
 
 func assertFloat(t *testing.T, f Float, from string) {

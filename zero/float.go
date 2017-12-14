@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"math"
 	"reflect"
 	"strconv"
 )
@@ -91,6 +92,12 @@ func (f Float) MarshalJSON() ([]byte, error) {
 	n := f.Float64
 	if !f.Valid {
 		n = 0
+	}
+	if math.IsInf(f.Float64, 0) || math.IsNaN(f.Float64) {
+		return nil, &json.UnsupportedValueError{
+			Value: reflect.ValueOf(f.Float64),
+			Str:   strconv.FormatFloat(f.Float64, 'g', -1, 64),
+		}
 	}
 	return []byte(strconv.FormatFloat(n, 'f', -1, 64)), nil
 }
