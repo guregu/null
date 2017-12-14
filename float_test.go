@@ -101,6 +101,11 @@ func TestMarshalFloat(t *testing.T) {
 	data, err = json.Marshal(null)
 	maybePanic(err)
 	assertJSONEquals(t, data, "null", "null json marshal")
+
+	nan := NewFloat(math.NaN(), true)
+	data, err = json.Marshal(nan)
+	maybePanic(err)
+	assertJSONEquals(t, data, "null", "null json marshal")
 }
 
 func TestMarshalFloatText(t *testing.T) {
