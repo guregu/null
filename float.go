@@ -39,6 +39,14 @@ func FloatFromPtr(f *float64) Float {
 	return NewFloat(*f, true)
 }
 
+// ValueOrZero returns the inner value if valid, otherwise zero.
+func (f Float) ValueOrZero() float64 {
+	if !f.Valid {
+		return 0
+	}
+	return f.Float64
+}
+
 // UnmarshalJSON implements json.Unmarshaler.
 // It supports number and null input.
 // 0 will not be considered a null Float.
