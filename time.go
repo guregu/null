@@ -128,6 +128,13 @@ func (t *Time) UnmarshalText(text []byte) error {
 	return nil
 }
 
+// UnmarshalParam implements github.com/labstack/echo.BindUnmarshaler to
+// unmarshal a value from a query or form parameters. It behaves like
+// UnmarshalText.
+func (t *Time) UnmarshalParam(text string) error {
+	return t.UnmarshalText([]byte(text))
+}
+
 // SetValid changes this Time's value and sets it to be non-null.
 func (t *Time) SetValid(v time.Time) {
 	t.Time = v

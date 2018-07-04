@@ -98,6 +98,13 @@ func (s *String) UnmarshalText(text []byte) error {
 	return nil
 }
 
+// UnmarshalParam implements github.com/labstack/echo.BindUnmarshaler to
+// unmarshal a value from a query or form parameters. It behaves like
+// UnmarshalText.
+func (s *String) UnmarshalParam(text string) error {
+	return s.UnmarshalText([]byte(text))
+}
+
 // SetValid changes this String's value and also sets it to be non-null.
 func (s *String) SetValid(v string) {
 	s.String = v
