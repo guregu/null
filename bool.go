@@ -77,9 +77,9 @@ func (b *Bool) UnmarshalText(text []byte) error {
 	case "", "null":
 		b.Valid = false
 		return nil
-	case "true":
+	case "true", "on", "On", "ON":
 		b.Bool = true
-	case "false":
+	case "false", "off", "Off", "OFF":
 		b.Bool = false
 	default:
 		b.Valid = false
@@ -87,6 +87,13 @@ func (b *Bool) UnmarshalText(text []byte) error {
 	}
 	b.Valid = true
 	return nil
+}
+
+// UnmarshalParam implements github.com/labstack/echo.BindUnmarshaler to
+// unmarshal a value from a query or form parameters. It behaves like
+// UnmarshalText.
+func (b *Bool) UnmarshalParam(src string) error {
+	return b.UnmarshalText([]byte(src))
 }
 
 // MarshalJSON implements json.Marshaler.

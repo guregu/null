@@ -94,6 +94,13 @@ func (f *Float) UnmarshalText(text []byte) error {
 	return err
 }
 
+// UnmarshalParam implements github.com/labstack/echo.BindUnmarshaler to
+// unmarshal a value from a query or form parameters. It behaves like
+// UnmarshalText.
+func (f *Float) UnmarshalParam(text string) error {
+	return f.UnmarshalText([]byte(text))
+}
+
 // MarshalJSON implements json.Marshaler.
 // It will encode null if this Float is null.
 func (f Float) MarshalJSON() ([]byte, error) {
