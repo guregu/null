@@ -188,6 +188,32 @@ func TestBoolValueOrZero(t *testing.T) {
 	}
 }
 
+func TestBoolEqual(t *testing.T) {
+	b1 := NewBool(true, false)
+	b2 := NewBool(true, false)
+	assertBoolEqualIsTrue(t, b1, b2)
+
+	b1 = NewBool(true, false)
+	b2 = NewBool(false, false)
+	assertBoolEqualIsTrue(t, b1, b2)
+
+	b1 = NewBool(true, true)
+	b2 = NewBool(true, true)
+	assertBoolEqualIsTrue(t, b1, b2)
+
+	b1 = NewBool(true, true)
+	b2 = NewBool(true, false)
+	assertBoolEqualIsFalse(t, b1, b2)
+
+	b1 = NewBool(true, false)
+	b2 = NewBool(true, true)
+	assertBoolEqualIsFalse(t, b1, b2)
+
+	b1 = NewBool(true, true)
+	b2 = NewBool(false, true)
+	assertBoolEqualIsFalse(t, b1, b2)
+}
+
 func assertBool(t *testing.T, b Bool, from string) {
 	if b.Bool != true {
 		t.Errorf("bad %s bool: %v ≠ %v\n", from, b.Bool, true)
@@ -209,5 +235,19 @@ func assertFalseBool(t *testing.T, b Bool, from string) {
 func assertNullBool(t *testing.T, b Bool, from string) {
 	if b.Valid {
 		t.Error(from, "is valid, but should be invalid")
+	}
+}
+
+func assertBoolEqualIsTrue(t *testing.T, a, b Bool) {
+	t.Helper()
+	if !a.Equal(b) {
+		t.Errorf("Equal() of Bool{%t, Valid:%t} and Bool{%t, Valid:%t} should return true", a.Bool, a.Valid, b.Bool, b.Valid)
+	}
+}
+
+func assertBoolEqualIsFalse(t *testing.T, a, b Bool) {
+	t.Helper()
+	if a.Equal(b) {
+		t.Errorf("Equal() of Bool{%t, Valid:%t} and Bool{%t, Valid:%t} should return false", a.Bool, a.Valid, b.Bool, b.Valid)
 	}
 }

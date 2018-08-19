@@ -190,6 +190,32 @@ func TestStringValueOrZero(t *testing.T) {
 	}
 }
 
+func TestStringEqual(t *testing.T) {
+	str1 := NewString("foo", false)
+	str2 := NewString("foo", false)
+	assertStringEqualIsTrue(t, str1, str2)
+
+	str1 = NewString("foo", false)
+	str2 = NewString("bar", false)
+	assertStringEqualIsTrue(t, str1, str2)
+
+	str1 = NewString("foo", true)
+	str2 = NewString("foo", true)
+	assertStringEqualIsTrue(t, str1, str2)
+
+	str1 = NewString("foo", true)
+	str2 = NewString("foo", false)
+	assertStringEqualIsFalse(t, str1, str2)
+
+	str1 = NewString("foo", false)
+	str2 = NewString("foo", true)
+	assertStringEqualIsFalse(t, str1, str2)
+
+	str1 = NewString("foo", true)
+	str2 = NewString("bar", true)
+	assertStringEqualIsFalse(t, str1, str2)
+}
+
 func maybePanic(err error) {
 	if err != nil {
 		panic(err)
@@ -214,5 +240,19 @@ func assertNullStr(t *testing.T, s String, from string) {
 func assertJSONEquals(t *testing.T, data []byte, cmp string, from string) {
 	if string(data) != cmp {
 		t.Errorf("bad %s data: %s ≠ %s\n", from, data, cmp)
+	}
+}
+
+func assertStringEqualIsTrue(t *testing.T, a, b String) {
+	t.Helper()
+	if !a.Equal(b) {
+		t.Errorf("Equal() of String{\"%v\", Valid:%t} and String{\"%v\", Valid:%t} should return true", a.String, a.Valid, b.String, b.Valid)
+	}
+}
+
+func assertStringEqualIsFalse(t *testing.T, a, b String) {
+	t.Helper()
+	if a.Equal(b) {
+		t.Errorf("Equal() of String{\"%v\", Valid:%t} and String{\"%v\", Valid:%t} should return false", a.String, a.Valid, b.String, b.Valid)
 	}
 }
