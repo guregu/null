@@ -61,8 +61,8 @@ func TimeFromPtr(t *time.Time) Time {
 }
 
 // ValueOrZero returns the inner value if valid, otherwise zero.
-func (t Time) ValueOrZero() time.Time {
-	if !t.Valid {
+func (t *Time) ValueOrZero() time.Time {
+	if t == nil || !t.Valid {
 		return time.Time{}
 	}
 	return t.Time

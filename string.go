@@ -31,8 +31,8 @@ func StringFromPtr(s *string) String {
 }
 
 // ValueOrZero returns the inner value if valid, otherwise zero.
-func (s String) ValueOrZero() string {
-	if !s.Valid {
+func (s *String) ValueOrZero() string {
+	if s == nil || !s.Valid {
 		return ""
 	}
 	return s.String

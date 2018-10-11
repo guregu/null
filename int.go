@@ -39,8 +39,8 @@ func IntFromPtr(i *int64) Int {
 }
 
 // ValueOrZero returns the inner value if valid, otherwise zero.
-func (i Int) ValueOrZero() int64 {
-	if !i.Valid {
+func (i *Int) ValueOrZero() int64 {
+	if i == nil || !i.Valid {
 		return 0
 	}
 	return i.Int64

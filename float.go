@@ -40,8 +40,8 @@ func FloatFromPtr(f *float64) Float {
 }
 
 // ValueOrZero returns the inner value if valid, otherwise zero.
-func (f Float) ValueOrZero() float64 {
-	if !f.Valid {
+func (f *Float) ValueOrZero() float64 {
+	if f == nil || !f.Valid {
 		return 0
 	}
 	return f.Float64

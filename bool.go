@@ -39,8 +39,8 @@ func BoolFromPtr(b *bool) Bool {
 }
 
 // ValueOrZero returns the inner value if valid, otherwise false.
-func (b Bool) ValueOrZero() bool {
-	return b.Valid && b.Bool
+func (b *Bool) ValueOrZero() bool {
+	return b != nil && b.Valid && b.Bool
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
