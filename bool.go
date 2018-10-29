@@ -6,6 +6,8 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+
+	"github.com/mailru/easyjson/jlexer"
 )
 
 // Bool is a nullable bool.
@@ -61,6 +63,39 @@ func (b *Bool) UnmarshalJSON(data []byte) error {
 	}
 	b.Valid = err == nil
 	return err
+}
+
+// UnmarshalEasyJSON is an easy-JSON specific decoder, that should be more efficient than the standard one.
+// We expect the value to be either `null` or `true`, but we also unmarshal if we receive
+// `{"Valid":true,"Bool":false}`
+func (b *Bool) UnmarshalEasyJSON(w *jlexer.Lexer) {
+	if w.IsNull() {
+		w.Skip()
+		b.Valid = false
+		return
+	}
+	if w.IsDelim('{') {
+		w.Skip()
+		for !w.IsDelim('}') {
+			key := w.UnsafeString()
+			w.WantColon()
+			if w.IsNull() {
+				w.Skip()
+				w.WantComma()
+				continue
+			}
+			switch key {
+			case "bool", "Bool":
+				b.Bool = w.Bool()
+			case "valid", "Valid":
+				b.Valid = w.Bool()
+			}
+			w.WantComma()
+		}
+		return
+	}
+	b.Bool = w.Bool()
+	b.Valid = (w.Error() == nil)
 }
 
 // UnmarshalText implements encoding.TextUnmarshaler.

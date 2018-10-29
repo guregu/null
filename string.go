@@ -9,6 +9,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+
+	"github.com/mailru/easyjson/jlexer"
 )
 
 // String is a nullable string. It supports SQL and JSON serialization.
@@ -62,6 +64,39 @@ func (s *String) UnmarshalJSON(data []byte) error {
 	}
 	s.Valid = (err == nil) && (s.String != "")
 	return err
+}
+
+// UnmarshalEasyJSON is an easy-JSON specific decoder, that should be more efficient than the standard one.
+// We expect the value to be either `null` or `"a string"`, but we also unmarshal if we receive
+// `{"Valid":true,"String":"a string"}`
+func (s *String) UnmarshalEasyJSON(w *jlexer.Lexer) {
+	if w.IsNull() {
+		w.Skip()
+		s.Valid = false
+		return
+	}
+	if w.IsDelim('{') {
+		w.Skip()
+		for !w.IsDelim('}') {
+			key := w.UnsafeString()
+			w.WantColon()
+			if w.IsNull() {
+				w.Skip()
+				w.WantComma()
+				continue
+			}
+			switch key {
+			case "string", "String":
+				s.String = w.String()
+			case "valid", "Valid":
+				s.Valid = w.Bool()
+			}
+			w.WantComma()
+		}
+		return
+	}
+	s.String = w.String()
+	s.Valid = (w.Error() == nil) && (s.String != "")
 }
 
 // MarshalJSON implements json.Marshaler.
