@@ -13,6 +13,7 @@ import (
 // It will decode to null, not false, if null.
 type Bool struct {
 	sql.NullBool
+	Fill bool
 }
 
 // NewBool creates a new Bool
@@ -38,6 +39,10 @@ func BoolFromPtr(b *bool) Bool {
 	return NewBool(*b, true)
 }
 
+func (b Bool) IsFill() bool {
+	return b.Fill
+}
+
 // ValueOrZero returns the inner value if valid, otherwise false.
 func (b Bool) ValueOrZero() bool {
 	return b.Valid && b.Bool
@@ -53,6 +58,7 @@ func (b *Bool) UnmarshalJSON(data []byte) error {
 	if err = json.Unmarshal(data, &v); err != nil {
 		return err
 	}
+
 	switch x := v.(type) {
 	case bool:
 		b.Bool = x
@@ -64,6 +70,7 @@ func (b *Bool) UnmarshalJSON(data []byte) error {
 	default:
 		err = fmt.Errorf("json: cannot unmarshal %v into Go value of type null.Bool", reflect.TypeOf(v).Name())
 	}
+	b.Fill = true
 	b.Valid = err == nil
 	return err
 }

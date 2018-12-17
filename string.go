@@ -15,6 +15,7 @@ import (
 // It will marshal to null if null. Blank string input will be considered null.
 type String struct {
 	sql.NullString
+	Fill bool
 }
 
 // StringFrom creates a new String that will never be blank.
@@ -36,6 +37,10 @@ func (s String) ValueOrZero() string {
 		return ""
 	}
 	return s.String
+}
+
+func (s String) IsFill() bool {
+	return s.Fill
 }
 
 // NewString creates a new String
@@ -68,6 +73,7 @@ func (s *String) UnmarshalJSON(data []byte) error {
 	default:
 		err = fmt.Errorf("json: cannot unmarshal %v into Go value of type null.String", reflect.TypeOf(v).Name())
 	}
+	s.Fill = true
 	s.Valid = err == nil
 	return err
 }

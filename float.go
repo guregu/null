@@ -14,6 +14,7 @@ import (
 // It will decode to null, not zero, if null.
 type Float struct {
 	sql.NullFloat64
+	Fill bool
 }
 
 // NewFloat creates a new Float
@@ -37,6 +38,10 @@ func FloatFromPtr(f *float64) Float {
 		return NewFloat(0, false)
 	}
 	return NewFloat(*f, true)
+}
+
+func (f Float) IsFill() bool {
+	return f.Fill
 }
 
 // ValueOrZero returns the inner value if valid, otherwise zero.
@@ -75,6 +80,7 @@ func (f *Float) UnmarshalJSON(data []byte) error {
 	default:
 		err = fmt.Errorf("json: cannot unmarshal %v into Go value of type null.Float", reflect.TypeOf(v).Name())
 	}
+	f.Fill = true
 	f.Valid = err == nil
 	return err
 }

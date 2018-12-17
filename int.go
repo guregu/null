@@ -13,6 +13,7 @@ import (
 // It will decode to null, not zero, if null.
 type Int struct {
 	sql.NullInt64
+	Fill bool
 }
 
 // NewInt creates a new Int
@@ -79,6 +80,10 @@ func (i *Int) UnmarshalJSON(data []byte) error {
 	return err
 }
 
+func (i Int) IsFill() bool {
+	return i.Fill
+}
+
 // UnmarshalText implements encoding.TextUnmarshaler.
 // It will unmarshal to a null Int if the input is a blank or not an integer.
 // It will return an error if the input is not an integer, blank, or "null".
@@ -86,10 +91,12 @@ func (i *Int) UnmarshalText(text []byte) error {
 	str := string(text)
 	if str == "" || str == "null" {
 		i.Valid = false
+		i.Fill = true
 		return nil
 	}
 	var err error
 	i.Int64, err = strconv.ParseInt(string(text), 10, 64)
+	i.Fill = true
 	i.Valid = err == nil
 	return err
 }
