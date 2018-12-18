@@ -3,6 +3,9 @@ package null
 import (
 	"encoding/json"
 	"testing"
+
+	"github.com/mailru/easyjson"
+	"github.com/stretchr/testify/assert"
 )
 
 var (
@@ -197,5 +200,46 @@ func assertFalseBool(t *testing.T, b Bool, from string) {
 func assertNullBool(t *testing.T, b Bool, from string) {
 	if b.Valid {
 		t.Error(from, "is valid, but should be invalid")
+	}
+}
+
+func TestBoolUnmarshalEasyJSON(t *testing.T) {
+	tests := []struct {
+		data string
+		exp  Bool
+	}{
+		{
+			data: "null",
+		},
+		{
+			data: `true`,
+			exp:  BoolFrom(true),
+		},
+		{
+			data: `false`,
+			exp:  BoolFrom(false),
+		},
+
+		{
+			data: `{"Bool":false,"Valid":true}`,
+			exp:  BoolFrom(false),
+		},
+		{
+			data: `{"bool":true,"valid":true}`,
+			exp:  BoolFrom(true),
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.data, func(t *testing.T) {
+			var b1 Bool
+			assert.NoError(t, easyjson.Unmarshal([]byte(test.data), &b1))
+			assert.Equal(t, test.exp, b1)
+
+			var b2 Bool
+			assert.NoError(t, json.Unmarshal([]byte(test.data), &b2))
+			assert.Equal(t, test.exp, b2)
+
+		})
 	}
 }
