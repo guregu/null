@@ -75,6 +75,7 @@ func (f *Float) UnmarshalJSON(data []byte) error {
 	case map[string]interface{}:
 		err = json.Unmarshal(data, &f.NullFloat64)
 	case nil:
+		f.Fill = true
 		f.Valid = false
 		return nil
 	default:

@@ -71,11 +71,13 @@ func (i *Int) UnmarshalJSON(data []byte) error {
 	case map[string]interface{}:
 		err = json.Unmarshal(data, &i.NullInt64)
 	case nil:
+		i.Fill = true
 		i.Valid = false
 		return nil
 	default:
 		err = fmt.Errorf("json: cannot unmarshal %v into Go value of type null.Int", reflect.TypeOf(v).Name())
 	}
+	i.Fill = true
 	i.Valid = err == nil
 	return err
 }

@@ -65,6 +65,7 @@ func (b *Bool) UnmarshalJSON(data []byte) error {
 	case map[string]interface{}:
 		err = json.Unmarshal(data, &b.NullBool)
 	case nil:
+		b.Fill = true
 		b.Valid = false
 		return nil
 	default:

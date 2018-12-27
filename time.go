@@ -23,11 +23,13 @@ func (t *Time) Scan(value interface{}) error {
 	case time.Time:
 		t.Time = x
 	case nil:
+		t.Fill = true
 		t.Valid = false
 		return nil
 	default:
 		err = fmt.Errorf("null: cannot scan type %T into null.Time: %v", value, value)
 	}
+	t.Fill = true
 	t.Valid = err == nil
 	return err
 }
