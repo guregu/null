@@ -13,6 +13,7 @@ import (
 // It will decode to null, not zero, if null.
 type Int struct {
 	sql.NullInt64
+	Fill bool
 }
 
 // NewInt creates a new Int
@@ -56,27 +57,26 @@ func (i *Int) UnmarshalJSON(data []byte) error {
 	if err = json.Unmarshal(data, &v); err != nil {
 		return err
 	}
-	switch x := v.(type) {
+	switch v.(type) {
 	case float64:
 		// Unmarshal again, directly to int64, to avoid intermediate float64
 		err = json.Unmarshal(data, &i.Int64)
-	case string:
-		str := string(x)
-		if len(str) == 0 {
-			i.Valid = false
-			return nil
-		}
-		i.Int64, err = strconv.ParseInt(str, 10, 64)
 	case map[string]interface{}:
 		err = json.Unmarshal(data, &i.NullInt64)
 	case nil:
+		i.Fill = true
 		i.Valid = false
 		return nil
 	default:
 		err = fmt.Errorf("json: cannot unmarshal %v into Go value of type null.Int", reflect.TypeOf(v).Name())
 	}
+	i.Fill = true
 	i.Valid = err == nil
 	return err
+}
+
+func (i Int) IsFill() bool {
+	return i.Fill
 }
 
 // UnmarshalText implements encoding.TextUnmarshaler.
@@ -86,10 +86,12 @@ func (i *Int) UnmarshalText(text []byte) error {
 	str := string(text)
 	if str == "" || str == "null" {
 		i.Valid = false
+		i.Fill = true
 		return nil
 	}
 	var err error
 	i.Int64, err = strconv.ParseInt(string(text), 10, 64)
+	i.Fill = true
 	i.Valid = err == nil
 	return err
 }

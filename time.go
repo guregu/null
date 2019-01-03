@@ -13,6 +13,7 @@ import (
 type Time struct {
 	Time  time.Time
 	Valid bool
+	Fill bool
 }
 
 // Scan implements the Scanner interface.
@@ -22,11 +23,13 @@ func (t *Time) Scan(value interface{}) error {
 	case time.Time:
 		t.Time = x
 	case nil:
+		t.Fill = true
 		t.Valid = false
 		return nil
 	default:
 		err = fmt.Errorf("null: cannot scan type %T into null.Time: %v", value, value)
 	}
+	t.Fill = true
 	t.Valid = err == nil
 	return err
 }
@@ -37,6 +40,10 @@ func (t Time) Value() (driver.Value, error) {
 		return nil, nil
 	}
 	return t.Time, nil
+}
+
+func (t Time) IsFill() bool {
+	return t.Fill
 }
 
 // NewTime creates a new Time.
@@ -104,6 +111,7 @@ func (t *Time) UnmarshalJSON(data []byte) error {
 	default:
 		err = fmt.Errorf("json: cannot unmarshal %v into Go value of type null.Time", reflect.TypeOf(v).Name())
 	}
+	t.Fill = true
 	t.Valid = err == nil
 	return err
 }
@@ -119,11 +127,13 @@ func (t *Time) UnmarshalText(text []byte) error {
 	str := string(text)
 	if str == "" || str == "null" {
 		t.Valid = false
+		t.Fill = true
 		return nil
 	}
 	if err := t.Time.UnmarshalText(text); err != nil {
 		return err
 	}
+	t.Fill = true
 	t.Valid = true
 	return nil
 }
