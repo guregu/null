@@ -3,6 +3,7 @@ package zero
 import (
 	"encoding/json"
 	"math"
+	"reflect"
 	"strconv"
 	"testing"
 )
@@ -34,6 +35,43 @@ func TestIntFromPtr(t *testing.T) {
 	assertNullInt(t, null, "IntFromPtr(nil)")
 }
 
+func TestNewIntFromString(t *testing.T) {
+	type args struct {
+		i     string
+		valid bool
+	}
+	tests := []struct {
+		name string
+		args args
+		want Int
+	}{
+		{
+			name: "equal zero",
+			args: args{
+				i:     "0",
+				valid: false,
+			},
+			want: IntFrom(0),
+			// TODO: Add test cases.
+		},
+		{
+			name: "equal one",
+			args: args{
+				i:     "1",
+				valid: true,
+			},
+			want: IntFrom(1),
+			// TODO: Add test cases.
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := NewIntFromString(tt.args.i, tt.args.valid); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("NewIntFromString() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
 func TestUnmarshalInt(t *testing.T) {
 	var i Int
 	err := json.Unmarshal(intJSON, &i)
