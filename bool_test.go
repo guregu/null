@@ -40,7 +40,7 @@ func TestUnmarshalBool(t *testing.T) {
 	var nb Bool
 	err = json.Unmarshal(nullBoolJSON, &nb)
 	maybePanic(err)
-	assertBool(t, nb, "sq.NullBool json")
+	assertBool(t, nb, "sql.NullBool json")
 
 	var null Bool
 	err = json.Unmarshal(nullJSON, &null)
