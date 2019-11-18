@@ -119,16 +119,22 @@ func (b *Bool) UnmarshalText(text []byte) error {
 	return nil
 }
 
+var (
+	nullLiteral  = []byte("null")
+	falseLiteral = []byte("false")
+	trueLiteral  = []byte("true")
+)
+
 // MarshalJSON implements json.Marshaler.
 // It will encode null if this Bool is null.
 func (b Bool) MarshalJSON() ([]byte, error) {
 	if !b.Valid {
-		return []byte("null"), nil
+		return nullLiteral, nil
 	}
 	if !b.Bool {
-		return []byte("false"), nil
+		return falseLiteral, nil
 	}
-	return []byte("true"), nil
+	return trueLiteral, nil
 }
 
 // MarshalText implements encoding.TextMarshaler.
@@ -138,9 +144,9 @@ func (b Bool) MarshalText() ([]byte, error) {
 		return []byte{}, nil
 	}
 	if !b.Bool {
-		return []byte("false"), nil
+		return falseLiteral, nil
 	}
-	return []byte("true"), nil
+	return trueLiteral, nil
 }
 
 // SetValid changes this Bool's value and also sets it to be non-null.

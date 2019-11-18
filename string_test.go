@@ -2,6 +2,7 @@ package null
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"testing"
 
 	"github.com/mailru/easyjson"
@@ -235,4 +236,15 @@ func assertJSONEquals(t *testing.T, data []byte, cmp string, from string) {
 	if string(data) != cmp {
 		t.Errorf("bad %s data: %s ≠ %s\n", from, data, cmp)
 	}
+}
+
+func BenchmarkMarshalNullString(b *testing.B) {
+	b.ReportAllocs()
+	b.RunParallel(func(b *testing.PB) {
+		var ns String
+		enc := json.NewEncoder(ioutil.Discard)
+		for b.Next() {
+			enc.Encode(&ns)
+		}
+	})
 }

@@ -64,7 +64,7 @@ func TimeFromPtr(t *time.Time) Time {
 // It will encode null if this time is null.
 func (t Time) MarshalJSON() ([]byte, error) {
 	if !t.Valid {
-		return []byte("null"), nil
+		return nullLiteral, nil
 	}
 	return t.Time.MarshalJSON()
 }
@@ -102,7 +102,7 @@ func (t *Time) UnmarshalJSON(data []byte) error {
 
 func (t Time) MarshalText() ([]byte, error) {
 	if !t.Valid {
-		return []byte("null"), nil
+		return nullLiteral, nil
 	}
 	return t.Time.MarshalText()
 }

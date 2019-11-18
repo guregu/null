@@ -103,7 +103,7 @@ func (s *String) UnmarshalEasyJSON(w *jlexer.Lexer) {
 // It will encode null if this String is null.
 func (s String) MarshalJSON() ([]byte, error) {
 	if !s.Valid {
-		return []byte("null"), nil
+		return nullLiteral, nil
 	}
 	return json.Marshal(s.String)
 }
