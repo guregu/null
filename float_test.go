@@ -72,17 +72,17 @@ func TestUnmarshalFloat(t *testing.T) {
 
 func BenchmarkFloatUnmarshalJSON(b *testing.B) {
 	b.ReportAllocs()
+	var v Float
 	for i := 0; i < b.N; i++ {
-		var v Float
 		err := json.Unmarshal(nullFloatJSON, &v)
 		maybePanic(err)
 	}
 }
 
 func BenchmarkFloatUnmarshalJSONString(b *testing.B) {
+	var v Float
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		var v Float
 		err := json.Unmarshal(nullFloatJSONString, &v)
 		maybePanic(err)
 	}
@@ -90,8 +90,8 @@ func BenchmarkFloatUnmarshalJSONString(b *testing.B) {
 
 func BenchmarkFloatUnmarshalJSONSimpleString(b *testing.B) {
 	b.ReportAllocs()
+	var v Float
 	for i := 0; i < b.N; i++ {
-		var v Float
 		err := json.Unmarshal(floatJSONString, &v)
 		maybePanic(err)
 	}
@@ -99,8 +99,8 @@ func BenchmarkFloatUnmarshalJSONSimpleString(b *testing.B) {
 
 func BenchmarkFloatUnmarshalJSONSimple(b *testing.B) {
 	b.ReportAllocs()
+	var v Float
 	for i := 0; i < b.N; i++ {
-		var v Float
 		err := json.Unmarshal(floatJSON, &v)
 		maybePanic(err)
 	}
@@ -108,8 +108,8 @@ func BenchmarkFloatUnmarshalJSONSimple(b *testing.B) {
 
 func BenchmarkFloatUnmarshalJSONNull(b *testing.B) {
 	b.ReportAllocs()
+	var v Float
 	for i := 0; i < b.N; i++ {
-		var v Float
 		err := json.Unmarshal(nullJSON, &v)
 		maybePanic(err)
 	}

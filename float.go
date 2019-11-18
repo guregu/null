@@ -106,7 +106,7 @@ func (f *Float) UnmarshalText(text []byte) error {
 // It will encode null if this Float is null.
 func (f Float) MarshalJSON() ([]byte, error) {
 	if !f.Valid {
-		return []byte("null"), nil
+		return nullLiteral, nil
 	}
 	return []byte(strconv.FormatFloat(f.Float64, 'f', -1, 64)), nil
 }
