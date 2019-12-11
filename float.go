@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"database/sql"
 	"encoding/json"
+	"github.com/philpearl/plenc"
 	"strconv"
 	"unsafe"
 )
@@ -138,4 +139,33 @@ func (f Float) Ptr() *float64 {
 // A non-null Float with a 0 value will not be considered zero.
 func (f Float) IsZero() bool {
 	return !f.Valid
+}
+
+// ΦλSizeFull determines how many bytes are needed to encode this value
+func (f Float) ΦλSizeFull(index int) (size int) {
+	if !f.Valid {
+		return 0
+	}
+	// We're going to cheat and assume this will always only include a single value. So we won't do the tag
+	// thing
+	return plenc.SizeTag(plenc.WT64, index) + plenc.SizeFloat64(f.Float64)
+}
+
+// ΦλAppendFull encodes example by appending to data. It returns the final slice
+func (f Float) ΦλAppendFull(data []byte, index int) []byte {
+	if !f.Valid {
+		return data
+	}
+	data = plenc.AppendTag(data, plenc.WT64, index)
+	return plenc.AppendFloat64(data, f.Float64)
+}
+
+// ΦλUnmarshal decodes a plenc encoded value
+func (f *Float) ΦλUnmarshal(data []byte) (int, error) {
+	// There's no tag within the encoding. If we're being asked to decode, then this value field must be present
+	// within the encoded data,
+	f.Valid = true
+	var n int
+	f.Float64, n = plenc.ReadFloat64(data)
+	return n, nil
 }
