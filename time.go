@@ -4,9 +4,12 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"fmt"
-	"github.com/philpearl/plenc"
 	"reflect"
 	"time"
+
+	"github.com/mailru/easyjson/jlexer"
+	"github.com/mailru/easyjson/jwriter"
+	"github.com/philpearl/plenc"
 )
 
 // Time is a nullable time.Time. It supports SQL and JSON serialization.
@@ -70,6 +73,17 @@ func (t Time) MarshalJSON() ([]byte, error) {
 	return t.Time.MarshalJSON()
 }
 
+func (t Time) MarshalEasyJSON(w *jwriter.Writer) {
+	if !t.Valid {
+		w.RawString("null")
+		return
+	}
+	w.Buffer.EnsureSpace(len(time.RFC3339Nano) + 2)
+	w.Buffer.AppendByte('"')
+	w.Buffer.Buf = t.Time.UTC().AppendFormat(w.Buffer.Buf, time.RFC3339Nano)
+	w.Buffer.AppendByte('"')
+}
+
 // UnmarshalJSON implements json.Unmarshaler.
 // It supports string, object (e.g. pq.NullTime and friends)
 // and null input.
@@ -99,6 +113,47 @@ func (t *Time) UnmarshalJSON(data []byte) error {
 	}
 	t.Valid = err == nil
 	return err
+}
+
+// UnmarshalEasyJSON is an easy-JSON specific decoder, that should be more efficient than the standard one.
+// We expect the value to be either `null` or `true`, but we also unmarshal if we receive
+// `{"Valid":true,"Bool":false}`
+func (i *Time) UnmarshalEasyJSON(w *jlexer.Lexer) {
+	if w.IsNull() {
+		w.Skip()
+		i.Valid = false
+		return
+	}
+	if w.IsDelim('{') {
+		w.Skip()
+		for !w.IsDelim('}') {
+			key := w.UnsafeString()
+			w.WantColon()
+			if w.IsNull() {
+				w.Skip()
+				w.WantComma()
+				continue
+			}
+			switch key {
+			case "time", "Time":
+				t, err := time.Parse(time.RFC3339, w.UnsafeString())
+				if err != nil {
+					w.AddError(err)
+				}
+				i.Time = t
+			case "valid", "Valid":
+				i.Valid = w.Bool()
+			}
+			w.WantComma()
+		}
+		return
+	}
+	t, err := time.Parse(time.RFC3339, w.UnsafeString())
+	if err != nil {
+		w.AddError(err)
+	}
+	i.Time = t
+	i.Valid = (w.Error() == nil)
 }
 
 func (t Time) MarshalText() ([]byte, error) {

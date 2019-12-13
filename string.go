@@ -11,6 +11,7 @@ import (
 	"reflect"
 
 	"github.com/mailru/easyjson/jlexer"
+	"github.com/mailru/easyjson/jwriter"
 	"github.com/philpearl/plenc"
 )
 
@@ -97,7 +98,16 @@ func (s *String) UnmarshalEasyJSON(w *jlexer.Lexer) {
 		return
 	}
 	s.String = w.String()
-	s.Valid = (w.Error() == nil) && (s.String != "")
+	s.Valid = (w.Error() == nil)
+}
+
+func (s String) MarshalEasyJSON(w *jwriter.Writer) {
+	if !s.Valid {
+		w.RawString("null")
+		return
+	}
+
+	w.String(s.String)
 }
 
 // MarshalJSON implements json.Marshaler.

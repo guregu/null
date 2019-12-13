@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"unsafe"
 
+	"github.com/mailru/easyjson/jlexer"
+	"github.com/mailru/easyjson/jwriter"
 	"github.com/philpearl/plenc"
 )
 
@@ -89,6 +91,39 @@ func (i *Int) UnmarshalJSON(data []byte) error {
 	return err
 }
 
+// UnmarshalEasyJSON is an easy-JSON specific decoder, that should be more efficient than the standard one.
+// We expect the value to be either `null` or `true`, but we also unmarshal if we receive
+// `{"Valid":true,"Bool":false}`
+func (i *Int) UnmarshalEasyJSON(w *jlexer.Lexer) {
+	if w.IsNull() {
+		w.Skip()
+		i.Valid = false
+		return
+	}
+	if w.IsDelim('{') {
+		w.Skip()
+		for !w.IsDelim('}') {
+			key := w.UnsafeString()
+			w.WantColon()
+			if w.IsNull() {
+				w.Skip()
+				w.WantComma()
+				continue
+			}
+			switch key {
+			case "int64", "Int64":
+				i.Int64 = w.Int64()
+			case "valid", "Valid":
+				i.Valid = w.Bool()
+			}
+			w.WantComma()
+		}
+		return
+	}
+	i.Int64 = w.Int64()
+	i.Valid = (w.Error() == nil)
+}
+
 // UnmarshalText implements encoding.TextUnmarshaler.
 // It will unmarshal to a null Int if the input is a blank or not an integer.
 // It will return an error if the input is not an integer, blank, or "null".
@@ -111,6 +146,14 @@ func (i Int) MarshalJSON() ([]byte, error) {
 		return nullLiteral, nil
 	}
 	return []byte(strconv.FormatInt(i.Int64, 10)), nil
+}
+
+func (i Int) MarshalEasyJSON(w *jwriter.Writer) {
+	if !i.Valid {
+		w.RawString("null")
+		return
+	}
+	w.Int64(i.Int64)
 }
 
 // MarshalText implements encoding.TextMarshaler.
