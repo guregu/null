@@ -97,7 +97,7 @@ func (s *String) UnmarshalEasyJSON(w *jlexer.Lexer) {
 		return
 	}
 	s.String = w.String()
-	s.Valid = (w.Error() == nil)
+	s.Valid = (w.Error() == nil) && s.String != ""
 }
 
 func (s String) MarshalEasyJSON(w *jwriter.Writer) {
