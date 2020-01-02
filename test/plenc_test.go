@@ -44,30 +44,6 @@ var fuzzFuncs = []interface{}{
 	},
 }
 
-func TestPlenc(t *testing.T) {
-	f := fuzz.New().Funcs(fuzzFuncs...)
-	for i := 0; i < 100; i++ {
-		var in, out pltest
-		f.Fuzz(&in)
-
-		s := in.ΦλSize()
-		b := make([]byte, 0, s)
-		b = in.ΦλAppend(b)
-
-		n, err := out.ΦλUnmarshal(b)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if n != s || len(b) != s {
-			t.Errorf("unexpected lengths %d %d %d", n, s, len(b))
-		}
-
-		if diff := cmp.Diff(in, out); diff != "" {
-			t.Fatalf("values differ. %s", diff)
-		}
-	}
-}
-
 func TestEasyjson(t *testing.T) {
 	f := fuzz.New().Funcs(fuzzFuncs...)
 	for i := 0; i < 100; i++ {
@@ -93,20 +69,6 @@ func BenchmarkSerialisation(b *testing.B) {
 
 	var in pltest
 	f.Fuzz(&in)
-
-	b.Run("plenc", func(b *testing.B) {
-		b.ReportAllocs()
-		b.RunParallel(func(pb *testing.PB) {
-			for pb.Next() {
-				s := in.ΦλSize()
-				bu := make([]byte, 0, s)
-				bu = in.ΦλAppend(bu)
-
-				var out pltest
-				out.ΦλUnmarshal(bu)
-			}
-		})
-	})
 
 	b.Run("easyjson", func(b *testing.B) {
 		b.ReportAllocs()
