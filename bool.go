@@ -9,7 +9,6 @@ import (
 
 	"github.com/mailru/easyjson/jlexer"
 	"github.com/mailru/easyjson/jwriter"
-	"github.com/philpearl/plenc"
 )
 
 // Bool is a nullable bool.
@@ -177,33 +176,4 @@ func (b Bool) Ptr() *bool {
 // A non-null Bool with a 0 value will not be considered zero.
 func (b Bool) IsZero() bool {
 	return !b.Valid
-}
-
-// ΦλSizeFull determines how many bytes are needed to encode this value
-func (b Bool) ΦλSizeFull(index int) (size int) {
-	if !b.Valid {
-		return 0
-	}
-	// We're going to cheat and assume this will always only include a single value. So we won't do the tag
-	// thing
-	return plenc.SizeTag(plenc.WTVarInt, index) + plenc.SizeBool(b.Bool)
-}
-
-// ΦλAppendFull encodes example by appending to data. It returns the final slice
-func (b Bool) ΦλAppendFull(data []byte, index int) []byte {
-	if !b.Valid {
-		return data
-	}
-	data = plenc.AppendTag(data, plenc.WTVarInt, index)
-	return plenc.AppendBool(data, b.Bool)
-}
-
-// ΦλUnmarshal decodes a plenc encoded value
-func (b *Bool) ΦλUnmarshal(data []byte) (int, error) {
-	// There's no tag within the encoding. If we're being asked to decode, then this value field must be present
-	// within the encoded data,
-	b.Valid = true
-	var n int
-	b.Bool, n = plenc.ReadBool(data)
-	return n, nil
 }

@@ -9,7 +9,6 @@ import (
 
 	"github.com/mailru/easyjson/jlexer"
 	"github.com/mailru/easyjson/jwriter"
-	"github.com/philpearl/plenc"
 )
 
 // Time is a nullable time.Time. It supports SQL and JSON serialization.
@@ -188,35 +187,4 @@ func (t Time) Ptr() *time.Time {
 		return nil
 	}
 	return &t.Time
-}
-
-// ΦλSize determines how many bytes are needed to encode this value
-func (t Time) ΦλSize() (size int) {
-	if !t.Valid {
-		return 0
-	}
-	var pt plenc.Time
-	pt.Set(t.Time)
-	return pt.ΦλSize()
-}
-
-// ΦλAppend encodes example by appending to data. It returns the final slice
-func (t Time) ΦλAppend(data []byte) []byte {
-	if !t.Valid {
-		return data
-	}
-	var pt plenc.Time
-	pt.Set(t.Time)
-	return pt.ΦλAppend(data)
-}
-
-// ΦλUnmarshal decodes a plenc encoded value
-func (t *Time) ΦλUnmarshal(data []byte) (int, error) {
-	// There's no tag within the encoding. If we're being asked to decode, then this value field must be present
-	// within the encoded data,
-	t.Valid = true
-	var pt plenc.Time
-	n, err := pt.ΦλUnmarshal(data)
-	t.Time = pt.Standard()
-	return n, err
 }

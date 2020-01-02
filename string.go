@@ -12,7 +12,6 @@ import (
 
 	"github.com/mailru/easyjson/jlexer"
 	"github.com/mailru/easyjson/jwriter"
-	"github.com/philpearl/plenc"
 )
 
 // String is a nullable string. It supports SQL and JSON serialization.
@@ -145,32 +144,4 @@ func (s String) Ptr() *string {
 // Will return false s if blank but non-null.
 func (s String) IsZero() bool {
 	return !s.Valid
-}
-
-// ΦλSize determines how many bytes are needed to encode this value
-func (s String) ΦλSize() (size int) {
-	if !s.Valid {
-		return 0
-	}
-	// We're going to cheat and assume this will always only include a single value. So we won't do the tag
-	// thing
-	return plenc.SizeString(s.String)
-}
-
-// ΦλAppend encodes example by appending to data. It returns the final slice
-func (s String) ΦλAppend(data []byte) []byte {
-	if !s.Valid {
-		return data
-	}
-	return plenc.AppendString(data, s.String)
-}
-
-// ΦλUnmarshal decodes a plenc encoded value
-func (s *String) ΦλUnmarshal(data []byte) (int, error) {
-	// There's no tag within the encoding. If we're being asked to decode, then this value field must be present
-	// within the encoded data,
-	s.Valid = true
-	var n int
-	s.String, n = plenc.ReadString(data)
-	return n, nil
 }

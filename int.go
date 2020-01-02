@@ -9,7 +9,6 @@ import (
 
 	"github.com/mailru/easyjson/jlexer"
 	"github.com/mailru/easyjson/jwriter"
-	"github.com/philpearl/plenc"
 )
 
 // Int is an nullable int64.
@@ -183,33 +182,4 @@ func (i Int) Ptr() *int64 {
 // A non-null Int with a 0 value will not be considered zero.
 func (i Int) IsZero() bool {
 	return !i.Valid
-}
-
-// ΦλSizeFull determines how many bytes are needed to encode this value
-func (i Int) ΦλSizeFull(index int) (size int) {
-	if !i.Valid {
-		return 0
-	}
-	// We're going to cheat and assume this will always only include a single value. So we won't do the tag
-	// thing
-	return plenc.SizeTag(plenc.WTVarInt, index) + plenc.SizeVarInt(i.Int64)
-}
-
-// ΦλAppendFull encodes example by appending to data. It returns the final slice
-func (i Int) ΦλAppendFull(data []byte, index int) []byte {
-	if !i.Valid {
-		return data
-	}
-	data = plenc.AppendTag(data, plenc.WTVarInt, index)
-	return plenc.AppendVarInt(data, i.Int64)
-}
-
-// ΦλUnmarshal decodes a plenc encoded value
-func (i *Int) ΦλUnmarshal(data []byte) (int, error) {
-	// There's no tag within the encoding. If we're being asked to decode, then this value field must be present
-	// within the encoded data,
-	i.Valid = true
-	var n int
-	i.Int64, n = plenc.ReadVarInt(data)
-	return n, nil
 }
