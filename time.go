@@ -115,8 +115,6 @@ func (t *Time) UnmarshalJSON(data []byte) error {
 }
 
 // UnmarshalEasyJSON is an easy-JSON specific decoder, that should be more efficient than the standard one.
-// We expect the value to be either `null` or `true`, but we also unmarshal if we receive
-// `{"Valid":true,"Bool":false}`
 func (i *Time) UnmarshalEasyJSON(w *jlexer.Lexer) {
 	if w.IsNull() {
 		w.Skip()
