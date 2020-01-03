@@ -6,6 +6,9 @@ import (
 	"encoding/json"
 	"strconv"
 	"unsafe"
+
+	"github.com/mailru/easyjson/jlexer"
+	"github.com/mailru/easyjson/jwriter"
 )
 
 // Float is a nullable float64.
@@ -87,6 +90,37 @@ func (i *Float) UnmarshalJSON(data []byte) error {
 	return err
 }
 
+// UnmarshalEasyJSON is an easy-JSON specific decoder, that should be more efficient than the standard one.
+func (i *Float) UnmarshalEasyJSON(w *jlexer.Lexer) {
+	if w.IsNull() {
+		w.Skip()
+		i.Valid = false
+		return
+	}
+	if w.IsDelim('{') {
+		w.Skip()
+		for !w.IsDelim('}') {
+			key := w.UnsafeString()
+			w.WantColon()
+			if w.IsNull() {
+				w.Skip()
+				w.WantComma()
+				continue
+			}
+			switch key {
+			case "float64", "Float64":
+				i.Float64 = w.Float64()
+			case "valid", "Valid":
+				i.Valid = w.Bool()
+			}
+			w.WantComma()
+		}
+		return
+	}
+	i.Float64 = w.Float64()
+	i.Valid = (w.Error() == nil)
+}
+
 // UnmarshalText implements encoding.TextUnmarshaler.
 // It will unmarshal to a null Float if the input is a blank or not an integer.
 // It will return an error if the input is not an integer, blank, or "null".
@@ -109,6 +143,14 @@ func (f Float) MarshalJSON() ([]byte, error) {
 		return nullLiteral, nil
 	}
 	return []byte(strconv.FormatFloat(f.Float64, 'f', -1, 64)), nil
+}
+
+func (i Float) MarshalEasyJSON(w *jwriter.Writer) {
+	if !i.Valid {
+		w.RawString("null")
+		return
+	}
+	w.Float64(i.Float64)
 }
 
 // MarshalText implements encoding.TextMarshaler.

@@ -8,6 +8,7 @@ import (
 	"reflect"
 
 	"github.com/mailru/easyjson/jlexer"
+	"github.com/mailru/easyjson/jwriter"
 )
 
 // Bool is a nullable bool.
@@ -135,6 +136,14 @@ func (b Bool) MarshalJSON() ([]byte, error) {
 		return falseLiteral, nil
 	}
 	return trueLiteral, nil
+}
+
+func (b Bool) MarshalEasyJSON(w *jwriter.Writer) {
+	if !b.Valid {
+		w.RawString("null")
+		return
+	}
+	w.Bool(b.Bool)
 }
 
 // MarshalText implements encoding.TextMarshaler.
