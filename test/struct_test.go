@@ -8,6 +8,9 @@ import (
 	fuzz "github.com/google/gofuzz"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/mailru/easyjson"
+	jwriter "github.com/mailru/easyjson/jwriter"
+	"github.com/philpearl/plenc"
+	plnull "github.com/philpearl/plenc/null"
 	"github.com/unravelin/null"
 )
 
@@ -73,10 +76,32 @@ func BenchmarkSerialisation(b *testing.B) {
 	b.Run("easyjson", func(b *testing.B) {
 		b.ReportAllocs()
 		b.RunParallel(func(pb *testing.PB) {
+			var w jwriter.Writer
+			var data []byte
 			for pb.Next() {
-				data, _ := easyjson.Marshal(&in)
+				in.MarshalEasyJSON(&w)
+				data, _ := w.BuildBytes(data[:0])
 				var out pltest
 				easyjson.Unmarshal(data, &out)
+			}
+		})
+	})
+
+	b.Run("plenc", func(b *testing.B) {
+		plnull.RegisterCodecs()
+		b.ReportAllocs()
+		b.RunParallel(func(pb *testing.PB) {
+			var data []byte
+			for pb.Next() {
+				var err error
+				data, err = plenc.Marshal(data[:0], &in)
+				if err != nil {
+					b.Fatal(err)
+				}
+				var out pltest
+				if err := plenc.Unmarshal(data, &out); err != nil {
+					b.Fatal(err)
+				}
 			}
 		})
 	})
@@ -102,5 +127,4 @@ func BenchmarkSerialisation(b *testing.B) {
 			}
 		})
 	})
-
 }
