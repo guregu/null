@@ -1,6 +1,7 @@
 package null
 
 import (
+	"database/sql"
 	"database/sql/driver"
 	"encoding/json"
 	"fmt"
@@ -11,8 +12,7 @@ import (
 // Time is a nullable time.Time. It supports SQL and JSON serialization.
 // It will marshal to null if null.
 type Time struct {
-	Time  time.Time
-	Valid bool
+	sql.NullTime
 }
 
 // Scan implements the Scanner interface.
@@ -42,8 +42,10 @@ func (t Time) Value() (driver.Value, error) {
 // NewTime creates a new Time.
 func NewTime(t time.Time, valid bool) Time {
 	return Time{
-		Time:  t,
-		Valid: valid,
+		NullTime: sql.NullTime{
+			Time:  t,
+			Valid: valid,
+		},
 	}
 }
 

@@ -1,6 +1,7 @@
 package zero
 
 import (
+	"database/sql"
 	"database/sql/driver"
 	"encoding/json"
 	"fmt"
@@ -12,8 +13,7 @@ import (
 // JSON marshals to the zero value for time.Time if null.
 // Considered to be null to SQL if zero.
 type Time struct {
-	Time  time.Time
-	Valid bool
+	sql.NullTime
 }
 
 // Scan implements Scanner interface.
@@ -43,8 +43,10 @@ func (t Time) Value() (driver.Value, error) {
 // NewTime creates a new Time.
 func NewTime(t time.Time, valid bool) Time {
 	return Time{
-		Time:  t,
-		Valid: valid,
+		NullTime: sql.NullTime{
+			Time:  t,
+			Valid: valid,
+		},
 	}
 }
 
