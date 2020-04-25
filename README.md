@@ -1,5 +1,5 @@
 ## null [![GoDoc](https://godoc.org/github.com/guregu/null?status.svg)](https://godoc.org/github.com/guregu/null) [![CircleCI](https://circleci.com/gh/guregu/null.svg?style=svg)](https://circleci.com/gh/guregu/null)
-`import "gopkg.in/guregu/null.v3"`
+`import "gopkg.in/guregu/null.v4"`
 
 null is a library with reasonable options for dealing with nullable SQL and JSON values
 
