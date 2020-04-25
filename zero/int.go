@@ -1,10 +1,11 @@
 package zero
 
 import (
+	"bytes"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"reflect"
 	"strconv"
 )
 
@@ -50,38 +51,40 @@ func (i Int) ValueOrZero() int64 {
 // UnmarshalJSON implements json.Unmarshaler.
 // It supports number and null input.
 // 0 will be considered a null Int.
-// It also supports unmarshalling a sql.NullInt64.
 func (i *Int) UnmarshalJSON(data []byte) error {
-	var err error
-	var v interface{}
-	if err = json.Unmarshal(data, &v); err != nil {
-		return err
-	}
-	switch x := v.(type) {
-	case float64:
-		// Unmarshal again, directly to int64, to avoid intermediate float64
-		err = json.Unmarshal(data, &i.Int64)
-	case string:
-		str := string(x)
-		if len(str) == 0 {
-			i.Valid = false
-			return nil
-		}
-		i.Int64, err = strconv.ParseInt(str, 10, 64)
-	case map[string]interface{}:
-		err = json.Unmarshal(data, &i.NullInt64)
-	case nil:
+	if bytes.Equal(data, nullBytes) {
 		i.Valid = false
 		return nil
-	default:
-		err = fmt.Errorf("json: cannot unmarshal %v into Go value of type zero.Int", reflect.TypeOf(v).Name())
 	}
-	i.Valid = (err == nil) && (i.Int64 != 0)
-	return err
+
+	if err := json.Unmarshal(data, &i.Int64); err != nil {
+		var typeError *json.UnmarshalTypeError
+		if errors.As(err, &typeError) {
+			// special case: accept string input
+			if typeError.Value != "string" {
+				return fmt.Errorf("zero: JSON input is invalid type (need int or string): %w", err)
+			}
+			var str string
+			if err := json.Unmarshal(data, &str); err != nil {
+				return fmt.Errorf("zero: couldn't unmarshal number string: %w", err)
+			}
+			n, err := strconv.ParseInt(str, 10, 64)
+			if err != nil {
+				return fmt.Errorf("zero: couldn't convert string to int: %w", err)
+			}
+			i.Int64 = n
+			i.Valid = n != 0
+			return nil
+		}
+		return fmt.Errorf("zero: couldn't unmarshal JSON: %w", err)
+	}
+
+	i.Valid = i.Int64 != 0
+	return nil
 }
 
 // UnmarshalText implements encoding.TextUnmarshaler.
-// It will unmarshal to a null Int if the input is a blank, zero, or not an integer.
+// It will unmarshal to a null Int if the input is a blank, or zero.
 // It will return an error if the input is not an integer, blank, or "null".
 func (i *Int) UnmarshalText(text []byte) error {
 	str := string(text)
@@ -91,7 +94,10 @@ func (i *Int) UnmarshalText(text []byte) error {
 	}
 	var err error
 	i.Int64, err = strconv.ParseInt(string(text), 10, 64)
-	i.Valid = (err == nil) && (i.Int64 != 0)
+	if err != nil {
+		return fmt.Errorf("zero: couldn't unmarshal text: %w", err)
+	}
+	i.Valid = i.Int64 != 0
 	return err
 }
 

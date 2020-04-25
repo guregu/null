@@ -2,6 +2,7 @@ package zero
 
 import (
 	"encoding/json"
+	"errors"
 	"testing"
 	"time"
 )
@@ -25,8 +26,9 @@ var (
 func TestUnmarshalTimeJSON(t *testing.T) {
 	var ti Time
 	err := json.Unmarshal(timeObject, &ti)
-	maybePanic(err)
-	assertTime(t, ti, "UnmarshalJSON() json")
+	if err == nil {
+		panic("expected error")
+	}
 
 	var blank Time
 	err = json.Unmarshal(blankTimeJSON, &blank)
@@ -40,46 +42,40 @@ func TestUnmarshalTimeJSON(t *testing.T) {
 
 	var fromObject Time
 	err = json.Unmarshal(timeObject, &fromObject)
-	maybePanic(err)
-	assertTime(t, fromObject, "map time json")
+	if err == nil {
+		panic("expected error")
+	}
 
 	var null Time
 	err = json.Unmarshal(nullObject, &null)
-	maybePanic(err)
-	assertNullTime(t, null, "map null time json")
-
-	var nullFromObj Time
-	err = json.Unmarshal(nullObject, &nullFromObj)
-	maybePanic(err)
-	assertNullTime(t, nullFromObj, "null from object json")
+	if err == nil {
+		panic("expected error")
+	}
 
 	var invalid Time
 	err = invalid.UnmarshalJSON(invalidJSON)
-	if _, ok := err.(*json.SyntaxError); !ok {
-		t.Errorf("expected json.SyntaxError, not %T", err)
+	var syntaxError *json.SyntaxError
+	if !errors.As(err, &syntaxError) {
+		t.Errorf("expected wrapped json.SyntaxError, not %T", err)
 	}
-	assertNullTime(t, invalid, "invalid from object json")
 
 	var bad Time
 	err = json.Unmarshal(badObject, &bad)
 	if err == nil {
 		t.Errorf("expected error: bad object")
 	}
-	assertNullTime(t, bad, "bad from object json")
 
 	var wrongType Time
 	err = json.Unmarshal(intJSON, &wrongType)
 	if err == nil {
 		t.Errorf("expected error: wrong type JSON")
 	}
-	assertNullTime(t, wrongType, "wrong type object json")
 
 	var wrongString Time
 	err = json.Unmarshal(stringJSON, &wrongString)
 	if err == nil {
 		t.Errorf("expected error: wrong string JSON")
 	}
-	assertNullTime(t, wrongString, "wrong string object json")
 }
 
 func TestMarshalTime(t *testing.T) {
@@ -177,7 +173,6 @@ func TestTimeScan(t *testing.T) {
 	if err == nil {
 		t.Error("expected error")
 	}
-	assertNullTime(t, wrong, "scanned wrong")
 }
 
 func TestTimeValue(t *testing.T) {

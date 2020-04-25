@@ -2,6 +2,7 @@ package null
 
 import (
 	"encoding/json"
+	"errors"
 	"math"
 	"testing"
 )
@@ -46,8 +47,9 @@ func TestUnmarshalFloat(t *testing.T) {
 
 	var nf Float
 	err = json.Unmarshal(nullFloatJSON, &nf)
-	maybePanic(err)
-	assertFloat(t, nf, "sql.NullFloat64 json")
+	if err == nil {
+		panic("expected error")
+	}
 
 	var null Float
 	err = json.Unmarshal(nullJSON, &null)
@@ -56,20 +58,21 @@ func TestUnmarshalFloat(t *testing.T) {
 
 	var blank Float
 	err = json.Unmarshal(floatBlankJSON, &blank)
-	maybePanic(err)
-	assertNullFloat(t, blank, "null blank string json")
+	if err == nil {
+		panic("expected error")
+	}
 
 	var badType Float
 	err = json.Unmarshal(boolJSON, &badType)
 	if err == nil {
 		panic("err should not be nil")
 	}
-	assertNullFloat(t, badType, "wrong type json")
 
 	var invalid Float
 	err = invalid.UnmarshalJSON(invalidJSON)
-	if _, ok := err.(*json.SyntaxError); !ok {
-		t.Errorf("expected json.SyntaxError, not %T", err)
+	var syntaxError *json.SyntaxError
+	if !errors.As(err, &syntaxError) {
+		t.Errorf("expected wrapped json.SyntaxError, not %T", err)
 	}
 }
 
@@ -88,6 +91,12 @@ func TestTextUnmarshalFloat(t *testing.T) {
 	err = null.UnmarshalText([]byte("null"))
 	maybePanic(err)
 	assertNullFloat(t, null, `UnmarshalText() "null"`)
+
+	var invalid Float
+	err = invalid.UnmarshalText([]byte("hello world"))
+	if err == nil {
+		panic("expected error")
+	}
 }
 
 func TestMarshalFloat(t *testing.T) {

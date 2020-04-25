@@ -1,11 +1,11 @@
 package zero
 
 import (
+	"bytes"
 	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"reflect"
 )
 
 // Bool is a nullable bool. False input is considered null.
@@ -45,30 +45,22 @@ func (b Bool) ValueOrZero() bool {
 
 // UnmarshalJSON implements json.Unmarshaler.
 // "false" will be considered a null Bool.
-// It also supports unmarshalling a sql.NullBool.
 func (b *Bool) UnmarshalJSON(data []byte) error {
-	var err error
-	var v interface{}
-	if err = json.Unmarshal(data, &v); err != nil {
-		return err
-	}
-	switch x := v.(type) {
-	case bool:
-		b.Bool = x
-	case map[string]interface{}:
-		err = json.Unmarshal(data, &b.NullBool)
-	case nil:
+	if bytes.Equal(data, nullBytes) {
 		b.Valid = false
 		return nil
-	default:
-		err = fmt.Errorf("json: cannot unmarshal %v into Go value of type zero.Bool", reflect.TypeOf(v).Name())
 	}
-	b.Valid = (err == nil) && b.Bool
-	return err
+
+	if err := json.Unmarshal(data, &b.Bool); err != nil {
+		return fmt.Errorf("zero: couldn't unmarshal JSON: %w", err)
+	}
+
+	b.Valid = b.Bool
+	return nil
 }
 
 // UnmarshalText implements encoding.TextUnmarshaler.
-// It will unmarshal to a null Bool if the input is a false or not a bool.
+// It will unmarshal to a null Bool if the input is false or blank.
 // It will return an error if the input is not a float, blank, or "null".
 func (b *Bool) UnmarshalText(text []byte) error {
 	str := string(text)
@@ -78,14 +70,14 @@ func (b *Bool) UnmarshalText(text []byte) error {
 		return nil
 	case "true":
 		b.Bool = true
+		b.Valid = true
+		return nil
 	case "false":
 		b.Bool = false
-	default:
 		b.Valid = false
-		return errors.New("invalid input:" + str)
+		return nil
 	}
-	b.Valid = b.Bool
-	return nil
+	return errors.New("invalid input:" + str)
 }
 
 // MarshalJSON implements json.Marshaler.

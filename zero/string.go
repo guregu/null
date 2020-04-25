@@ -5,11 +5,14 @@
 package zero
 
 import (
+	"bytes"
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"reflect"
 )
+
+// nullBytes is a JSON null literal
+var nullBytes = []byte("null")
 
 // String is a nullable string.
 // JSON marshals to a blank string if null.
@@ -52,26 +55,18 @@ func (s String) ValueOrZero() string {
 
 // UnmarshalJSON implements json.Unmarshaler.
 // It supports string and null input. Blank string input produces a null String.
-// It also supports unmarshalling a sql.NullString.
 func (s *String) UnmarshalJSON(data []byte) error {
-	var err error
-	var v interface{}
-	if err = json.Unmarshal(data, &v); err != nil {
-		return err
-	}
-	switch x := v.(type) {
-	case string:
-		s.String = x
-	case map[string]interface{}:
-		err = json.Unmarshal(data, &s.NullString)
-	case nil:
+	if bytes.Equal(data, nullBytes) {
 		s.Valid = false
 		return nil
-	default:
-		err = fmt.Errorf("json: cannot unmarshal %v into Go value of type zero.String", reflect.TypeOf(v).Name())
 	}
-	s.Valid = (err == nil) && (s.String != "")
-	return err
+
+	if err := json.Unmarshal(data, &s.String); err != nil {
+		return fmt.Errorf("zero: couldn't unmarshal JSON: %w", err)
+	}
+
+	s.Valid = s.String != ""
+	return nil
 }
 
 // MarshalText implements encoding.TextMarshaler.

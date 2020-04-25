@@ -2,6 +2,7 @@ package zero
 
 import (
 	"encoding/json"
+	"errors"
 	"testing"
 )
 
@@ -39,8 +40,9 @@ func TestUnmarshalBool(t *testing.T) {
 
 	var nb Bool
 	err = json.Unmarshal(nullBoolJSON, &nb)
-	maybePanic(err)
-	assertBool(t, nb, "sql.NullBool json")
+	if err == nil {
+		panic("expected error")
+	}
 
 	var zero Bool
 	err = json.Unmarshal(falseJSON, &zero)
@@ -54,8 +56,9 @@ func TestUnmarshalBool(t *testing.T) {
 
 	var invalid Bool
 	err = invalid.UnmarshalJSON(invalidJSON)
-	if _, ok := err.(*json.SyntaxError); !ok {
-		t.Errorf("expected json.SyntaxError, not %T: %v", err, err)
+	var syntaxError *json.SyntaxError
+	if !errors.As(err, &syntaxError) {
+		t.Errorf("expected wrapped json.SyntaxError, not %T", err)
 	}
 	assertNullBool(t, invalid, "invalid json")
 

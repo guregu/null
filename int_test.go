@@ -2,6 +2,7 @@ package null
 
 import (
 	"encoding/json"
+	"errors"
 	"math"
 	"strconv"
 	"testing"
@@ -46,13 +47,15 @@ func TestUnmarshalInt(t *testing.T) {
 
 	var ni Int
 	err = json.Unmarshal(nullIntJSON, &ni)
-	maybePanic(err)
-	assertInt(t, ni, "sql.NullInt64 json")
+	if err == nil {
+		panic("err should not be nill")
+	}
 
 	var bi Int
 	err = json.Unmarshal(floatBlankJSON, &bi)
-	maybePanic(err)
-	assertNullInt(t, bi, "blank json string")
+	if err == nil {
+		panic("err should not be nill")
+	}
 
 	var null Int
 	err = json.Unmarshal(nullJSON, &null)
@@ -68,8 +71,9 @@ func TestUnmarshalInt(t *testing.T) {
 
 	var invalid Int
 	err = invalid.UnmarshalJSON(invalidJSON)
-	if _, ok := err.(*json.SyntaxError); !ok {
-		t.Errorf("expected json.SyntaxError, not %T", err)
+	var syntaxError *json.SyntaxError
+	if !errors.As(err, &syntaxError) {
+		t.Errorf("expected wrapped json.SyntaxError, not %T", err)
 	}
 	assertNullInt(t, invalid, "invalid json")
 }
@@ -113,6 +117,12 @@ func TestTextUnmarshalInt(t *testing.T) {
 	err = null.UnmarshalText([]byte("null"))
 	maybePanic(err)
 	assertNullInt(t, null, `UnmarshalText() "null"`)
+
+	var invalid Int
+	err = invalid.UnmarshalText([]byte("hello world"))
+	if err == nil {
+		panic("expected error")
+	}
 }
 
 func TestMarshalInt(t *testing.T) {

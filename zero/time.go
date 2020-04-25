@@ -5,7 +5,6 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"fmt"
-	"reflect"
 	"time"
 )
 
@@ -14,22 +13,6 @@ import (
 // Considered to be null to SQL if zero.
 type Time struct {
 	sql.NullTime
-}
-
-// Scan implements Scanner interface.
-func (t *Time) Scan(value interface{}) error {
-	var err error
-	switch x := value.(type) {
-	case time.Time:
-		t.Time = x
-	case nil:
-		t.Valid = false
-		return nil
-	default:
-		err = fmt.Errorf("null: cannot scan type %T into null.Time: %v", value, value)
-	}
-	t.Valid = err == nil
-	return err
 }
 
 // Value implements the driver Valuer interface.
@@ -84,37 +67,20 @@ func (t Time) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
-// It supports string, object (e.g. pq.NullTime and friends)
-// and null input.
+// It supports string and null input.
 func (t *Time) UnmarshalJSON(data []byte) error {
-	var err error
-	var v interface{}
-	if err = json.Unmarshal(data, &v); err != nil {
-		return err
-	}
-	switch x := v.(type) {
-	case string:
-		var ti time.Time
-		if err = ti.UnmarshalJSON(data); err != nil {
-			return err
-		}
-		*t = TimeFrom(ti)
-		return nil
-	case map[string]interface{}:
-		ti, tiOK := x["Time"].(string)
-		valid, validOK := x["Valid"].(bool)
-		if !tiOK || !validOK {
-			return fmt.Errorf(`json: unmarshalling object into Go value of type null.Time requires key "Time" to be of type string and key "Valid" to be of type bool; found %T and %T, respectively`, x["Time"], x["Valid"])
-		}
-		err = t.Time.UnmarshalText([]byte(ti))
-		t.Valid = valid
-		return err
-	case nil:
+	switch string(data) {
+	case "null", `""`:
 		t.Valid = false
 		return nil
-	default:
-		return fmt.Errorf("json: cannot unmarshal %v into Go value of type null.Time", reflect.TypeOf(v).Name())
 	}
+
+	if err := json.Unmarshal(data, &t.Time); err != nil {
+		return fmt.Errorf("zero: couldn't unmarshal JSON: %w", err)
+	}
+
+	t.Valid = !t.Time.IsZero()
+	return nil
 }
 
 // MarshalText implements encoding.TextMarshaler.
@@ -129,7 +95,7 @@ func (t Time) MarshalText() ([]byte, error) {
 
 // UnmarshalText implements encoding.TextUnmarshaler.
 // It has compatibility with the null package in that it will accept empty strings as invalid values,
-// which will be unmarshaled to a zero value.
+// which will be unmarshaled to an invalid zero value.
 func (t *Time) UnmarshalText(text []byte) error {
 	str := string(text)
 	// allowing "null" is for backwards compatibility with v3
@@ -138,9 +104,9 @@ func (t *Time) UnmarshalText(text []byte) error {
 		return nil
 	}
 	if err := t.Time.UnmarshalText(text); err != nil {
-		return err
+		return fmt.Errorf("zero: couldn't unmarshal text: %w", err)
 	}
-	t.Valid = true
+	t.Valid = !t.Time.IsZero()
 	return nil
 }
 

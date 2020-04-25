@@ -2,6 +2,7 @@ package null
 
 import (
 	"encoding/json"
+	"errors"
 	"testing"
 )
 
@@ -39,8 +40,9 @@ func TestUnmarshalBool(t *testing.T) {
 
 	var nb Bool
 	err = json.Unmarshal(nullBoolJSON, &nb)
-	maybePanic(err)
-	assertBool(t, nb, "sq.NullBool json")
+	if err == nil {
+		panic("err should not be nil")
+	}
 
 	var null Bool
 	err = json.Unmarshal(nullJSON, &null)
@@ -56,8 +58,9 @@ func TestUnmarshalBool(t *testing.T) {
 
 	var invalid Bool
 	err = invalid.UnmarshalJSON(invalidJSON)
-	if _, ok := err.(*json.SyntaxError); !ok {
-		t.Errorf("expected json.SyntaxError, not %T", err)
+	var syntaxError *json.SyntaxError
+	if !errors.As(err, &syntaxError) {
+		t.Errorf("expected wrapped json.SyntaxError, not %T", err)
 	}
 }
 
