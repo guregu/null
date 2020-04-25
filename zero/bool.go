@@ -38,6 +38,11 @@ func BoolFromPtr(b *bool) Bool {
 	return NewBool(*b, true)
 }
 
+// ValueOrZero returns the inner value if valid, otherwise false.
+func (b Bool) ValueOrZero() bool {
+	return b.Valid && b.Bool
+}
+
 // UnmarshalJSON implements json.Unmarshaler.
 // "false" will be considered a null Bool.
 // It also supports unmarshalling a sql.NullBool.
@@ -118,4 +123,9 @@ func (b Bool) Ptr() *bool {
 // IsZero returns true for null or zero Bools, for future omitempty support (Go 1.4?)
 func (b Bool) IsZero() bool {
 	return !b.Valid || !b.Bool
+}
+
+// Equal returns true if both booleans are true and valid, or if both booleans are either false or invalid.
+func (b Bool) Equal(other Bool) bool {
+	return b.ValueOrZero() == other.ValueOrZero()
 }

@@ -39,6 +39,14 @@ func FloatFromPtr(f *float64) Float {
 	return NewFloat(*f, true)
 }
 
+// ValueOrZero returns the inner value if valid, otherwise zero.
+func (f Float) ValueOrZero() float64 {
+	if !f.Valid {
+		return 0
+	}
+	return f.Float64
+}
+
 // UnmarshalJSON implements json.Unmarshaler.
 // It supports number and null input.
 // 0 will be considered a null Float.
@@ -129,4 +137,13 @@ func (f Float) Ptr() *float64 {
 // IsZero returns true for null or zero Floats, for future omitempty support (Go 1.4?)
 func (f Float) IsZero() bool {
 	return !f.Valid || f.Float64 == 0
+}
+
+// Equal returns true if both floats have the same value or are both either null or zero.
+// Warning: calculations using floating point numbers can result in different ways
+// the numbers are stored in memory. Therefore, this function is not suitable to
+// compare the result of a calculation. Use this method only to check if the value
+// has changed in comparison to some previous value.
+func (f Float) Equal(other Float) bool {
+	return f.ValueOrZero() == other.ValueOrZero()
 }

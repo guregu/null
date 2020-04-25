@@ -191,6 +191,48 @@ func TestFloatInfNaN(t *testing.T) {
 	}
 }
 
+func TestFloatValueOrZero(t *testing.T) {
+	valid := NewFloat(1.2345, true)
+	if valid.ValueOrZero() != 1.2345 {
+		t.Error("unexpected ValueOrZero", valid.ValueOrZero())
+	}
+
+	invalid := NewFloat(1.2345, false)
+	if invalid.ValueOrZero() != 0 {
+		t.Error("unexpected ValueOrZero", invalid.ValueOrZero())
+	}
+}
+
+func TestFloatEqual(t *testing.T) {
+	f1 := NewFloat(10, false)
+	f2 := NewFloat(10, false)
+	assertFloatEqualIsTrue(t, f1, f2)
+
+	f1 = NewFloat(10, false)
+	f2 = NewFloat(20, false)
+	assertFloatEqualIsTrue(t, f1, f2)
+
+	f1 = NewFloat(10, true)
+	f2 = NewFloat(10, true)
+	assertFloatEqualIsTrue(t, f1, f2)
+
+	f1 = NewFloat(10, false)
+	f2 = NewFloat(0, true)
+	assertFloatEqualIsTrue(t, f1, f2)
+
+	f1 = NewFloat(10, true)
+	f2 = NewFloat(10, false)
+	assertFloatEqualIsFalse(t, f1, f2)
+
+	f1 = NewFloat(10, false)
+	f2 = NewFloat(10, true)
+	assertFloatEqualIsFalse(t, f1, f2)
+
+	f1 = NewFloat(10, true)
+	f2 = NewFloat(20, true)
+	assertFloatEqualIsFalse(t, f1, f2)
+}
+
 func assertFloat(t *testing.T, f Float, from string) {
 	if f.Float64 != 1.2345 {
 		t.Errorf("bad %s float: %f ≠ %f\n", from, f.Float64, 1.2345)
@@ -203,5 +245,19 @@ func assertFloat(t *testing.T, f Float, from string) {
 func assertNullFloat(t *testing.T, f Float, from string) {
 	if f.Valid {
 		t.Error(from, "is valid, but should be invalid")
+	}
+}
+
+func assertFloatEqualIsTrue(t *testing.T, a, b Float) {
+	t.Helper()
+	if !a.Equal(b) {
+		t.Errorf("Equal() of Float{%v, Valid:%t} and Float{%v, Valid:%t} should return true", a.Float64, a.Valid, b.Float64, b.Valid)
+	}
+}
+
+func assertFloatEqualIsFalse(t *testing.T, a, b Float) {
+	t.Helper()
+	if a.Equal(b) {
+		t.Errorf("Equal() of Float{%v, Valid:%t} and Float{%v, Valid:%t} should return false", a.Float64, a.Valid, b.Float64, b.Valid)
 	}
 }

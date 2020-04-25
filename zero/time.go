@@ -63,6 +63,14 @@ func TimeFromPtr(t *time.Time) Time {
 	return TimeFrom(*t)
 }
 
+// ValueOrZero returns the inner value if valid, otherwise zero.
+func (t Time) ValueOrZero() time.Time {
+	if !t.Valid {
+		return time.Time{}
+	}
+	return t.Time
+}
+
 // MarshalJSON implements json.Marshaler.
 // It will encode the zero value of time.Time
 // if this time is invalid.
@@ -147,4 +155,18 @@ func (t Time) Ptr() *time.Time {
 // IsZero returns true for null or zero Times, for potential future omitempty support.
 func (t Time) IsZero() bool {
 	return !t.Valid || t.Time.IsZero()
+}
+
+// Equal returns true if both Time objects encode the same time or are both are either null or zero.
+// Two times can be equal even if they are in different locations.
+// For example, 6:00 +0200 CEST and 4:00 UTC are Equal.
+func (t Time) Equal(other Time) bool {
+	return t.ValueOrZero().Equal(other.ValueOrZero())
+}
+
+// ExactEqual returns true if both Time objects are equal or both are either null or zero.
+// ExactEqual returns false for times that are in different locations or
+// have a different monotonic clock reading.
+func (t Time) ExactEqual(other Time) bool {
+	return t.ValueOrZero() == other.ValueOrZero()
 }

@@ -39,6 +39,14 @@ func IntFromPtr(i *int64) Int {
 	return n
 }
 
+// ValueOrZero returns the inner value if valid, otherwise zero.
+func (i Int) ValueOrZero() int64 {
+	if !i.Valid {
+		return 0
+	}
+	return i.Int64
+}
+
 // UnmarshalJSON implements json.Unmarshaler.
 // It supports number and null input.
 // 0 will be considered a null Int.
@@ -124,4 +132,9 @@ func (i Int) Ptr() *int64 {
 // IsZero returns true for null or zero Ints, for future omitempty support (Go 1.4?)
 func (i Int) IsZero() bool {
 	return !i.Valid || i.Int64 == 0
+}
+
+// Equal returns true if both ints have the same value or are both either null or zero.
+func (i Int) Equal(other Int) bool {
+	return i.ValueOrZero() == other.ValueOrZero()
 }

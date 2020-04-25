@@ -42,6 +42,14 @@ func StringFromPtr(s *string) String {
 	return NewString(*s, *s != "")
 }
 
+// ValueOrZero returns the inner value if valid, otherwise zero.
+func (s String) ValueOrZero() string {
+	if !s.Valid {
+		return ""
+	}
+	return s.String
+}
+
 // UnmarshalJSON implements json.Unmarshaler.
 // It supports string and null input. Blank string input produces a null String.
 // It also supports unmarshalling a sql.NullString.
@@ -100,4 +108,9 @@ func (s String) Ptr() *string {
 // IsZero returns true for null or empty strings, for potential future omitempty support.
 func (s String) IsZero() bool {
 	return !s.Valid || s.String == ""
+}
+
+// Equal returns true if both strings have the same value or are both either null or empty.
+func (s String) Equal(other String) bool {
+	return s.ValueOrZero() == other.ValueOrZero()
 }
