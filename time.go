@@ -110,15 +110,17 @@ func (t *Time) UnmarshalJSON(data []byte) error {
 	return err
 }
 
+// MarshalText returns an empty string if invalid, otherwise time.Time's MarshalText.
 func (t Time) MarshalText() ([]byte, error) {
 	if !t.Valid {
-		return []byte("null"), nil
+		return []byte{}, nil
 	}
 	return t.Time.MarshalText()
 }
 
 func (t *Time) UnmarshalText(text []byte) error {
 	str := string(text)
+	// allowing "null" is for backwards compatibility with v3
 	if str == "" || str == "null" {
 		t.Valid = false
 		return nil

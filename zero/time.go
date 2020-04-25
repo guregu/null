@@ -117,6 +117,8 @@ func (t *Time) UnmarshalJSON(data []byte) error {
 	}
 }
 
+// MarshalText implements encoding.TextMarshaler.
+// It will encode to an empty time.Time if invalid.
 func (t Time) MarshalText() ([]byte, error) {
 	ti := t.Time
 	if !t.Valid {
@@ -125,8 +127,12 @@ func (t Time) MarshalText() ([]byte, error) {
 	return ti.MarshalText()
 }
 
+// UnmarshalText implements encoding.TextUnmarshaler.
+// It has compatibility with the null package in that it will accept empty strings as invalid values,
+// which will be unmarshaled to a zero value.
 func (t *Time) UnmarshalText(text []byte) error {
 	str := string(text)
+	// allowing "null" is for backwards compatibility with v3
 	if str == "" || str == "null" {
 		t.Valid = false
 		return nil

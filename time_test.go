@@ -80,7 +80,7 @@ func TestUnmarshalTimeText(t *testing.T) {
 	assertNullTime(t, null, "unmarshal null text")
 	txt, err = null.MarshalText()
 	maybePanic(err)
-	assertJSONEquals(t, txt, string(nullJSON), "marshal null text")
+	assertJSONEquals(t, txt, "", "marshal null text")
 
 	var invalid Time
 	err = invalid.UnmarshalText([]byte("hello world"))
