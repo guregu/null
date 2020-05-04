@@ -117,7 +117,18 @@ func (i *Float) UnmarshalEasyJSON(w *jlexer.Lexer) {
 		}
 		return
 	}
-	i.Float64 = w.Float64()
+	data := w.Raw()
+	if data[0] == '"' {
+		data = data[1 : len(data)-1]
+	}
+	f, err := strconv.ParseFloat(*(*string)(unsafe.Pointer(&data)), 64)
+	if err != nil {
+		w.AddError(&jlexer.LexerError{
+			Reason: err.Error(),
+			Data:   string(data),
+		})
+	}
+	i.Float64 = f
 	i.Valid = (w.Error() == nil)
 }
 
