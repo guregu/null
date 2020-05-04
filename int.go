@@ -117,8 +117,19 @@ func (i *Int) UnmarshalEasyJSON(w *jlexer.Lexer) {
 		}
 		return
 	}
-	i.Int64 = w.Int64()
-	i.Valid = (w.Error() == nil)
+	data := w.Raw()
+	if data[0] == '"' {
+		data = data[1 : len(data)-1]
+	}
+	ii, err := strconv.ParseInt(*(*string)(unsafe.Pointer(&data)), 10, 64)
+	if err != nil {
+		w.AddError(&jlexer.LexerError{
+			Reason: err.Error(),
+			Data:   string(data),
+		})
+	}
+	i.Int64 = ii
+	i.Valid = (err == nil)
 }
 
 // UnmarshalText implements encoding.TextUnmarshaler.

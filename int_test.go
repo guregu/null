@@ -3,8 +3,13 @@ package null
 import (
 	"encoding/json"
 	"math"
+	"reflect"
 	"strconv"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
+	"github.com/mailru/easyjson"
+	"github.com/mailru/easyjson/jlexer"
 )
 
 var (
@@ -34,43 +39,117 @@ func TestIntFromPtr(t *testing.T) {
 	assertNullInt(t, null, "IntFromPtr(nil)")
 }
 
-func TestUnmarshalInt(t *testing.T) {
-	var i Int
-	err := json.Unmarshal(intJSON, &i)
-	maybePanic(err)
-	assertInt(t, i, "int json")
-
-	err = json.Unmarshal(intJSONString, &i)
-	maybePanic(err)
-	assertInt(t, i, "int json string")
-
-	var ni Int
-	err = json.Unmarshal(nullIntJSON, &ni)
-	maybePanic(err)
-	assertInt(t, ni, "sq.NullInt64 json")
-
-	err = json.Unmarshal(nullIntJSONString, &ni)
-	maybePanic(err)
-	assertInt(t, ni, "sq.NullInt64 json string")
-
-	var null Int
-	err = json.Unmarshal(nullJSON, &null)
-	maybePanic(err)
-	assertNullInt(t, null, "null json")
-
-	var badType Int
-	err = json.Unmarshal(boolJSON, &badType)
-	if err == nil {
-		panic("err should not be nil")
+func TestIntUnmarshal(t *testing.T) {
+	tests := []struct {
+		in             []byte
+		exp            Int
+		expErrType     reflect.Type
+		expErrTypeEasy reflect.Type
+	}{
+		{
+			in:  intJSON,
+			exp: IntFrom(12345),
+		},
+		{
+			in:  intJSONString,
+			exp: IntFrom(12345),
+		},
+		{
+			in: []byte(` "12345"  	 `),
+			exp: IntFrom(12345),
+		},
+		{
+			in:  nullIntJSON,
+			exp: IntFrom(12345),
+		},
+		{
+			in: nullJSON,
+		},
+		{
+			in:             boolJSON,
+			expErrType:     reflect.TypeOf((*strconv.NumError)(nil)),
+			expErrTypeEasy: reflect.TypeOf((*jlexer.LexerError)(nil)),
+		},
+		{
+			in:             invalidJSON,
+			expErrType:     reflect.TypeOf((*json.SyntaxError)(nil)),
+			expErrTypeEasy: reflect.TypeOf((*jlexer.LexerError)(nil)),
+		},
 	}
-	assertNullInt(t, badType, "wrong type json")
 
-	var invalid Int
-	err = json.Unmarshal(invalidJSON, &invalid)
-	if _, ok := err.(*json.SyntaxError); !ok {
-		t.Errorf("expected json.SyntaxError, not %T", err)
+	for _, test := range tests {
+		t.Run(string(test.in), func(t *testing.T) {
+			var i Int
+			err := json.Unmarshal(test.in, &i)
+			if err != nil {
+				if test.expErrType == nil {
+					t.Fatal(err)
+				}
+				if reflect.TypeOf(err) != test.expErrType {
+					t.Fatalf("error %s(%T) is not of type %s", err, err, test.expErrType)
+				}
+
+			} else if test.expErrType != nil {
+				t.Fatal("expected an error")
+			}
+			if diff := cmp.Diff(test.exp, i); diff != "" {
+				t.Fatalf("result not as expected. %s", diff)
+			}
+		})
+
+		t.Run(string(test.in)+"_easyjson", func(t *testing.T) {
+			var i Int
+			err := easyjson.Unmarshal(test.in, &i)
+			if err != nil {
+				if test.expErrTypeEasy == nil {
+					t.Fatal(err)
+				}
+				if reflect.TypeOf(err) != test.expErrTypeEasy {
+					t.Fatalf("error %s(%T) is not of type %s", err, err, test.expErrTypeEasy)
+				}
+
+			} else if test.expErrTypeEasy != nil {
+				t.Fatal("expected an error")
+			}
+			if diff := cmp.Diff(test.exp, i); diff != "" {
+				t.Fatalf("result not as expected. %s", diff)
+			}
+		})
+
 	}
-	assertNullInt(t, invalid, "invalid json")
+}
+
+func BenchmarkIntUnmarshal(b *testing.B) {
+	tests := [][]byte{
+		intJSON,
+		intJSONString,
+		[]byte(` "12345"  	 `),
+		nullIntJSON,
+		nullJSON,
+	}
+
+	for _, test := range tests {
+		b.Run(string(test), func(b *testing.B) {
+			b.ReportAllocs()
+			for i := 0; i < b.N; i++ {
+				var ii Int
+				if err := json.Unmarshal(test, &ii); err != nil {
+					b.Fatal(err)
+				}
+			}
+		})
+		b.Run("easy "+string(test), func(b *testing.B) {
+			b.ReportAllocs()
+			for i := 0; i < b.N; i++ {
+				w := &jlexer.Lexer{Data: test}
+				var ii Int
+				ii.UnmarshalEasyJSON(w)
+				if err := w.Error(); err != nil {
+					b.Fatal(err)
+				}
+			}
+		})
+	}
 }
 
 func TestUnmarshalNonIntegerNumber(t *testing.T) {
@@ -202,50 +281,5 @@ func assertInt(t *testing.T, i Int, from string) {
 func assertNullInt(t *testing.T, i Int, from string) {
 	if i.Valid {
 		t.Error(from, "is valid, but should be invalid")
-	}
-}
-
-func BenchmarkIntUnmarshalJSON(b *testing.B) {
-	b.ReportAllocs()
-	for i := 0; i < b.N; i++ {
-		var v Int
-		err := json.Unmarshal(nullIntJSON, &v)
-		maybePanic(err)
-	}
-}
-
-func BenchmarkIntUnmarshalJSONString(b *testing.B) {
-	b.ReportAllocs()
-	for i := 0; i < b.N; i++ {
-		var v Int
-		err := json.Unmarshal(nullIntJSONString, &v)
-		maybePanic(err)
-	}
-}
-
-func BenchmarkIntUnmarshalJSONSimpleString(b *testing.B) {
-	b.ReportAllocs()
-	for i := 0; i < b.N; i++ {
-		var v Int
-		err := json.Unmarshal(intJSONString, &v)
-		maybePanic(err)
-	}
-}
-
-func BenchmarkIntUnmarshalJSONSimple(b *testing.B) {
-	b.ReportAllocs()
-	for i := 0; i < b.N; i++ {
-		var v Int
-		err := json.Unmarshal(intJSON, &v)
-		maybePanic(err)
-	}
-}
-
-func BenchmarkIntUnmarshalJSONNull(b *testing.B) {
-	b.ReportAllocs()
-	for i := 0; i < b.N; i++ {
-		var v Int
-		err := json.Unmarshal(nullJSON, &v)
-		maybePanic(err)
 	}
 }
