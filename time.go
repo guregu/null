@@ -186,3 +186,7 @@ func (t Time) Ptr() *time.Time {
 	}
 	return &t.Time
 }
+
+func (t Time) IsDefined() bool {
+	return t.Valid
+}

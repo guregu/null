@@ -177,3 +177,7 @@ func (b Bool) Ptr() *bool {
 func (b Bool) IsZero() bool {
 	return !b.Valid
 }
+
+func (b Bool) IsDefined() bool {
+	return b.Valid
+}

@@ -66,6 +66,16 @@ func easyjson785d9294DecodeGithubComUnravelinNullTest(in *jlexer.Lexer, out *plt
 			(out.D2).UnmarshalEasyJSON(in)
 		case "E2":
 			(out.E2).UnmarshalEasyJSON(in)
+		case "A3":
+			(out.A3).UnmarshalEasyJSON(in)
+		case "B3":
+			(out.B3).UnmarshalEasyJSON(in)
+		case "C3":
+			(out.C3).UnmarshalEasyJSON(in)
+		case "D3":
+			(out.D3).UnmarshalEasyJSON(in)
+		case "E3":
+			(out.E3).UnmarshalEasyJSON(in)
 		default:
 			in.SkipRecursive()
 		}
@@ -154,6 +164,31 @@ func easyjson785d9294EncodeGithubComUnravelinNullTest(out *jwriter.Writer, in pl
 		const prefix string = ",\"E2\":"
 		out.RawString(prefix)
 		(in.E2).MarshalEasyJSON(out)
+	}
+	if (in.A3).IsDefined() {
+		const prefix string = ",\"A3\":"
+		out.RawString(prefix)
+		(in.A3).MarshalEasyJSON(out)
+	}
+	if (in.B3).IsDefined() {
+		const prefix string = ",\"B3\":"
+		out.RawString(prefix)
+		(in.B3).MarshalEasyJSON(out)
+	}
+	if (in.C3).IsDefined() {
+		const prefix string = ",\"C3\":"
+		out.RawString(prefix)
+		(in.C3).MarshalEasyJSON(out)
+	}
+	if (in.D3).IsDefined() {
+		const prefix string = ",\"D3\":"
+		out.RawString(prefix)
+		(in.D3).MarshalEasyJSON(out)
+	}
+	if (in.E3).IsDefined() {
+		const prefix string = ",\"E3\":"
+		out.RawString(prefix)
+		(in.E3).MarshalEasyJSON(out)
 	}
 	out.RawByte('}')
 }

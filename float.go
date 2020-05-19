@@ -192,3 +192,7 @@ func (f Float) Ptr() *float64 {
 func (f Float) IsZero() bool {
 	return !f.Valid
 }
+
+func (f Float) IsDefined() bool {
+	return f.Valid
+}

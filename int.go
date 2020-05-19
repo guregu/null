@@ -192,3 +192,7 @@ func (i Int) Ptr() *int64 {
 func (i Int) IsZero() bool {
 	return !i.Valid
 }
+
+func (i Int) IsDefined() bool {
+	return i.Valid
+}

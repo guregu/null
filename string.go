@@ -145,3 +145,7 @@ func (s String) Ptr() *string {
 func (s String) IsZero() bool {
 	return !s.Valid
 }
+
+func (s String) IsDefined() bool {
+	return s.Valid
+}
