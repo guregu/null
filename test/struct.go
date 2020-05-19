@@ -21,4 +21,9 @@ type pltest struct {
 	C2 null.Int    `plenc:"13"`
 	D2 null.String `plenc:"14"`
 	E2 null.Time   `plenc:"15"`
+	A3 null.Bool   `json:",omitempty" plenc:"16"`
+	B3 null.Float  `json:",omitempty" plenc:"17"`
+	C3 null.Int    `json:",omitempty" plenc:"18"`
+	D3 null.String `json:",omitempty" plenc:"19"`
+	E3 null.Time   `json:",omitempty" plenc:"20"`
 }
