@@ -128,3 +128,16 @@ func (b Bool) IsZero() bool {
 func (b Bool) Equal(other Bool) bool {
 	return b.Valid == other.Valid && (!b.Valid || b.Bool == other.Bool)
 }
+
+// SqlValue() returns one of the following 2 values:
+// 1. if provided value is invalid, it returns an empty sql.NullBool{} which translates to NULL in SQL.
+// 2. else, it returns sql.NullBool with the provided value
+func (b Bool) SqlValue() sql.NullBool {
+	if !b.Valid {
+		return sql.NullBool{}
+	}
+	return sql.NullBool{
+		Bool:  b.Bool,
+		Valid: true,
+	}
+}
