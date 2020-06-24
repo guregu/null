@@ -142,3 +142,16 @@ func (i Int) IsZero() bool {
 func (i Int) Equal(other Int) bool {
 	return i.Valid == other.Valid && (!i.Valid || i.Int64 == other.Int64)
 }
+
+// SqlValue() returns one of the following 2 values:
+// 1. if provided value is invalid, it returns an empty sql.NullInt64{} which translates to NULL in SQL.
+// 2. else, it returns sql.NullInt64 with the provided value
+func (i Int) SqlValue() sql.NullInt64 {
+	if !i.Valid {
+		return sql.NullInt64{}
+	}
+	return sql.NullInt64{
+		Int64: i.Int64,
+		Valid: true,
+	}
+}

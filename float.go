@@ -154,3 +154,16 @@ func (f Float) IsZero() bool {
 func (f Float) Equal(other Float) bool {
 	return f.Valid == other.Valid && (!f.Valid || f.Float64 == other.Float64)
 }
+
+// SqlValue() returns one of the following 2 values:
+// 1. if provided value is invalid, it returns an empty sql.NullFloat64{} which translates to NULL in SQL.
+// 2. else, it returns sql.NullFloat64 with the provided value
+func (f Float) SqlValue() sql.NullFloat64 {
+	if !f.Valid {
+		return sql.NullFloat64{}
+	}
+	return sql.NullFloat64{
+		Float64: f.Float64,
+		Valid:   true,
+	}
+}

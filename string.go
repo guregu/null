@@ -116,3 +116,16 @@ func (s String) IsZero() bool {
 func (s String) Equal(other String) bool {
 	return s.Valid == other.Valid && (!s.Valid || s.String == other.String)
 }
+
+// SqlValue() returns one of the following 2 values:
+// 1. if provided value is invalid, it returns an empty sql.NullString{} which translates to NULL in SQL.
+// 2. else, it returns sql.NullString with the provided value
+func (s String) SqlValue() sql.NullString {
+	if !s.Valid {
+		return sql.NullString{}
+	}
+	return sql.NullString{
+		String: s.String,
+		Valid: true,
+	}
+}
