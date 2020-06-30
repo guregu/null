@@ -24,8 +24,8 @@ func TestStringFrom(t *testing.T) {
 	assertStr(t, str, "StringFrom() string")
 
 	zero := StringFrom("")
-	if !zero.Valid {
-		t.Error("StringFrom(0)", "is invalid, but should be valid")
+	if zero.Valid {
+		t.Error("StringFrom(\"\")", "is valid, but should be invalid")
 	}
 }
 

@@ -22,7 +22,7 @@ type String struct {
 
 // StringFrom creates a new String that will never be blank.
 func StringFrom(s string) String {
-	return NewString(s, true)
+	return NewString(s, s != "")
 }
 
 // StringFromPtr creates a new String that be null if s is nil.
