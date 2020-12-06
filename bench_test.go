@@ -6,7 +6,7 @@ import (
 
 func BenchmarkIntUnmarshalJSON(b *testing.B) {
 	input := []byte("123456")
-	var nullable Int
+	var nullable Int64
 	for n := 0; n < b.N; n++ {
 		nullable.UnmarshalJSON(input)
 	}
@@ -22,7 +22,7 @@ func BenchmarkIntStringUnmarshalJSON(b *testing.B) {
 
 func BenchmarkNullIntUnmarshalJSON(b *testing.B) {
 	input := []byte("null")
-	var nullable Int
+	var nullable Int64
 	for n := 0; n < b.N; n++ {
 		nullable.UnmarshalJSON(input)
 	}

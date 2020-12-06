@@ -50,7 +50,7 @@ func TestUnmarshalBool(t *testing.T) {
 	assertNullBool(t, null, "null json")
 
 	var badType Bool
-	err = json.Unmarshal(intJSON, &badType)
+	err = json.Unmarshal(int64JSON, &badType)
 	if err == nil {
 		panic("err should not be nil")
 	}

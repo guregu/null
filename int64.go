@@ -9,16 +9,16 @@ import (
 	"strconv"
 )
 
-// Int is an nullable int64.
+// Int64 is an nullable int64.
 // It does not consider zero values to be null.
 // It will decode to null, not zero, if null.
-type Int struct {
+type Int64 struct {
 	sql.NullInt64
 }
 
-// NewInt creates a new Int
-func NewInt(i int64, valid bool) Int {
-	return Int{
+// NewInt64 creates a new Int64
+func NewInt64(i int64, valid bool) Int64 {
+	return Int64{
 		NullInt64: sql.NullInt64{
 			Int64: i,
 			Valid: valid,
@@ -26,21 +26,21 @@ func NewInt(i int64, valid bool) Int {
 	}
 }
 
-// IntFrom creates a new Int that will always be valid.
-func IntFrom(i int64) Int {
-	return NewInt(i, true)
+// Int64From creates a new Int64 that will always be valid.
+func Int64From(i int64) Int64 {
+	return NewInt64(i, true)
 }
 
-// IntFromPtr creates a new Int that be null if i is nil.
-func IntFromPtr(i *int64) Int {
+// Int64FromPtr creates a new Int64 that be null if i is nil.
+func Int64FromPtr(i *int64) Int64 {
 	if i == nil {
-		return NewInt(0, false)
+		return NewInt64(0, false)
 	}
-	return NewInt(*i, true)
+	return NewInt64(*i, true)
 }
 
 // ValueOrZero returns the inner value if valid, otherwise zero.
-func (i Int) ValueOrZero() int64 {
+func (i Int64) ValueOrZero() int64 {
 	if !i.Valid {
 		return 0
 	}
@@ -49,8 +49,8 @@ func (i Int) ValueOrZero() int64 {
 
 // UnmarshalJSON implements json.Unmarshaler.
 // It supports number, string, and null input.
-// 0 will not be considered a null Int.
-func (i *Int) UnmarshalJSON(data []byte) error {
+// 0 will not be considered a null Int64.
+func (i *Int64) UnmarshalJSON(data []byte) error {
 	if bytes.Equal(data, nullBytes) {
 		i.Valid = false
 		return nil
@@ -83,9 +83,9 @@ func (i *Int) UnmarshalJSON(data []byte) error {
 }
 
 // UnmarshalText implements encoding.TextUnmarshaler.
-// It will unmarshal to a null Int if the input is blank.
+// It will unmarshal to a null Int64 if the input is blank.
 // It will return an error if the input is not an integer, blank, or "null".
-func (i *Int) UnmarshalText(text []byte) error {
+func (i *Int64) UnmarshalText(text []byte) error {
 	str := string(text)
 	if str == "" || str == "null" {
 		i.Valid = false
@@ -101,8 +101,8 @@ func (i *Int) UnmarshalText(text []byte) error {
 }
 
 // MarshalJSON implements json.Marshaler.
-// It will encode null if this Int is null.
-func (i Int) MarshalJSON() ([]byte, error) {
+// It will encode null if this Int64 is null.
+func (i Int64) MarshalJSON() ([]byte, error) {
 	if !i.Valid {
 		return []byte("null"), nil
 	}
@@ -110,22 +110,22 @@ func (i Int) MarshalJSON() ([]byte, error) {
 }
 
 // MarshalText implements encoding.TextMarshaler.
-// It will encode a blank string if this Int is null.
-func (i Int) MarshalText() ([]byte, error) {
+// It will encode a blank string if this Int64 is null.
+func (i Int64) MarshalText() ([]byte, error) {
 	if !i.Valid {
 		return []byte{}, nil
 	}
 	return []byte(strconv.FormatInt(i.Int64, 10)), nil
 }
 
-// SetValid changes this Int's value and also sets it to be non-null.
-func (i *Int) SetValid(n int64) {
+// SetValid changes this Int64's value and also sets it to be non-null.
+func (i *Int64) SetValid(n int64) {
 	i.Int64 = n
 	i.Valid = true
 }
 
-// Ptr returns a pointer to this Int's value, or a nil pointer if this Int is null.
-func (i Int) Ptr() *int64 {
+// Ptr returns a pointer to this Int64's value, or a nil pointer if this Int64 is null.
+func (i Int64) Ptr() *int64 {
 	if !i.Valid {
 		return nil
 	}
@@ -133,12 +133,12 @@ func (i Int) Ptr() *int64 {
 }
 
 // IsZero returns true for invalid Ints, for future omitempty support (Go 1.4?)
-// A non-null Int with a 0 value will not be considered zero.
-func (i Int) IsZero() bool {
+// A non-null Int64 with a 0 value will not be considered zero.
+func (i Int64) IsZero() bool {
 	return !i.Valid
 }
 
 // Equal returns true if both ints have the same value or are both null.
-func (i Int) Equal(other Int) bool {
+func (i Int64) Equal(other Int64) bool {
 	return i.Valid == other.Valid && (!i.Valid || i.Int64 == other.Int64)
 }

@@ -11,16 +11,16 @@ import (
 	"strconv"
 )
 
-// Float is a nullable float64.
+// Float64 is a nullable float64.
 // It does not consider zero values to be null.
 // It will decode to null, not zero, if null.
-type Float struct {
+type Float64 struct {
 	sql.NullFloat64
 }
 
-// NewFloat creates a new Float
-func NewFloat(f float64, valid bool) Float {
-	return Float{
+// NewFloat64 creates a new Float64
+func NewFloat64(f float64, valid bool) Float64 {
+	return Float64{
 		NullFloat64: sql.NullFloat64{
 			Float64: f,
 			Valid:   valid,
@@ -28,21 +28,21 @@ func NewFloat(f float64, valid bool) Float {
 	}
 }
 
-// FloatFrom creates a new Float that will always be valid.
-func FloatFrom(f float64) Float {
-	return NewFloat(f, true)
+// Float64From creates a new Float64 that will always be valid.
+func Float64From(f float64) Float64 {
+	return NewFloat64(f, true)
 }
 
-// FloatFromPtr creates a new Float that be null if f is nil.
-func FloatFromPtr(f *float64) Float {
+// Float64FromPtr creates a new Float64 that be null if f is nil.
+func Float64FromPtr(f *float64) Float64 {
 	if f == nil {
-		return NewFloat(0, false)
+		return NewFloat64(0, false)
 	}
-	return NewFloat(*f, true)
+	return NewFloat64(*f, true)
 }
 
 // ValueOrZero returns the inner value if valid, otherwise zero.
-func (f Float) ValueOrZero() float64 {
+func (f Float64) ValueOrZero() float64 {
 	if !f.Valid {
 		return 0
 	}
@@ -51,8 +51,8 @@ func (f Float) ValueOrZero() float64 {
 
 // UnmarshalJSON implements json.Unmarshaler.
 // It supports number and null input.
-// 0 will not be considered a null Float.
-func (f *Float) UnmarshalJSON(data []byte) error {
+// 0 will not be considered a null Float64.
+func (f *Float64) UnmarshalJSON(data []byte) error {
 	if bytes.Equal(data, nullBytes) {
 		f.Valid = false
 		return nil
@@ -85,9 +85,9 @@ func (f *Float) UnmarshalJSON(data []byte) error {
 }
 
 // UnmarshalText implements encoding.TextUnmarshaler.
-// It will unmarshal to a null Float if the input is blank.
+// It will unmarshal to a null Float64 if the input is blank.
 // It will return an error if the input is not an integer, blank, or "null".
-func (f *Float) UnmarshalText(text []byte) error {
+func (f *Float64) UnmarshalText(text []byte) error {
 	str := string(text)
 	if str == "" || str == "null" {
 		f.Valid = false
@@ -103,8 +103,8 @@ func (f *Float) UnmarshalText(text []byte) error {
 }
 
 // MarshalJSON implements json.Marshaler.
-// It will encode null if this Float is null.
-func (f Float) MarshalJSON() ([]byte, error) {
+// It will encode null if this Float64 is null.
+func (f Float64) MarshalJSON() ([]byte, error) {
 	if !f.Valid {
 		return []byte("null"), nil
 	}
@@ -118,22 +118,22 @@ func (f Float) MarshalJSON() ([]byte, error) {
 }
 
 // MarshalText implements encoding.TextMarshaler.
-// It will encode a blank string if this Float is null.
-func (f Float) MarshalText() ([]byte, error) {
+// It will encode a blank string if this Float64 is null.
+func (f Float64) MarshalText() ([]byte, error) {
 	if !f.Valid {
 		return []byte{}, nil
 	}
 	return []byte(strconv.FormatFloat(f.Float64, 'f', -1, 64)), nil
 }
 
-// SetValid changes this Float's value and also sets it to be non-null.
-func (f *Float) SetValid(n float64) {
+// SetValid changes this Float64's value and also sets it to be non-null.
+func (f *Float64) SetValid(n float64) {
 	f.Float64 = n
 	f.Valid = true
 }
 
-// Ptr returns a pointer to this Float's value, or a nil pointer if this Float is null.
-func (f Float) Ptr() *float64 {
+// Ptr returns a pointer to this Float64's value, or a nil pointer if this Float64 is null.
+func (f Float64) Ptr() *float64 {
 	if !f.Valid {
 		return nil
 	}
@@ -141,8 +141,8 @@ func (f Float) Ptr() *float64 {
 }
 
 // IsZero returns true for invalid Floats, for future omitempty support (Go 1.4?)
-// A non-null Float with a 0 value will not be considered zero.
-func (f Float) IsZero() bool {
+// A non-null Float64 with a 0 value will not be considered zero.
+func (f Float64) IsZero() bool {
 	return !f.Valid
 }
 
@@ -151,6 +151,6 @@ func (f Float) IsZero() bool {
 // the numbers are stored in memory. Therefore, this function is not suitable to
 // compare the result of a calculation. Use this method only to check if the value
 // has changed in comparison to some previous value.
-func (f Float) Equal(other Float) bool {
+func (f Float64) Equal(other Float64) bool {
 	return f.Valid == other.Valid && (!f.Valid || f.Float64 == other.Float64)
 }

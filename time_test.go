@@ -60,7 +60,7 @@ func TestUnmarshalTimeJSON(t *testing.T) {
 	assertNullTime(t, bad, "bad from object json")
 
 	var wrongType Time
-	err = json.Unmarshal(intJSON, &wrongType)
+	err = json.Unmarshal(int64JSON, &wrongType)
 	if err == nil {
 		t.Errorf("expected error: wrong type JSON")
 	}
