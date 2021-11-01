@@ -164,7 +164,7 @@ func TestTextUnmarshalFloat(t *testing.T) {
 	assertNullFloat(t, blank, "UnmarshalText() empty float")
 
 	var null Float
-	err = null.UnmarshalText([]byte("null"))
+	err = null.UnmarshalText(nullLiteral)
 	maybePanic(err)
 	assertNullFloat(t, null, `UnmarshalText() "null"`)
 

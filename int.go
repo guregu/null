@@ -56,7 +56,7 @@ func (i Int) ValueOrZero() int64 {
 func (i *Int) UnmarshalJSON(data []byte) error {
 	var err error
 	// Golden path is being passed a integer or null
-	if bytes.Compare(data, []byte("null")) == 0 {
+	if bytes.Equal(data, nullLiteral) {
 		i.Valid = false
 		return nil
 	}

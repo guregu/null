@@ -11,6 +11,12 @@ import (
 	"github.com/mailru/easyjson/jwriter"
 )
 
+var (
+	nullLiteral  = []byte("null")
+	falseLiteral = []byte("false")
+	trueLiteral  = []byte("true")
+)
+
 // Bool is a nullable bool.
 // It does not consider false values to be null.
 // It will decode to null, not false, if null.
@@ -50,7 +56,7 @@ func (b Bool) ValueOrZero() bool {
 // It supports number and null input.
 // 0 will not be considered a null Bool.
 func (b *Bool) UnmarshalJSON(data []byte) error {
-	if bytes.Equal(data, nullBytes) {
+	if bytes.Equal(data, nullLiteral) {
 		b.Valid = false
 		return nil
 	}
@@ -122,12 +128,6 @@ func (b *Bool) UnmarshalText(text []byte) error {
 	b.Valid = true
 	return nil
 }
-
-var (
-	nullLiteral  = []byte("null")
-	falseLiteral = []byte("false")
-	trueLiteral  = []byte("true")
-)
 
 // MarshalJSON implements json.Marshaler.
 // It will encode null if this Bool is null.

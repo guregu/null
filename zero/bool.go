@@ -46,7 +46,7 @@ func (b Bool) ValueOrZero() bool {
 // UnmarshalJSON implements json.Unmarshaler.
 // "false" will be considered a null Bool.
 func (b *Bool) UnmarshalJSON(data []byte) error {
-	if bytes.Equal(data, nullBytes) {
+	if bytes.Equal(data, nullLiteral) {
 		b.Valid = false
 		return nil
 	}

@@ -54,7 +54,7 @@ func (i Int) ValueOrZero() int64 {
 func (i *Int) UnmarshalJSON(data []byte) error {
 	// FIXME: In merging, I've dropped support for unmarshalling the object type
 	// which will need to be re-added. The old code was a bit nasty.
-	if bytes.Equal(data, nullBytes) {
+	if bytes.Equal(data, nullLiteral) {
 		i.Valid = false
 		return nil
 	}

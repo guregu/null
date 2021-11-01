@@ -82,7 +82,7 @@ func TestTextUnmarshalBool(t *testing.T) {
 	assertNullBool(t, blank, "UnmarshalText() empty bool")
 
 	var null Bool
-	err = null.UnmarshalText([]byte("null"))
+	err = null.UnmarshalText(nullLiteral)
 	maybePanic(err)
 	assertNullBool(t, null, `UnmarshalText() "null"`)
 
