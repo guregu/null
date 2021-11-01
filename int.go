@@ -54,44 +54,44 @@ func (i Int) ValueOrZero() int64 {
 // It supports number, string, and null input.
 // 0 will not be considered a null Int.
 func (i *Int) UnmarshalJSON(data []byte) error {
-	var err error
-	// Golden path is being passed a integer or null
 	if bytes.Equal(data, nullLiteral) {
 		i.Valid = false
 		return nil
 	}
-	// BQ sends numbers as strings. We can strip quotes on simple strings
+
+	if data[0] == '{' {
+		// Try the struct form of Int.
+		type basicInt Int
+		var ii basicInt
+		if json.Unmarshal(data, &ii) == nil {
+			*i = Int(ii)
+			return nil
+		}
+
+		// Try a string version
+		var si struct {
+			Int64 string
+			Valid bool
+		}
+		if err := json.Unmarshal(data, &si); err != nil {
+			return err
+		}
+		i.Valid = si.Valid
+		if !si.Valid {
+			return nil
+		}
+		var err error
+		i.Int64, err = strconv.ParseInt(si.Int64, 10, 64)
+		i.Valid = (err == nil)
+		return err
+	}
+
 	if data[0] == '"' {
 		data = bytes.Trim(data, `"`)
 	}
-	if data[0] == '{' {
-		// We've been sent a structure. This is not our main-line as we encode
-		// to a simple int
-		type basicInt Int
-		var ii basicInt
-		err = json.Unmarshal(data, &ii)
-		if err != nil {
-			// Try a string version
-			var si struct {
-				Int64 string
-				Valid bool
-			}
-			err = json.Unmarshal(data, &si)
-			if err == nil {
-				i.Valid = si.Valid
-				if si.Valid {
-					i.Int64, err = strconv.ParseInt(si.Int64, 10, 64)
-					i.Valid = (err == nil)
-				}
-			}
-		} else {
-			*i = Int(ii)
-		}
-	} else {
-		i.Int64, err = strconv.ParseInt(*(*string)(unsafe.Pointer(&data)), 10, 64)
-		i.Valid = (err == nil)
-	}
-
+	var err error
+	i.Int64, err = strconv.ParseInt(*(*string)(unsafe.Pointer(&data)), 10, 64)
+	i.Valid = (err == nil)
 	return err
 }
 

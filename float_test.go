@@ -80,6 +80,11 @@ func TestUnmarshalFloat(t *testing.T) {
 			expErrType:     reflect.TypeOf((*json.SyntaxError)(nil)),
 			expErrTypeEasy: reflect.TypeOf((*jlexer.LexerError)(nil)),
 		},
+		{
+			in:             []byte(`{"Float64": true, "Valid": true}`),
+			expErrType:     reflect.TypeOf((*json.UnmarshalTypeError)(nil)),
+			expErrTypeEasy: reflect.TypeOf((*jlexer.LexerError)(nil)),
+		},
 	}
 
 	for _, test := range tests {
