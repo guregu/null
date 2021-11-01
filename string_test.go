@@ -96,8 +96,8 @@ func TestStringUnmarshalEasyJSON(t *testing.T) {
 			exp:  StringFrom("hat"),
 		},
 		{
-			// For some reason empty string isn't counted as valid. Which is nuts
 			data: `""`,
+			exp:  StringFrom(""),
 		},
 		{
 			data: `{"String":"hat","Valid":true}`,
