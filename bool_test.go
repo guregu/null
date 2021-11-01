@@ -2,6 +2,7 @@ package null
 
 import (
 	"encoding/json"
+	"errors"
 	"testing"
 
 	"github.com/mailru/easyjson"
@@ -42,8 +43,9 @@ func TestUnmarshalBool(t *testing.T) {
 
 	var nb Bool
 	err = json.Unmarshal(nullBoolJSON, &nb)
-	maybePanic(err)
-	assertBool(t, nb, "sq.NullBool json")
+	if err == nil {
+		panic("err should not be nil")
+	}
 
 	var null Bool
 	err = json.Unmarshal(nullJSON, &null)
@@ -59,8 +61,9 @@ func TestUnmarshalBool(t *testing.T) {
 
 	var invalid Bool
 	err = invalid.UnmarshalJSON(invalidJSON)
-	if _, ok := err.(*json.SyntaxError); !ok {
-		t.Errorf("expected json.SyntaxError, not %T", err)
+	var syntaxError *json.SyntaxError
+	if !errors.As(err, &syntaxError) {
+		t.Errorf("expected wrapped json.SyntaxError, not %T", err)
 	}
 }
 
@@ -179,6 +182,44 @@ func TestBoolScan(t *testing.T) {
 	assertNullBool(t, null, "scanned null")
 }
 
+func TestBoolValueOrZero(t *testing.T) {
+	valid := NewBool(true, true)
+	if valid.ValueOrZero() != true {
+		t.Error("unexpected ValueOrZero", valid.ValueOrZero())
+	}
+
+	invalid := NewBool(true, false)
+	if invalid.ValueOrZero() != false {
+		t.Error("unexpected ValueOrZero", invalid.ValueOrZero())
+	}
+}
+
+func TestBoolEqual(t *testing.T) {
+	b1 := NewBool(true, false)
+	b2 := NewBool(true, false)
+	assertBoolEqualIsTrue(t, b1, b2)
+
+	b1 = NewBool(true, false)
+	b2 = NewBool(false, false)
+	assertBoolEqualIsTrue(t, b1, b2)
+
+	b1 = NewBool(true, true)
+	b2 = NewBool(true, true)
+	assertBoolEqualIsTrue(t, b1, b2)
+
+	b1 = NewBool(true, true)
+	b2 = NewBool(true, false)
+	assertBoolEqualIsFalse(t, b1, b2)
+
+	b1 = NewBool(true, false)
+	b2 = NewBool(true, true)
+	assertBoolEqualIsFalse(t, b1, b2)
+
+	b1 = NewBool(true, true)
+	b2 = NewBool(false, true)
+	assertBoolEqualIsFalse(t, b1, b2)
+}
+
 func assertBool(t *testing.T, b Bool, from string) {
 	if b.Bool != true {
 		t.Errorf("bad %s bool: %v ≠ %v\n", from, b.Bool, true)
@@ -239,7 +280,20 @@ func TestBoolUnmarshalEasyJSON(t *testing.T) {
 			var b2 Bool
 			assert.NoError(t, json.Unmarshal([]byte(test.data), &b2))
 			assert.Equal(t, test.exp, b2)
-
 		})
+	}
+}
+
+func assertBoolEqualIsTrue(t *testing.T, a, b Bool) {
+	t.Helper()
+	if !a.Equal(b) {
+		t.Errorf("Equal() of Bool{%t, Valid:%t} and Bool{%t, Valid:%t} should return true", a.Bool, a.Valid, b.Bool, b.Valid)
+	}
+}
+
+func assertBoolEqualIsFalse(t *testing.T, a, b Bool) {
+	t.Helper()
+	if a.Equal(b) {
+		t.Errorf("Equal() of Bool{%t, Valid:%t} and Bool{%t, Valid:%t} should return false", a.Bool, a.Valid, b.Bool, b.Valid)
 	}
 }

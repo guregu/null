@@ -1,10 +1,11 @@
 package null
 
 import (
+	"bytes"
+	"database/sql"
 	"database/sql/driver"
 	"encoding/json"
 	"fmt"
-	"reflect"
 	"time"
 
 	"github.com/mailru/easyjson/jlexer"
@@ -14,24 +15,7 @@ import (
 // Time is a nullable time.Time. It supports SQL and JSON serialization.
 // It will marshal to null if null.
 type Time struct {
-	Time  time.Time
-	Valid bool
-}
-
-// Scan implements the Scanner interface.
-func (t *Time) Scan(value interface{}) error {
-	var err error
-	switch x := value.(type) {
-	case time.Time:
-		t.Time = x
-	case nil:
-		t.Valid = false
-		return nil
-	default:
-		err = fmt.Errorf("null: cannot scan type %T into null.Time: %v", value, value)
-	}
-	t.Valid = err == nil
-	return err
+	sql.NullTime
 }
 
 // Value implements the driver Valuer interface.
@@ -45,8 +29,10 @@ func (t Time) Value() (driver.Value, error) {
 // NewTime creates a new Time.
 func NewTime(t time.Time, valid bool) Time {
 	return Time{
-		Time:  t,
-		Valid: valid,
+		NullTime: sql.NullTime{
+			Time:  t,
+			Valid: valid,
+		},
 	}
 }
 
@@ -61,6 +47,14 @@ func TimeFromPtr(t *time.Time) Time {
 		return NewTime(time.Time{}, false)
 	}
 	return NewTime(*t, true)
+}
+
+// ValueOrZero returns the inner value if valid, otherwise zero.
+func (t Time) ValueOrZero() time.Time {
+	if !t.Valid {
+		return time.Time{}
+	}
+	return t.Time
 }
 
 // MarshalJSON implements json.Marshaler.
@@ -84,34 +78,19 @@ func (t Time) MarshalEasyJSON(w *jwriter.Writer) {
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
-// It supports string, object (e.g. pq.NullTime and friends)
-// and null input.
+// It supports string and null input.
 func (t *Time) UnmarshalJSON(data []byte) error {
-	var err error
-	var v interface{}
-	if err = json.Unmarshal(data, &v); err != nil {
-		return err
-	}
-	switch x := v.(type) {
-	case string:
-		err = t.Time.UnmarshalJSON(data)
-	case map[string]interface{}:
-		ti, tiOK := x["Time"].(string)
-		valid, validOK := x["Valid"].(bool)
-		if !tiOK || !validOK {
-			return fmt.Errorf(`json: unmarshalling object into Go value of type null.Time requires key "Time" to be of type string and key "Valid" to be of type bool; found %T and %T, respectively`, x["Time"], x["Valid"])
-		}
-		err = t.Time.UnmarshalText([]byte(ti))
-		t.Valid = valid
-		return err
-	case nil:
+	if bytes.Equal(data, nullBytes) {
 		t.Valid = false
 		return nil
-	default:
-		err = fmt.Errorf("json: cannot unmarshal %v into Go value of type null.Time", reflect.TypeOf(v).Name())
 	}
-	t.Valid = err == nil
-	return err
+
+	if err := json.Unmarshal(data, &t.Time); err != nil {
+		return fmt.Errorf("null: couldn't unmarshal JSON: %w", err)
+	}
+
+	t.Valid = true
+	return nil
 }
 
 // UnmarshalEasyJSON is an easy-JSON specific decoder, that should be more efficient than the standard one.
@@ -153,21 +132,27 @@ func (i *Time) UnmarshalEasyJSON(w *jlexer.Lexer) {
 	i.Valid = (w.Error() == nil)
 }
 
+// MarshalText implements encoding.TextMarshaler.
+// It returns an empty string if invalid, otherwise time.Time's MarshalText.
 func (t Time) MarshalText() ([]byte, error) {
 	if !t.Valid {
-		return nullLiteral, nil
+		return []byte{}, nil
 	}
 	return t.Time.MarshalText()
 }
 
+// UnmarshalText implements encoding.TextUnmarshaler.
+// It has backwards compatibility with v3 in that the string "null" is considered equivalent to an empty string
+// and unmarshaling will succeed. This may be removed in a future version.
 func (t *Time) UnmarshalText(text []byte) error {
 	str := string(text)
+	// allowing "null" is for backwards compatibility with v3
 	if str == "" || str == "null" {
 		t.Valid = false
 		return nil
 	}
 	if err := t.Time.UnmarshalText(text); err != nil {
-		return err
+		return fmt.Errorf("null: couldn't unmarshal text: %w", err)
 	}
 	t.Valid = true
 	return nil
@@ -188,5 +173,25 @@ func (t Time) Ptr() *time.Time {
 }
 
 func (t Time) IsDefined() bool {
-	return t.Valid
+	return !t.IsZero()
+}
+
+// IsZero returns true for invalid Times, hopefully for future omitempty support.
+// A non-null Time with a zero value will not be considered zero.
+func (t Time) IsZero() bool {
+	return !t.Valid
+}
+
+// Equal returns true if both Time objects encode the same time or are both null.
+// Two times can be equal even if they are in different locations.
+// For example, 6:00 +0200 CEST and 4:00 UTC are Equal.
+func (t Time) Equal(other Time) bool {
+	return t.Valid == other.Valid && (!t.Valid || t.Time.Equal(other.Time))
+}
+
+// ExactEqual returns true if both Time objects are equal or both null.
+// ExactEqual returns false for times that are in different locations or
+// have a different monotonic clock reading.
+func (t Time) ExactEqual(other Time) bool {
+	return t.Valid == other.Valid && (!t.Valid || t.Time == other.Time)
 }

@@ -1,11 +1,11 @@
 package null
 
 import (
+	"bytes"
 	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"reflect"
 
 	"github.com/mailru/easyjson/jlexer"
 	"github.com/mailru/easyjson/jwriter"
@@ -41,29 +41,26 @@ func BoolFromPtr(b *bool) Bool {
 	return NewBool(*b, true)
 }
 
+// ValueOrZero returns the inner value if valid, otherwise false.
+func (b Bool) ValueOrZero() bool {
+	return b.Valid && b.Bool
+}
+
 // UnmarshalJSON implements json.Unmarshaler.
 // It supports number and null input.
 // 0 will not be considered a null Bool.
-// It also supports unmarshalling a sql.NullBool.
 func (b *Bool) UnmarshalJSON(data []byte) error {
-	var err error
-	var v interface{}
-	if err = json.Unmarshal(data, &v); err != nil {
-		return err
-	}
-	switch x := v.(type) {
-	case bool:
-		b.Bool = x
-	case map[string]interface{}:
-		err = json.Unmarshal(data, &b.NullBool)
-	case nil:
+	if bytes.Equal(data, nullBytes) {
 		b.Valid = false
 		return nil
-	default:
-		err = fmt.Errorf("json: cannot unmarshal %v into Go value of type null.Bool", reflect.TypeOf(v).Name())
 	}
-	b.Valid = err == nil
-	return err
+
+	if err := json.Unmarshal(data, &b.Bool); err != nil {
+		return fmt.Errorf("null: couldn't unmarshal JSON: %w", err)
+	}
+
+	b.Valid = true
+	return nil
 }
 
 // UnmarshalEasyJSON is an easy-JSON specific decoder, that should be more efficient than the standard one.
@@ -100,7 +97,7 @@ func (b *Bool) UnmarshalEasyJSON(w *jlexer.Lexer) {
 }
 
 // UnmarshalText implements encoding.TextUnmarshaler.
-// It will unmarshal to a null Bool if the input is a blank or not an integer.
+// It will unmarshal to a null Bool if the input is blank.
 // It will return an error if the input is not an integer, blank, or "null".
 func (b *Bool) UnmarshalText(text []byte) error {
 	str := string(text)
@@ -113,8 +110,7 @@ func (b *Bool) UnmarshalText(text []byte) error {
 	case "false":
 		b.Bool = false
 	default:
-		b.Valid = false
-		return errors.New("invalid input:" + str)
+		return errors.New("null: invalid input for UnmarshalText:" + str)
 	}
 	b.Valid = true
 	return nil
@@ -178,6 +174,12 @@ func (b Bool) IsZero() bool {
 	return !b.Valid
 }
 
+// IsDefined implements the easyjson.Optional interface for omitempty-ing.
 func (b Bool) IsDefined() bool {
-	return b.Valid
+	return !b.IsZero()
+}
+
+// Equal returns true if both booleans have the same value or are both null.
+func (b Bool) Equal(other Bool) bool {
+	return b.Valid == other.Valid && (!b.Valid || b.Bool == other.Bool)
 }

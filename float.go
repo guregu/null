@@ -4,6 +4,9 @@ import (
 	"bytes"
 	"database/sql"
 	"encoding/json"
+	"fmt"
+	"math"
+	"reflect"
 	"strconv"
 	"unsafe"
 
@@ -41,11 +44,12 @@ func FloatFromPtr(f *float64) Float {
 	return NewFloat(*f, true)
 }
 
-type basicFloat Float
-
-type stringFloat struct {
-	Float64 string
-	Valid   bool
+// ValueOrZero returns the inner value if valid, otherwise zero.
+func (f Float) ValueOrZero() float64 {
+	if !f.Valid {
+		return 0
+	}
+	return f.Float64
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
@@ -66,11 +70,15 @@ func (i *Float) UnmarshalJSON(data []byte) error {
 	if data[0] == '{' {
 		// We've been sent a structure. This is not our main-line as we encode
 		// to a simple float
+		type basicFloat Float
 		var ii basicFloat
 		err = json.Unmarshal(data, &ii)
 		if err != nil {
 			// Try a string version
-			var si stringFloat
+			var si struct {
+				Float64 string
+				Valid   bool
+			}
 			err = json.Unmarshal(data, &si)
 			if err == nil {
 				i.Valid = si.Valid
@@ -133,7 +141,7 @@ func (i *Float) UnmarshalEasyJSON(w *jlexer.Lexer) {
 }
 
 // UnmarshalText implements encoding.TextUnmarshaler.
-// It will unmarshal to a null Float if the input is a blank or not an integer.
+// It will unmarshal to a null Float if the input is blank.
 // It will return an error if the input is not an integer, blank, or "null".
 func (f *Float) UnmarshalText(text []byte) error {
 	str := string(text)
@@ -143,7 +151,10 @@ func (f *Float) UnmarshalText(text []byte) error {
 	}
 	var err error
 	f.Float64, err = strconv.ParseFloat(string(text), 64)
-	f.Valid = err == nil
+	if err != nil {
+		return fmt.Errorf("null: couldn't unmarshal text: %w", err)
+	}
+	f.Valid = true
 	return err
 }
 
@@ -152,6 +163,12 @@ func (f *Float) UnmarshalText(text []byte) error {
 func (f Float) MarshalJSON() ([]byte, error) {
 	if !f.Valid {
 		return nullLiteral, nil
+	}
+	if math.IsInf(f.Float64, 0) || math.IsNaN(f.Float64) {
+		return nil, &json.UnsupportedValueError{
+			Value: reflect.ValueOf(f.Float64),
+			Str:   strconv.FormatFloat(f.Float64, 'g', -1, 64),
+		}
 	}
 	return []byte(strconv.FormatFloat(f.Float64, 'f', -1, 64)), nil
 }
@@ -194,5 +211,14 @@ func (f Float) IsZero() bool {
 }
 
 func (f Float) IsDefined() bool {
-	return f.Valid
+	return !f.IsZero()
+}
+
+// Equal returns true if both floats have the same value or are both null.
+// Warning: calculations using floating point numbers can result in different ways
+// the numbers are stored in memory. Therefore, this function is not suitable to
+// compare the result of a calculation. Use this method only to check if the value
+// has changed in comparison to some previous value.
+func (f Float) Equal(other Float) bool {
+	return f.Valid == other.Valid && (!f.Valid || f.Float64 == other.Float64)
 }

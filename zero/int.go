@@ -1,10 +1,11 @@
 package zero
 
 import (
+	"bytes"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"reflect"
 	"strconv"
 )
 
@@ -39,44 +40,53 @@ func IntFromPtr(i *int64) Int {
 	return n
 }
 
+// ValueOrZero returns the inner value if valid, otherwise zero.
+func (i Int) ValueOrZero() int64 {
+	if !i.Valid {
+		return 0
+	}
+	return i.Int64
+}
+
 // UnmarshalJSON implements json.Unmarshaler.
 // It supports number and null input.
 // 0 will be considered a null Int.
-// It also supports unmarshalling a sql.NullInt64.
 func (i *Int) UnmarshalJSON(data []byte) error {
-	var err error
-	var v interface{}
-	if err = json.Unmarshal(data, &v); err != nil {
-		return err
-	}
-	switch vi := v.(type) {
-	case float64:
-		// Unmarshal again, directly to int64, to avoid intermediate float64
-		err = json.Unmarshal(data, &i.Int64)
-	case map[string]interface{}:
-		err = json.Unmarshal(data, &i.NullInt64)
-	case nil:
+	// FIXME: In merging, I've dropped support for unmarshalling the object type
+	// which will need to be re-added. The old code was a bit nasty.
+	if bytes.Equal(data, nullBytes) {
 		i.Valid = false
 		return nil
-	case string:
-		// Big Query deliberately encodes integers as strings. If we can decode
-		// an integer from this string do so.
-		var intVal int
-		intVal, err = strconv.Atoi(vi)
-		if err != nil {
-			err = fmt.Errorf("json: cannot unmarshal string (%s) into Go value of type null.Int. %v", vi, err)
-			break
-		}
-		i.Int64 = int64(intVal)
-	default:
-		err = fmt.Errorf("json: cannot unmarshal %v into Go value of type zero.Int", reflect.TypeOf(v).Name())
 	}
-	i.Valid = (err == nil) && (i.Int64 != 0)
-	return err
+
+	if err := json.Unmarshal(data, &i.Int64); err != nil {
+		var typeError *json.UnmarshalTypeError
+		if errors.As(err, &typeError) {
+			// special case: accept string input
+			if typeError.Value != "string" {
+				return fmt.Errorf("zero: JSON input is invalid type (need int or string): %w", err)
+			}
+			var str string
+			if err := json.Unmarshal(data, &str); err != nil {
+				return fmt.Errorf("zero: couldn't unmarshal number string: %w", err)
+			}
+			n, err := strconv.ParseInt(str, 10, 64)
+			if err != nil {
+				return fmt.Errorf("zero: couldn't convert string to int: %w", err)
+			}
+			i.Int64 = n
+			i.Valid = n != 0
+			return nil
+		}
+		return fmt.Errorf("zero: couldn't unmarshal JSON: %w", err)
+	}
+
+	i.Valid = i.Int64 != 0
+	return nil
 }
 
 // UnmarshalText implements encoding.TextUnmarshaler.
-// It will unmarshal to a null Int if the input is a blank, zero, or not an integer.
+// It will unmarshal to a null Int if the input is a blank, or zero.
 // It will return an error if the input is not an integer, blank, or "null".
 func (i *Int) UnmarshalText(text []byte) error {
 	str := string(text)
@@ -86,7 +96,10 @@ func (i *Int) UnmarshalText(text []byte) error {
 	}
 	var err error
 	i.Int64, err = strconv.ParseInt(string(text), 10, 64)
-	i.Valid = (err == nil) && (i.Int64 != 0)
+	if err != nil {
+		return fmt.Errorf("zero: couldn't unmarshal text: %w", err)
+	}
+	i.Valid = i.Int64 != 0
 	return err
 }
 
@@ -127,4 +140,9 @@ func (i Int) Ptr() *int64 {
 // IsZero returns true for null or zero Ints, for future omitempty support (Go 1.4?)
 func (i Int) IsZero() bool {
 	return !i.Valid || i.Int64 == 0
+}
+
+// Equal returns true if both ints have the same value or are both either null or zero.
+func (i Int) Equal(other Int) bool {
+	return i.ValueOrZero() == other.ValueOrZero()
 }

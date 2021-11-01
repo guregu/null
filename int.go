@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"unsafe"
 
@@ -41,17 +42,17 @@ func IntFromPtr(i *int64) Int {
 	return NewInt(*i, true)
 }
 
-type basicInt Int
-
-type stringInt struct {
-	Int64 string
-	Valid bool
+// ValueOrZero returns the inner value if valid, otherwise zero.
+func (i Int) ValueOrZero() int64 {
+	if !i.Valid {
+		return 0
+	}
+	return i.Int64
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
-// It supports number and null input.
+// It supports number, string, and null input.
 // 0 will not be considered a null Int.
-// It also supports unmarshalling a sql.NullInt64.
 func (i *Int) UnmarshalJSON(data []byte) error {
 	var err error
 	// Golden path is being passed a integer or null
@@ -66,11 +67,15 @@ func (i *Int) UnmarshalJSON(data []byte) error {
 	if data[0] == '{' {
 		// We've been sent a structure. This is not our main-line as we encode
 		// to a simple int
+		type basicInt Int
 		var ii basicInt
 		err = json.Unmarshal(data, &ii)
 		if err != nil {
 			// Try a string version
-			var si stringInt
+			var si struct {
+				Int64 string
+				Valid bool
+			}
 			err = json.Unmarshal(data, &si)
 			if err == nil {
 				i.Valid = si.Valid
@@ -133,7 +138,7 @@ func (i *Int) UnmarshalEasyJSON(w *jlexer.Lexer) {
 }
 
 // UnmarshalText implements encoding.TextUnmarshaler.
-// It will unmarshal to a null Int if the input is a blank or not an integer.
+// It will unmarshal to a null Int if the input is blank.
 // It will return an error if the input is not an integer, blank, or "null".
 func (i *Int) UnmarshalText(text []byte) error {
 	str := string(text)
@@ -143,8 +148,11 @@ func (i *Int) UnmarshalText(text []byte) error {
 	}
 	var err error
 	i.Int64, err = strconv.ParseInt(string(text), 10, 64)
-	i.Valid = err == nil
-	return err
+	if err != nil {
+		return fmt.Errorf("null: couldn't unmarshal text: %w", err)
+	}
+	i.Valid = true
+	return nil
 }
 
 // MarshalJSON implements json.Marshaler.
@@ -194,5 +202,10 @@ func (i Int) IsZero() bool {
 }
 
 func (i Int) IsDefined() bool {
-	return i.Valid
+	return !i.IsZero()
+}
+
+// Equal returns true if both ints have the same value or are both null.
+func (i Int) Equal(other Int) bool {
+	return i.Valid == other.Valid && (!i.Valid || i.Int64 == other.Int64)
 }
