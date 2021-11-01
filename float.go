@@ -64,27 +64,13 @@ func (i *Float) UnmarshalJSON(data []byte) error {
 
 	if data[0] == '{' {
 		// Try the struct form of Float.
-		type basicFloat Float
-		var ii basicFloat
-		if json.Unmarshal(data, &ii) == nil {
-			*i = Float(ii)
-			return nil
-		}
-
-		// Try the struct form of Float, but with a string Float64.
-		var si struct {
-			Float64 string
-			Valid   bool
-		}
-		if err := json.Unmarshal(data, &si); err != nil {
+		type nf sql.NullFloat64
+		var ii nf
+		if err := json.Unmarshal(data, &ii); err != nil {
+			i.Valid = false
 			return err
 		}
-		i.Valid = si.Valid
-		if si.Valid {
-			var err error
-			i.Float64, err = strconv.ParseFloat(si.Float64, 64)
-			i.Valid = (err == nil)
-		}
+		i.NullFloat64 = sql.NullFloat64(ii)
 		return nil
 	}
 
@@ -118,13 +104,11 @@ func (i *Float) UnmarshalEasyJSON(w *jlexer.Lexer) {
 			}
 			switch key {
 			case "float64", "Float64":
-				f, err := w.JsonNumber().Float64()
-				if err != nil {
-					w.AddError(err)
+				i.Float64 = w.Float64()
+				if !w.Ok() {
 					i.Valid = false
 					return
 				}
-				i.Float64 = f
 			case "valid", "Valid":
 				i.Valid = w.Bool()
 			}
