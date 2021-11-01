@@ -63,6 +63,10 @@ func TestIntUnmarshal(t *testing.T) {
 			exp: IntFrom(12345),
 		},
 		{
+			in:  nullIntJSONString,
+			exp: IntFrom(12345),
+		},
+		{
 			in: nullJSON,
 		},
 		{

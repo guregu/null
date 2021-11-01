@@ -114,7 +114,13 @@ func (i *Int) UnmarshalEasyJSON(w *jlexer.Lexer) {
 			}
 			switch key {
 			case "int64", "Int64":
-				i.Int64 = w.Int64()
+				v, err := w.JsonNumber().Int64()
+				if err != nil {
+					w.AddError(err)
+					i.Valid = false
+					return
+				}
+				i.Int64 = v
 			case "valid", "Valid":
 				i.Valid = w.Bool()
 			}
