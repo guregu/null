@@ -57,44 +57,43 @@ func (f Float) ValueOrZero() float64 {
 // 0 will not be considered a null Float.
 // It also supports unmarshalling a sql.NullFloat64.
 func (i *Float) UnmarshalJSON(data []byte) error {
-	var err error
-	// Golden path is being passed a integer or null
-	if bytes.Compare(data, []byte("null")) == 0 {
+	if bytes.Equal(data, nullLiteral) {
 		i.Valid = false
 		return nil
 	}
+
+	if data[0] == '{' {
+		// Try the struct form of Float.
+		type basicFloat Float
+		var ii basicFloat
+		if err := json.Unmarshal(data, &ii); err == nil {
+			*i = Float(ii)
+			return nil
+		}
+
+		// Try the struct form of Float, but with a string Float64.
+		var si struct {
+			Float64 string
+			Valid   bool
+		}
+		if err := json.Unmarshal(data, &si); err == nil {
+			i.Valid = si.Valid
+			if si.Valid {
+				i.Float64, err = strconv.ParseFloat(si.Float64, 64)
+				i.Valid = (err == nil)
+			}
+		}
+		return nil
+	}
+
 	// BQ sends numbers as strings. We can strip quotes on simple strings
 	if data[0] == '"' {
 		data = bytes.Trim(data, `"`)
 	}
-	if data[0] == '{' {
-		// We've been sent a structure. This is not our main-line as we encode
-		// to a simple float
-		type basicFloat Float
-		var ii basicFloat
-		err = json.Unmarshal(data, &ii)
-		if err != nil {
-			// Try a string version
-			var si struct {
-				Float64 string
-				Valid   bool
-			}
-			err = json.Unmarshal(data, &si)
-			if err == nil {
-				i.Valid = si.Valid
-				if si.Valid {
-					i.Float64, err = strconv.ParseFloat(si.Float64, 64)
-					i.Valid = (err == nil)
-				}
-			}
-		} else {
-			*i = Float(ii)
-		}
-	} else {
-		i.Float64, err = strconv.ParseFloat(*(*string)(unsafe.Pointer(&data)), 64)
-		i.Valid = (err == nil)
-	}
 
+	var err error
+	i.Float64, err = strconv.ParseFloat(*(*string)(unsafe.Pointer(&data)), 64)
+	i.Valid = (err == nil)
 	return err
 }
 
@@ -117,7 +116,13 @@ func (i *Float) UnmarshalEasyJSON(w *jlexer.Lexer) {
 			}
 			switch key {
 			case "float64", "Float64":
-				i.Float64 = w.Float64()
+				f, err := w.JsonNumber().Float64()
+				if err != nil {
+					w.AddError(err)
+					i.Valid = false
+					return
+				}
+				i.Float64 = f
 			case "valid", "Valid":
 				i.Valid = w.Bool()
 			}

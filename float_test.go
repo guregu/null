@@ -64,6 +64,10 @@ func TestUnmarshalFloat(t *testing.T) {
 			exp: FloatFrom(1.2345),
 		},
 		{
+			in:  nullFloatJSONString,
+			exp: FloatFrom(1.2345),
+		},
+		{
 			in: nullJSON,
 		},
 		{
