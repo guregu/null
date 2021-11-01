@@ -55,6 +55,13 @@ func (b *Bool) UnmarshalJSON(data []byte) error {
 		return nil
 	}
 
+	if data[0] == '{' {
+		if err := json.Unmarshal(data, &b.NullBool); err != nil {
+			return fmt.Errorf("null: couldn't unmarshal JSON: %w", err)
+		}
+		return nil
+	}
+
 	if err := json.Unmarshal(data, &b.Bool); err != nil {
 		return fmt.Errorf("null: couldn't unmarshal JSON: %w", err)
 	}

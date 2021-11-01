@@ -43,9 +43,7 @@ func TestUnmarshalBool(t *testing.T) {
 
 	var nb Bool
 	err = json.Unmarshal(nullBoolJSON, &nb)
-	if err == nil {
-		panic("err should not be nil")
-	}
+	maybePanic(err)
 
 	var null Bool
 	err = json.Unmarshal(nullJSON, &null)
