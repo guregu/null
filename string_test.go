@@ -51,9 +51,8 @@ func TestUnmarshalString(t *testing.T) {
 
 	var ns String
 	err = json.Unmarshal(nullStringJSON, &ns)
-	if err == nil {
-		panic("err should not be nil")
-	}
+	maybePanic(err)
+	assertStr(t, ns, "test")
 
 	var blank String
 	err = json.Unmarshal(blankStringJSON, &blank)
@@ -112,11 +111,11 @@ func TestStringUnmarshalEasyJSON(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.data, func(t *testing.T) {
 			var str String
-			assert.NoError(t, easyjson.Unmarshal([]byte(test.data), &str))
+			assert.NoError(t, easyjson.Unmarshal([]byte(test.data), &str), "easyjson.Unmarshal")
 			assert.Equal(t, test.exp, str)
 
 			var str2 String
-			assert.NoError(t, json.Unmarshal([]byte(test.data), &str2))
+			assert.NoError(t, json.Unmarshal([]byte(test.data), &str2), "json.Unmarshal")
 			assert.Equal(t, test.exp, str2)
 		})
 	}
