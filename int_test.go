@@ -108,7 +108,10 @@ func TestIntUnmarshal(t *testing.T) {
 
 		t.Run(string(test.in)+"_easyjson", func(t *testing.T) {
 			var i Int
-			err := easyjson.Unmarshal(test.in, &i)
+			var err error
+			allocs := testing.AllocsPerRun(10, func() {
+				err = easyjson.Unmarshal(test.in, &i)
+			})
 			if err != nil {
 				if test.expErrTypeEasy == nil {
 					t.Fatal(err)
@@ -119,6 +122,9 @@ func TestIntUnmarshal(t *testing.T) {
 
 			} else if test.expErrTypeEasy != nil {
 				t.Fatal("expected an error")
+			}
+			if test.expErrTypeEasy == nil && allocs > 0 {
+				t.Fatalf("easyjson made %.0f allocations unmarshalling %T from: %s", allocs, i, test.in)
 			}
 			if diff := cmp.Diff(test.exp, i); diff != "" {
 				t.Fatalf("result not as expected. %s", diff)
