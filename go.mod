@@ -1,3 +1,4 @@
+// Deprecated: Use github.com/unravelin/null/v4
 module github.com/unravelin/null
 
 go 1.17
