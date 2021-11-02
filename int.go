@@ -61,14 +61,29 @@ func (i *Int) UnmarshalJSON(data []byte) error {
 
 	if data[0] == '{' {
 		// Try the struct form of Int.
-		type ni sql.NullInt64
-		var ii ni
-		if err := json.Unmarshal(data, &ii); err != nil {
-			i.Valid = false
+		type basicInt Int
+		var ii basicInt
+		if json.Unmarshal(data, &ii) == nil {
+			*i = Int(ii)
+			return nil
+		}
+
+		// Try a string version
+		var si struct {
+			Int64 string
+			Valid bool
+		}
+		if err := json.Unmarshal(data, &si); err != nil {
 			return err
 		}
-		i.NullInt64 = sql.NullInt64(ii)
-		return nil
+		i.Valid = si.Valid
+		if !si.Valid {
+			return nil
+		}
+		var err error
+		i.Int64, err = strconv.ParseInt(si.Int64, 10, 64)
+		i.Valid = (err == nil)
+		return err
 	}
 
 	if data[0] == '"' {
@@ -99,11 +114,13 @@ func (i *Int) UnmarshalEasyJSON(w *jlexer.Lexer) {
 			}
 			switch key {
 			case "int64", "Int64":
-				i.Int64 = w.Int64()
-				if !w.Ok() {
+				v, err := w.JsonNumber().Int64()
+				if err != nil {
+					w.AddError(err)
 					i.Valid = false
 					return
 				}
+				i.Int64 = v
 			case "valid", "Valid":
 				i.Valid = w.Bool()
 			}

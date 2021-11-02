@@ -13,9 +13,10 @@ import (
 )
 
 var (
-	intJSON       = []byte(`12345`)
-	intJSONString = []byte(`"12345"`)
-	nullIntJSON   = []byte(`  { "Int64":12345,"Valid":true}`)
+	intJSON           = []byte(`12345`)
+	intJSONString     = []byte(`"12345"`)
+	nullIntJSON       = []byte(`  { "Int64":12345,"Valid":true}`)
+	nullIntJSONString = []byte(`{"Int64":  "12345","Valid":true}`)
 )
 
 func TestIntFrom(t *testing.T) {
@@ -59,6 +60,10 @@ func TestIntUnmarshal(t *testing.T) {
 		},
 		{
 			in:  nullIntJSON,
+			exp: IntFrom(12345),
+		},
+		{
+			in:  nullIntJSONString,
 			exp: IntFrom(12345),
 		},
 		{
