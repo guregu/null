@@ -104,7 +104,7 @@ func (i *Int) UnmarshalEasyJSON(w *jlexer.Lexer) {
 	}
 	if w.IsDelim('{') {
 		w.Skip()
-		for !w.IsDelim('}') {
+		for w.Ok() && !w.IsDelim('}') {
 			key := w.UnsafeString()
 			w.WantColon()
 			if w.IsNull() {
@@ -114,13 +114,23 @@ func (i *Int) UnmarshalEasyJSON(w *jlexer.Lexer) {
 			}
 			switch key {
 			case "int64", "Int64":
-				v, err := w.JsonNumber().Int64()
+				// Read int from raw.
+				data := w.Raw()
+				if data[0] == '"' {
+					data = data[1 : len(data)-1]
+				}
+				v, err := strconv.ParseInt(*(*string)(unsafe.Pointer(&data)), 10, 64)
 				if err != nil {
-					w.AddError(err)
+					w.AddError(&jlexer.LexerError{
+						Reason: err.Error(),
+						Data:   string(data),
+					})
+					i.Int64 = 0
 					i.Valid = false
 					return
 				}
 				i.Int64 = v
+				i.Valid = true
 			case "valid", "Valid":
 				i.Valid = w.Bool()
 			}
@@ -128,19 +138,24 @@ func (i *Int) UnmarshalEasyJSON(w *jlexer.Lexer) {
 		}
 		return
 	}
+
+	// Read int from raw.
 	data := w.Raw()
 	if data[0] == '"' {
 		data = data[1 : len(data)-1]
 	}
-	ii, err := strconv.ParseInt(*(*string)(unsafe.Pointer(&data)), 10, 64)
+	v, err := strconv.ParseInt(*(*string)(unsafe.Pointer(&data)), 10, 64)
 	if err != nil {
 		w.AddError(&jlexer.LexerError{
 			Reason: err.Error(),
 			Data:   string(data),
 		})
+		i.Int64 = 0
+		i.Valid = false
+		return
 	}
-	i.Int64 = ii
-	i.Valid = (err == nil)
+	i.Int64 = v
+	i.Valid = true
 }
 
 // UnmarshalText implements encoding.TextUnmarshaler.
