@@ -63,6 +63,10 @@ func TestIntUnmarshal(t *testing.T) {
 			exp: IntFrom(12345),
 		},
 		{
+			in:  nullIntJSONString,
+			exp: IntFrom(12345),
+		},
+		{
 			in: nullJSON,
 		},
 		{
@@ -73,6 +77,11 @@ func TestIntUnmarshal(t *testing.T) {
 		{
 			in:             invalidJSON,
 			expErrType:     reflect.TypeOf((*json.SyntaxError)(nil)),
+			expErrTypeEasy: reflect.TypeOf((*jlexer.LexerError)(nil)),
+		},
+		{
+			in:             []byte(`{"Int64":true,"Valid":true}`),
+			expErrType:     reflect.TypeOf((*json.UnmarshalTypeError)(nil)),
 			expErrTypeEasy: reflect.TypeOf((*jlexer.LexerError)(nil)),
 		},
 	}
@@ -99,7 +108,10 @@ func TestIntUnmarshal(t *testing.T) {
 
 		t.Run(string(test.in)+"_easyjson", func(t *testing.T) {
 			var i Int
-			err := easyjson.Unmarshal(test.in, &i)
+			var err error
+			allocs := testing.AllocsPerRun(10, func() {
+				err = easyjson.Unmarshal(test.in, &i)
+			})
 			if err != nil {
 				if test.expErrTypeEasy == nil {
 					t.Fatal(err)
@@ -111,11 +123,13 @@ func TestIntUnmarshal(t *testing.T) {
 			} else if test.expErrTypeEasy != nil {
 				t.Fatal("expected an error")
 			}
+			if test.expErrTypeEasy == nil && allocs > 0 {
+				t.Fatalf("easyjson made %.0f allocations unmarshalling %T from: %s", allocs, i, test.in)
+			}
 			if diff := cmp.Diff(test.exp, i); diff != "" {
 				t.Fatalf("result not as expected. %s", diff)
 			}
 		})
-
 	}
 }
 
@@ -188,9 +202,15 @@ func TestTextUnmarshalInt(t *testing.T) {
 	assertNullInt(t, blank, "UnmarshalText() empty int")
 
 	var null Int
-	err = null.UnmarshalText([]byte("null"))
+	err = null.UnmarshalText(nullLiteral)
 	maybePanic(err)
 	assertNullInt(t, null, `UnmarshalText() "null"`)
+
+	var invalid Int
+	err = invalid.UnmarshalText([]byte("hello world"))
+	if err == nil {
+		panic("expected error")
+	}
 }
 
 func TestMarshalInt(t *testing.T) {
@@ -269,6 +289,44 @@ func TestIntScan(t *testing.T) {
 	assertNullInt(t, null, "scanned null")
 }
 
+func TestIntValueOrZero(t *testing.T) {
+	valid := NewInt(12345, true)
+	if valid.ValueOrZero() != 12345 {
+		t.Error("unexpected ValueOrZero", valid.ValueOrZero())
+	}
+
+	invalid := NewInt(12345, false)
+	if invalid.ValueOrZero() != 0 {
+		t.Error("unexpected ValueOrZero", invalid.ValueOrZero())
+	}
+}
+
+func TestIntEqual(t *testing.T) {
+	int1 := NewInt(10, false)
+	int2 := NewInt(10, false)
+	assertIntEqualIsTrue(t, int1, int2)
+
+	int1 = NewInt(10, false)
+	int2 = NewInt(20, false)
+	assertIntEqualIsTrue(t, int1, int2)
+
+	int1 = NewInt(10, true)
+	int2 = NewInt(10, true)
+	assertIntEqualIsTrue(t, int1, int2)
+
+	int1 = NewInt(10, true)
+	int2 = NewInt(10, false)
+	assertIntEqualIsFalse(t, int1, int2)
+
+	int1 = NewInt(10, false)
+	int2 = NewInt(10, true)
+	assertIntEqualIsFalse(t, int1, int2)
+
+	int1 = NewInt(10, true)
+	int2 = NewInt(20, true)
+	assertIntEqualIsFalse(t, int1, int2)
+}
+
 func assertInt(t *testing.T, i Int, from string) {
 	if i.Int64 != 12345 {
 		t.Errorf("bad %s int: %d ≠ %d\n", from, i.Int64, 12345)
@@ -281,5 +339,19 @@ func assertInt(t *testing.T, i Int, from string) {
 func assertNullInt(t *testing.T, i Int, from string) {
 	if i.Valid {
 		t.Error(from, "is valid, but should be invalid")
+	}
+}
+
+func assertIntEqualIsTrue(t *testing.T, a, b Int) {
+	t.Helper()
+	if !a.Equal(b) {
+		t.Errorf("Equal() of Int{%v, Valid:%t} and Int{%v, Valid:%t} should return true", a.Int64, a.Valid, b.Int64, b.Valid)
+	}
+}
+
+func assertIntEqualIsFalse(t *testing.T, a, b Int) {
+	t.Helper()
+	if a.Equal(b) {
+		t.Errorf("Equal() of Int{%v, Valid:%t} and Int{%v, Valid:%t} should return false", a.Int64, a.Valid, b.Int64, b.Valid)
 	}
 }

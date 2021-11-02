@@ -1,12 +1,5 @@
-
-This is a clone of github.com/guregu/null, with master reset to the V2.2 tag
-then altered to allow decoding of strings containing integers into NullInts
-to get around Big Query oddnesses - https://code.google.com/p/google-bigquery/issues/detail?id=31
-
-import at github.com/unravelin/null
-
-## null [![GoDoc](https://godoc.org/github.com/guregu/null?status.svg)](https://godoc.org/github.com/guregu/null) [![Coverage](http://gocover.io/_badge/github.com/guregu/null)](http://gocover.io/github.com/guregu/null)
-`import "gopkg.in/guregu/null.v2"`
+## null [![GoDoc](https://godoc.org/github.com/guregu/null?status.svg)](https://godoc.org/github.com/guregu/null) [![CircleCI](https://circleci.com/gh/guregu/null.svg?style=svg)](https://circleci.com/gh/guregu/null)
+`import "gopkg.in/guregu/null.v4"`
 
 null is a library with reasonable options for dealing with nullable SQL and JSON values
 
@@ -20,7 +13,7 @@ All types implement `sql.Scanner` and `driver.Valuer`, so you can use this libra
 
 ### null package
 
-`import "gopkg.in/guregu/null.v2"`
+`import "gopkg.in/guregu/null.v3"`
 
 #### null.String
 Nullable string.
@@ -48,10 +41,10 @@ Marshals to JSON null if SQL source data is null. Uses `time.Time`'s marshaler. 
 
 ### zero package
 
-`import "gopkg.in/guregu/null.v2/zero"`
+`import "gopkg.in/guregu/null.v3/zero"`
 
 #### zero.String
-Nullable int64. 
+Nullable string.
 
 Will marshal to a blank string if null. Blank string input produces a null String. Null values and zero values are considered equivalent. Can unmarshal from `sql.NullString` JSON input. 
 
@@ -70,13 +63,13 @@ Nullable bool.
 
 Will marshal to false if null. `false` produces a null Float. Null values and zero values are considered equivalent. Can unmarshal from `sql.NullBool` JSON input. 
 
-#### null.Time
+#### zero.Time
 
 Will marshal to the zero time if null. Uses `time.Time`'s marshaler. Can unmarshal from `pq.NullTime` and similar JSON input.
 
 
 ### Bugs
-`json`'s `",omitempty"` struct tag does not work correctly right now. It will never omit a null or empty String. This might be [fixed eventually](https://github.com/golang/go/issues/4357).
+`json`'s `",omitempty"` struct tag does not work correctly right now. It will never omit a null or empty String. This might be [fixed eventually](https://github.com/golang/go/issues/11939).
 
 ### License
 BSD

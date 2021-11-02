@@ -1,4 +1,4 @@
-package test
+package bench
 
 import (
 	"encoding/json"
@@ -37,9 +37,6 @@ var fuzzFuncs = []interface{}{
 		a.Valid = c.RandBool()
 		if a.Valid {
 			c.Fuzz(&a.String)
-			if a.String == "" {
-				a.Valid = false // sigh
-			}
 		}
 	},
 	func(a *null.Time, c fuzz.Continue) {

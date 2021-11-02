@@ -2,6 +2,7 @@ package zero
 
 import (
 	"encoding/json"
+	"errors"
 	"testing"
 )
 
@@ -34,8 +35,9 @@ func TestUnmarshalString(t *testing.T) {
 
 	var ns String
 	err = json.Unmarshal(nullStringJSON, &ns)
-	maybePanic(err)
-	assertStr(t, ns, "sql.NullString json")
+	if err == nil {
+		panic("expected error")
+	}
 
 	var blank String
 	err = json.Unmarshal(blankStringJSON, &blank)
@@ -56,8 +58,9 @@ func TestUnmarshalString(t *testing.T) {
 
 	var invalid String
 	err = invalid.UnmarshalJSON(invalidJSON)
-	if _, ok := err.(*json.SyntaxError); !ok {
-		t.Errorf("expected json.SyntaxError, not %T", err)
+	var syntaxError *json.SyntaxError
+	if !errors.As(err, &syntaxError) {
+		t.Errorf("expected wrapped json.SyntaxError, not %T", err)
 	}
 	assertNullStr(t, invalid, "invalid json")
 }
@@ -161,6 +164,48 @@ func TestStringSetValid(t *testing.T) {
 	assertStr(t, change, "SetValid()")
 }
 
+func TestStringValueOrZero(t *testing.T) {
+	valid := NewString("test", true)
+	if valid.ValueOrZero() != "test" {
+		t.Error("unexpected ValueOrZero", valid.ValueOrZero())
+	}
+
+	invalid := NewString("test", false)
+	if invalid.ValueOrZero() != "" {
+		t.Error("unexpected ValueOrZero", invalid.ValueOrZero())
+	}
+}
+
+func TestStringEqual(t *testing.T) {
+	str1 := NewString("foo", false)
+	str2 := NewString("foo", false)
+	assertStringEqualIsTrue(t, str1, str2)
+
+	str1 = NewString("foo", false)
+	str2 = NewString("bar", false)
+	assertStringEqualIsTrue(t, str1, str2)
+
+	str1 = NewString("foo", true)
+	str2 = NewString("foo", true)
+	assertStringEqualIsTrue(t, str1, str2)
+
+	str1 = NewString("", true)
+	str2 = NewString("foo", false)
+	assertStringEqualIsTrue(t, str1, str2)
+
+	str1 = NewString("foo", true)
+	str2 = NewString("foo", false)
+	assertStringEqualIsFalse(t, str1, str2)
+
+	str1 = NewString("foo", false)
+	str2 = NewString("foo", true)
+	assertStringEqualIsFalse(t, str1, str2)
+
+	str1 = NewString("foo", true)
+	str2 = NewString("bar", true)
+	assertStringEqualIsFalse(t, str1, str2)
+}
+
 func maybePanic(err error) {
 	if err != nil {
 		panic(err)
@@ -185,5 +230,19 @@ func assertNullStr(t *testing.T, s String, from string) {
 func assertJSONEquals(t *testing.T, data []byte, cmp string, from string) {
 	if string(data) != cmp {
 		t.Errorf("bad %s data: %s ≠ %s\n", from, data, cmp)
+	}
+}
+
+func assertStringEqualIsTrue(t *testing.T, a, b String) {
+	t.Helper()
+	if !a.Equal(b) {
+		t.Errorf("Equal() of String{\"%v\", Valid:%t} and String{\"%v\", Valid:%t} should return true", a.String, a.Valid, b.String, b.Valid)
+	}
+}
+
+func assertStringEqualIsFalse(t *testing.T, a, b String) {
+	t.Helper()
+	if a.Equal(b) {
+		t.Errorf("Equal() of String{\"%v\", Valid:%t} and String{\"%v\", Valid:%t} should return false", a.String, a.Valid, b.String, b.Valid)
 	}
 }

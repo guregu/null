@@ -5,10 +5,10 @@
 package null
 
 import (
+	"bytes"
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"reflect"
 
 	"github.com/mailru/easyjson/jlexer"
 	"github.com/mailru/easyjson/jwriter"
@@ -33,6 +33,14 @@ func StringFromPtr(s *string) String {
 	return NewString(*s, true)
 }
 
+// ValueOrZero returns the inner value if valid, otherwise zero.
+func (s String) ValueOrZero() string {
+	if !s.Valid {
+		return ""
+	}
+	return s.String
+}
+
 // NewString creates a new String
 func NewString(s string, valid bool) String {
 	return String{
@@ -44,27 +52,26 @@ func NewString(s string, valid bool) String {
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
-// It supports string and null input. Blank string input produces a null String.
-// It also supports unmarshalling a sql.NullString.
+// It supports string and null input. Blank string input does not produce a null String.
 func (s *String) UnmarshalJSON(data []byte) error {
-	var err error
-	var v interface{}
-	if err = json.Unmarshal(data, &v); err != nil {
-		return err
-	}
-	switch x := v.(type) {
-	case string:
-		s.String = x
-	case map[string]interface{}:
-		err = json.Unmarshal(data, &s.NullString)
-	case nil:
+	if bytes.Equal(data, nullLiteral) {
 		s.Valid = false
 		return nil
-	default:
-		err = fmt.Errorf("json: cannot unmarshal %v into Go value of type null.String", reflect.TypeOf(v).Name())
 	}
-	s.Valid = (err == nil) && (s.String != "")
-	return err
+
+	if data[0] == '{' {
+		if err := json.Unmarshal(data, &s.NullString); err != nil {
+			return fmt.Errorf("null: couldn't unmarshal JSON: %w", err)
+		}
+		return nil
+	}
+
+	if err := json.Unmarshal(data, &s.String); err != nil {
+		return fmt.Errorf("null: couldn't unmarshal JSON: %w", err)
+	}
+
+	s.Valid = true
+	return nil
 }
 
 // UnmarshalEasyJSON is an easy-JSON specific decoder, that should be more efficient than the standard one.
@@ -97,7 +104,7 @@ func (s *String) UnmarshalEasyJSON(w *jlexer.Lexer) {
 		return
 	}
 	s.String = w.String()
-	s.Valid = (w.Error() == nil) && s.String != ""
+	s.Valid = (w.Error() == nil)
 }
 
 func (s String) MarshalEasyJSON(w *jwriter.Writer) {
@@ -116,6 +123,15 @@ func (s String) MarshalJSON() ([]byte, error) {
 		return nullLiteral, nil
 	}
 	return json.Marshal(s.String)
+}
+
+// MarshalText implements encoding.TextMarshaler.
+// It will encode a blank string when this String is null.
+func (s String) MarshalText() ([]byte, error) {
+	if !s.Valid {
+		return []byte{}, nil
+	}
+	return []byte(s.String), nil
 }
 
 // UnmarshalText implements encoding.TextUnmarshaler.
@@ -140,12 +156,16 @@ func (s String) Ptr() *string {
 	return &s.String
 }
 
-// IsZero returns true for null or empty strings, for future omitempty support. (Go 1.4?)
-// Will return false s if blank but non-null.
+// IsZero returns true for null strings, for potential future omitempty support.
 func (s String) IsZero() bool {
 	return !s.Valid
 }
 
 func (s String) IsDefined() bool {
-	return s.Valid
+	return !s.IsZero()
+}
+
+// Equal returns true if both strings have the same value or are both null.
+func (s String) Equal(other String) bool {
+	return s.Valid == other.Valid && (!s.Valid || s.String == other.String)
 }

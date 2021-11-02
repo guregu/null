@@ -2,6 +2,7 @@ package null
 
 import (
 	"encoding/json"
+	"math"
 	"reflect"
 	"strconv"
 	"testing"
@@ -14,6 +15,7 @@ import (
 var (
 	floatJSON           = []byte(`1.2345`)
 	floatJSONString     = []byte(`"1.2345"`)
+	floatBlankJSON      = []byte(`""`)
 	nullFloatJSON       = []byte(`{"Float64":1.2345,"Valid":true}`)
 	nullFloatJSONString = []byte(`{"Float64":"1.2345","Valid":true}`)
 )
@@ -62,6 +64,10 @@ func TestUnmarshalFloat(t *testing.T) {
 			exp: FloatFrom(1.2345),
 		},
 		{
+			in:  nullFloatJSONString,
+			exp: FloatFrom(1.2345),
+		},
+		{
 			in: nullJSON,
 		},
 		{
@@ -72,6 +78,11 @@ func TestUnmarshalFloat(t *testing.T) {
 		{
 			in:             invalidJSON,
 			expErrType:     reflect.TypeOf((*json.SyntaxError)(nil)),
+			expErrTypeEasy: reflect.TypeOf((*jlexer.LexerError)(nil)),
+		},
+		{
+			in:             []byte(`{"Float64": true, "Valid": true}`),
+			expErrType:     reflect.TypeOf((*json.UnmarshalTypeError)(nil)),
 			expErrTypeEasy: reflect.TypeOf((*jlexer.LexerError)(nil)),
 		},
 	}
@@ -98,7 +109,10 @@ func TestUnmarshalFloat(t *testing.T) {
 
 		t.Run(string(test.in)+"_easyjson", func(t *testing.T) {
 			var f Float
-			err := easyjson.Unmarshal(test.in, &f)
+			var err error
+			allocs := testing.AllocsPerRun(10, func() {
+				err = easyjson.Unmarshal(test.in, &f)
+			})
 			if err != nil {
 				if test.expErrTypeEasy == nil {
 					t.Fatal(err)
@@ -109,6 +123,9 @@ func TestUnmarshalFloat(t *testing.T) {
 
 			} else if test.expErrTypeEasy != nil {
 				t.Fatal("expected an error")
+			}
+			if test.expErrTypeEasy == nil && allocs > 0 {
+				t.Fatalf("easyjson made %.0f allocations unmarshalling %T from: %s", allocs, f, test.in)
 			}
 			if diff := cmp.Diff(test.exp, f); diff != "" {
 				t.Fatalf("result not as expected. %s", diff)
@@ -162,9 +179,15 @@ func TestTextUnmarshalFloat(t *testing.T) {
 	assertNullFloat(t, blank, "UnmarshalText() empty float")
 
 	var null Float
-	err = null.UnmarshalText([]byte("null"))
+	err = null.UnmarshalText(nullLiteral)
 	maybePanic(err)
 	assertNullFloat(t, null, `UnmarshalText() "null"`)
+
+	var invalid Float
+	err = invalid.UnmarshalText([]byte("hello world"))
+	if err == nil {
+		panic("expected error")
+	}
 }
 
 func TestMarshalFloat(t *testing.T) {
@@ -237,10 +260,67 @@ func TestFloatScan(t *testing.T) {
 	maybePanic(err)
 	assertFloat(t, f, "scanned float")
 
+	var sf Float
+	err = sf.Scan("1.2345")
+	maybePanic(err)
+	assertFloat(t, sf, "scanned string float")
+
 	var null Float
 	err = null.Scan(nil)
 	maybePanic(err)
 	assertNullFloat(t, null, "scanned null")
+}
+
+func TestFloatInfNaN(t *testing.T) {
+	nan := NewFloat(math.NaN(), true)
+	_, err := nan.MarshalJSON()
+	if err == nil {
+		t.Error("expected error for NaN, got nil")
+	}
+
+	inf := NewFloat(math.Inf(1), true)
+	_, err = inf.MarshalJSON()
+	if err == nil {
+		t.Error("expected error for Inf, got nil")
+	}
+}
+
+func TestFloatValueOrZero(t *testing.T) {
+	valid := NewFloat(1.2345, true)
+	if valid.ValueOrZero() != 1.2345 {
+		t.Error("unexpected ValueOrZero", valid.ValueOrZero())
+	}
+
+	invalid := NewFloat(1.2345, false)
+	if invalid.ValueOrZero() != 0 {
+		t.Error("unexpected ValueOrZero", invalid.ValueOrZero())
+	}
+}
+
+func TestFloatEqual(t *testing.T) {
+	f1 := NewFloat(10, false)
+	f2 := NewFloat(10, false)
+	assertFloatEqualIsTrue(t, f1, f2)
+
+	f1 = NewFloat(10, false)
+	f2 = NewFloat(20, false)
+	assertFloatEqualIsTrue(t, f1, f2)
+
+	f1 = NewFloat(10, true)
+	f2 = NewFloat(10, true)
+	assertFloatEqualIsTrue(t, f1, f2)
+
+	f1 = NewFloat(10, true)
+	f2 = NewFloat(10, false)
+	assertFloatEqualIsFalse(t, f1, f2)
+
+	f1 = NewFloat(10, false)
+	f2 = NewFloat(10, true)
+	assertFloatEqualIsFalse(t, f1, f2)
+
+	f1 = NewFloat(10, true)
+	f2 = NewFloat(20, true)
+	assertFloatEqualIsFalse(t, f1, f2)
 }
 
 func assertFloat(t *testing.T, f Float, from string) {
@@ -255,5 +335,19 @@ func assertFloat(t *testing.T, f Float, from string) {
 func assertNullFloat(t *testing.T, f Float, from string) {
 	if f.Valid {
 		t.Error(from, "is valid, but should be invalid")
+	}
+}
+
+func assertFloatEqualIsTrue(t *testing.T, a, b Float) {
+	t.Helper()
+	if !a.Equal(b) {
+		t.Errorf("Equal() of Float{%v, Valid:%t} and Float{%v, Valid:%t} should return true", a.Float64, a.Valid, b.Float64, b.Valid)
+	}
+}
+
+func assertFloatEqualIsFalse(t *testing.T, a, b Float) {
+	t.Helper()
+	if a.Equal(b) {
+		t.Errorf("Equal() of Float{%v, Valid:%t} and Float{%v, Valid:%t} should return false", a.Float64, a.Valid, b.Float64, b.Valid)
 	}
 }

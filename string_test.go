@@ -2,6 +2,7 @@ package null
 
 import (
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"testing"
 
@@ -51,12 +52,14 @@ func TestUnmarshalString(t *testing.T) {
 	var ns String
 	err = json.Unmarshal(nullStringJSON, &ns)
 	maybePanic(err)
-	assertStr(t, ns, "sql.NullString json")
+	assertStr(t, ns, "test")
 
 	var blank String
 	err = json.Unmarshal(blankStringJSON, &blank)
 	maybePanic(err)
-	assertNullStr(t, blank, "blank string json")
+	if !blank.Valid {
+		t.Error("blank string should be valid")
+	}
 
 	var null String
 	err = json.Unmarshal(nullJSON, &null)
@@ -72,8 +75,9 @@ func TestUnmarshalString(t *testing.T) {
 
 	var invalid String
 	err = invalid.UnmarshalJSON(invalidJSON)
-	if _, ok := err.(*json.SyntaxError); !ok {
-		t.Errorf("expected json.SyntaxError, not %T", err)
+	var syntaxError *json.SyntaxError
+	if !errors.As(err, &syntaxError) {
+		t.Errorf("expected wrapped json.SyntaxError, not %T", err)
 	}
 	assertNullStr(t, invalid, "invalid json")
 }
@@ -91,8 +95,8 @@ func TestStringUnmarshalEasyJSON(t *testing.T) {
 			exp:  StringFrom("hat"),
 		},
 		{
-			// For some reason empty string isn't counted as valid. Which is nuts
 			data: `""`,
+			exp:  StringFrom(""),
 		},
 		{
 			data: `{"String":"hat","Valid":true}`,
@@ -107,13 +111,12 @@ func TestStringUnmarshalEasyJSON(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.data, func(t *testing.T) {
 			var str String
-			assert.NoError(t, easyjson.Unmarshal([]byte(test.data), &str))
+			assert.NoError(t, easyjson.Unmarshal([]byte(test.data), &str), "easyjson.Unmarshal")
 			assert.Equal(t, test.exp, str)
 
 			var str2 String
-			assert.NoError(t, json.Unmarshal([]byte(test.data), &str2))
+			assert.NoError(t, json.Unmarshal([]byte(test.data), &str2), "json.Unmarshal")
 			assert.Equal(t, test.exp, str2)
-
 		})
 	}
 }
@@ -135,17 +138,26 @@ func TestMarshalString(t *testing.T) {
 	data, err := json.Marshal(str)
 	maybePanic(err)
 	assertJSONEquals(t, data, `"test"`, "non-empty json marshal")
+	data, err = str.MarshalText()
+	maybePanic(err)
+	assertJSONEquals(t, data, "test", "non-empty text marshal")
 
 	// empty values should be encoded as an empty string
 	zero := StringFrom("")
 	data, err = json.Marshal(zero)
 	maybePanic(err)
 	assertJSONEquals(t, data, `""`, "empty json marshal")
+	data, err = zero.MarshalText()
+	maybePanic(err)
+	assertJSONEquals(t, data, "", "string marshal text")
 
 	null := StringFromPtr(nil)
 	data, err = json.Marshal(null)
 	maybePanic(err)
 	assertJSONEquals(t, data, `null`, "null json marshal")
+	data, err = null.MarshalText()
+	maybePanic(err)
+	assertJSONEquals(t, data, "", "string marshal text")
 }
 
 // Tests omitempty... broken until Go 1.4
@@ -211,6 +223,44 @@ func TestStringScan(t *testing.T) {
 	assertNullStr(t, null, "scanned null")
 }
 
+func TestStringValueOrZero(t *testing.T) {
+	valid := NewString("test", true)
+	if valid.ValueOrZero() != "test" {
+		t.Error("unexpected ValueOrZero", valid.ValueOrZero())
+	}
+
+	invalid := NewString("test", false)
+	if invalid.ValueOrZero() != "" {
+		t.Error("unexpected ValueOrZero", invalid.ValueOrZero())
+	}
+}
+
+func TestStringEqual(t *testing.T) {
+	str1 := NewString("foo", false)
+	str2 := NewString("foo", false)
+	assertStringEqualIsTrue(t, str1, str2)
+
+	str1 = NewString("foo", false)
+	str2 = NewString("bar", false)
+	assertStringEqualIsTrue(t, str1, str2)
+
+	str1 = NewString("foo", true)
+	str2 = NewString("foo", true)
+	assertStringEqualIsTrue(t, str1, str2)
+
+	str1 = NewString("foo", true)
+	str2 = NewString("foo", false)
+	assertStringEqualIsFalse(t, str1, str2)
+
+	str1 = NewString("foo", false)
+	str2 = NewString("foo", true)
+	assertStringEqualIsFalse(t, str1, str2)
+
+	str1 = NewString("foo", true)
+	str2 = NewString("bar", true)
+	assertStringEqualIsFalse(t, str1, str2)
+}
+
 func maybePanic(err error) {
 	if err != nil {
 		panic(err)
@@ -247,4 +297,18 @@ func BenchmarkMarshalNullString(b *testing.B) {
 			enc.Encode(&ns)
 		}
 	})
+}
+
+func assertStringEqualIsTrue(t *testing.T, a, b String) {
+	t.Helper()
+	if !a.Equal(b) {
+		t.Errorf("Equal() of String{\"%v\", Valid:%t} and String{\"%v\", Valid:%t} should return true", a.String, a.Valid, b.String, b.Valid)
+	}
+}
+
+func assertStringEqualIsFalse(t *testing.T, a, b String) {
+	t.Helper()
+	if a.Equal(b) {
+		t.Errorf("Equal() of String{\"%v\", Valid:%t} and String{\"%v\", Valid:%t} should return false", a.String, a.Valid, b.String, b.Valid)
+	}
 }

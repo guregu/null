@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"unsafe"
 
@@ -41,52 +42,56 @@ func IntFromPtr(i *int64) Int {
 	return NewInt(*i, true)
 }
 
-type basicInt Int
-
-type stringInt struct {
-	Int64 string
-	Valid bool
+// ValueOrZero returns the inner value if valid, otherwise zero.
+func (i Int) ValueOrZero() int64 {
+	if !i.Valid {
+		return 0
+	}
+	return i.Int64
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
-// It supports number and null input.
+// It supports number, string, and null input.
 // 0 will not be considered a null Int.
-// It also supports unmarshalling a sql.NullInt64.
 func (i *Int) UnmarshalJSON(data []byte) error {
-	var err error
-	// Golden path is being passed a integer or null
-	if bytes.Compare(data, []byte("null")) == 0 {
+	if bytes.Equal(data, nullLiteral) {
 		i.Valid = false
 		return nil
 	}
-	// BQ sends numbers as strings. We can strip quotes on simple strings
+
+	if data[0] == '{' {
+		// Try the struct form of Int.
+		type basicInt Int
+		var ii basicInt
+		if json.Unmarshal(data, &ii) == nil {
+			*i = Int(ii)
+			return nil
+		}
+
+		// Try a string version
+		var si struct {
+			Int64 string
+			Valid bool
+		}
+		if err := json.Unmarshal(data, &si); err != nil {
+			return err
+		}
+		i.Valid = si.Valid
+		if !si.Valid {
+			return nil
+		}
+		var err error
+		i.Int64, err = strconv.ParseInt(si.Int64, 10, 64)
+		i.Valid = (err == nil)
+		return err
+	}
+
 	if data[0] == '"' {
 		data = bytes.Trim(data, `"`)
 	}
-	if data[0] == '{' {
-		// We've been sent a structure. This is not our main-line as we encode
-		// to a simple int
-		var ii basicInt
-		err = json.Unmarshal(data, &ii)
-		if err != nil {
-			// Try a string version
-			var si stringInt
-			err = json.Unmarshal(data, &si)
-			if err == nil {
-				i.Valid = si.Valid
-				if si.Valid {
-					i.Int64, err = strconv.ParseInt(si.Int64, 10, 64)
-					i.Valid = (err == nil)
-				}
-			}
-		} else {
-			*i = Int(ii)
-		}
-	} else {
-		i.Int64, err = strconv.ParseInt(*(*string)(unsafe.Pointer(&data)), 10, 64)
-		i.Valid = (err == nil)
-	}
-
+	var err error
+	i.Int64, err = strconv.ParseInt(*(*string)(unsafe.Pointer(&data)), 10, 64)
+	i.Valid = (err == nil)
 	return err
 }
 
@@ -99,7 +104,7 @@ func (i *Int) UnmarshalEasyJSON(w *jlexer.Lexer) {
 	}
 	if w.IsDelim('{') {
 		w.Skip()
-		for !w.IsDelim('}') {
+		for w.Ok() && !w.IsDelim('}') {
 			key := w.UnsafeString()
 			w.WantColon()
 			if w.IsNull() {
@@ -109,7 +114,23 @@ func (i *Int) UnmarshalEasyJSON(w *jlexer.Lexer) {
 			}
 			switch key {
 			case "int64", "Int64":
-				i.Int64 = w.Int64()
+				// Read int from raw.
+				data := w.Raw()
+				if data[0] == '"' {
+					data = data[1 : len(data)-1]
+				}
+				v, err := strconv.ParseInt(*(*string)(unsafe.Pointer(&data)), 10, 64)
+				if err != nil {
+					w.AddError(&jlexer.LexerError{
+						Reason: err.Error(),
+						Data:   string(data),
+					})
+					i.Int64 = 0
+					i.Valid = false
+					return
+				}
+				i.Int64 = v
+				i.Valid = true
 			case "valid", "Valid":
 				i.Valid = w.Bool()
 			}
@@ -117,23 +138,28 @@ func (i *Int) UnmarshalEasyJSON(w *jlexer.Lexer) {
 		}
 		return
 	}
+
+	// Read int from raw.
 	data := w.Raw()
 	if data[0] == '"' {
 		data = data[1 : len(data)-1]
 	}
-	ii, err := strconv.ParseInt(*(*string)(unsafe.Pointer(&data)), 10, 64)
+	v, err := strconv.ParseInt(*(*string)(unsafe.Pointer(&data)), 10, 64)
 	if err != nil {
 		w.AddError(&jlexer.LexerError{
 			Reason: err.Error(),
 			Data:   string(data),
 		})
+		i.Int64 = 0
+		i.Valid = false
+		return
 	}
-	i.Int64 = ii
-	i.Valid = (err == nil)
+	i.Int64 = v
+	i.Valid = true
 }
 
 // UnmarshalText implements encoding.TextUnmarshaler.
-// It will unmarshal to a null Int if the input is a blank or not an integer.
+// It will unmarshal to a null Int if the input is blank.
 // It will return an error if the input is not an integer, blank, or "null".
 func (i *Int) UnmarshalText(text []byte) error {
 	str := string(text)
@@ -143,8 +169,11 @@ func (i *Int) UnmarshalText(text []byte) error {
 	}
 	var err error
 	i.Int64, err = strconv.ParseInt(string(text), 10, 64)
-	i.Valid = err == nil
-	return err
+	if err != nil {
+		return fmt.Errorf("null: couldn't unmarshal text: %w", err)
+	}
+	i.Valid = true
+	return nil
 }
 
 // MarshalJSON implements json.Marshaler.
@@ -194,5 +223,10 @@ func (i Int) IsZero() bool {
 }
 
 func (i Int) IsDefined() bool {
-	return i.Valid
+	return !i.IsZero()
+}
+
+// Equal returns true if both ints have the same value or are both null.
+func (i Int) Equal(other Int) bool {
+	return i.Valid == other.Valid && (!i.Valid || i.Int64 == other.Int64)
 }

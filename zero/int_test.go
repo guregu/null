@@ -2,15 +2,17 @@ package zero
 
 import (
 	"encoding/json"
+	"errors"
 	"math"
 	"strconv"
 	"testing"
 )
 
 var (
-	intJSON     = []byte(`12345`)
-	nullIntJSON = []byte(`{"Int64":12345,"Valid":true}`)
-	zeroJSON    = []byte(`0`)
+	intJSON       = []byte(`12345`)
+	intStringJSON = []byte(`"12345"`)
+	nullIntJSON   = []byte(`{"Int64":12345,"Valid":true}`)
+	zeroJSON      = []byte(`0`)
 )
 
 func TestIntFrom(t *testing.T) {
@@ -39,14 +41,22 @@ func TestUnmarshalInt(t *testing.T) {
 	maybePanic(err)
 	assertInt(t, i, "int json")
 
-	err = json.Unmarshal([]byte(`"12345"`), &i)
+	var si Int
+	err = json.Unmarshal(intStringJSON, &si)
 	maybePanic(err)
-	assertInt(t, i, "int json")
+	assertInt(t, si, "int string json")
 
 	var ni Int
 	err = json.Unmarshal(nullIntJSON, &ni)
-	maybePanic(err)
-	assertInt(t, ni, "sql.NullInt64 json")
+	if err == nil {
+		panic("expected error")
+	}
+
+	var bi Int
+	err = json.Unmarshal(floatBlankJSON, &bi)
+	if err == nil {
+		panic("expected error")
+	}
 
 	var zero Int
 	err = json.Unmarshal(zeroJSON, &zero)
@@ -67,8 +77,9 @@ func TestUnmarshalInt(t *testing.T) {
 
 	var invalid Int
 	err = invalid.UnmarshalJSON(invalidJSON)
-	if _, ok := err.(*json.SyntaxError); !ok {
-		t.Errorf("expected json.SyntaxError, not %T", err)
+	var syntaxError *json.SyntaxError
+	if !errors.As(err, &syntaxError) {
+		t.Errorf("expected wrapped json.SyntaxError, not %T", err)
 	}
 	assertNullInt(t, invalid, "invalid json")
 }
@@ -114,9 +125,15 @@ func TestTextUnmarshalInt(t *testing.T) {
 	assertNullInt(t, blank, "UnmarshalText() empty int")
 
 	var null Int
-	err = null.UnmarshalText([]byte("null"))
+	err = null.UnmarshalText(nullLiteral)
 	maybePanic(err)
 	assertNullInt(t, null, `UnmarshalText() "null"`)
+
+	var invalid Int
+	err = invalid.UnmarshalText([]byte("hello world"))
+	if err == nil {
+		panic("expected error")
+	}
 }
 
 func TestMarshalInt(t *testing.T) {
@@ -195,6 +212,48 @@ func TestIntSetValid(t *testing.T) {
 	assertInt(t, change, "SetValid()")
 }
 
+func TestIntValueOrZero(t *testing.T) {
+	valid := NewInt(12345, true)
+	if valid.ValueOrZero() != 12345 {
+		t.Error("unexpected ValueOrZero", valid.ValueOrZero())
+	}
+
+	invalid := NewInt(12345, false)
+	if invalid.ValueOrZero() != 0 {
+		t.Error("unexpected ValueOrZero", invalid.ValueOrZero())
+	}
+}
+
+func TestIntEqual(t *testing.T) {
+	int1 := NewInt(10, false)
+	int2 := NewInt(10, false)
+	assertIntEqualIsTrue(t, int1, int2)
+
+	int1 = NewInt(10, false)
+	int2 = NewInt(20, false)
+	assertIntEqualIsTrue(t, int1, int2)
+
+	int1 = NewInt(10, true)
+	int2 = NewInt(10, true)
+	assertIntEqualIsTrue(t, int1, int2)
+
+	int1 = NewInt(0, true)
+	int2 = NewInt(10, false)
+	assertIntEqualIsTrue(t, int1, int2)
+
+	int1 = NewInt(10, true)
+	int2 = NewInt(10, false)
+	assertIntEqualIsFalse(t, int1, int2)
+
+	int1 = NewInt(10, false)
+	int2 = NewInt(10, true)
+	assertIntEqualIsFalse(t, int1, int2)
+
+	int1 = NewInt(10, true)
+	int2 = NewInt(20, true)
+	assertIntEqualIsFalse(t, int1, int2)
+}
+
 func assertInt(t *testing.T, i Int, from string) {
 	if i.Int64 != 12345 {
 		t.Errorf("bad %s int: %d ≠ %d\n", from, i.Int64, 12345)
@@ -207,5 +266,19 @@ func assertInt(t *testing.T, i Int, from string) {
 func assertNullInt(t *testing.T, i Int, from string) {
 	if i.Valid {
 		t.Error(from, "is valid, but should be invalid")
+	}
+}
+
+func assertIntEqualIsTrue(t *testing.T, a, b Int) {
+	t.Helper()
+	if !a.Equal(b) {
+		t.Errorf("Equal() of Int{%v, Valid:%t} and Int{%v, Valid:%t} should return true", a.Int64, a.Valid, b.Int64, b.Valid)
+	}
+}
+
+func assertIntEqualIsFalse(t *testing.T, a, b Int) {
+	t.Helper()
+	if a.Equal(b) {
+		t.Errorf("Equal() of Int{%v, Valid:%t} and Int{%v, Valid:%t} should return false", a.Int64, a.Valid, b.Int64, b.Valid)
 	}
 }
