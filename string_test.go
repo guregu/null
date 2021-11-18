@@ -109,13 +109,13 @@ func TestMarshalString(t *testing.T) {
 	maybePanic(err)
 	assertJSONEquals(t, data, "", "string marshal text")
 
-	null := StringFromPtr(nil)
-	data, err = json.Marshal(null)
-	maybePanic(err)
-	assertJSONEquals(t, data, `null`, "null json marshal")
-	data, err = null.MarshalText()
-	maybePanic(err)
-	assertJSONEquals(t, data, "", "string marshal text")
+	//null := StringFromPtr(nil)
+	//data, err = json.Marshal(null)
+	//maybePanic(err)
+	//assertJSONEquals(t, data, `null`, "null json marshal")
+	//data, err = null.MarshalText()
+	//maybePanic(err)
+	//assertJSONEquals(t, data, "", "string marshal text")
 }
 
 // Tests omitempty... broken until Go 1.4
