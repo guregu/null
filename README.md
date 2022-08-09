@@ -26,6 +26,11 @@ Nullable int64.
 
 Marshals to JSON null if SQL source data is null. Zero input will not produce a null Int.
 
+#### null.Int16
+Nullable int16. 
+
+Marshals to JSON null if SQL source data is null. Zero input will not produce a null Int16.
+
 #### null.Float
 Nullable float64. 
 
