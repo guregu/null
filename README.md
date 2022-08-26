@@ -45,6 +45,10 @@ Marshals to JSON null if SQL source data is null. False input will not produce a
 
 Marshals to JSON null if SQL source data is null. Zero input will not produce a null Time.
 
+#### null.Interval
+
+Marshals a `pgtype.Interval` struct to a string representation of it. Marshals to JSON null if the Status is Null or Undefined.
+
 ### zero package
 
 `import "gopkg.in/guregu/null.v4/zero"`

@@ -78,7 +78,7 @@ func TestUnmarshalInt16(t *testing.T) {
 	assertNullInt16(t, invalid, "invalid json")
 }
 
-func TestUnmarshalNonInt16egerNumber(t *testing.T) {
+func TestUnmarshalNonInt16Number(t *testing.T) {
 	var i Int16
 	err := json.Unmarshal(floatJSON, &i)
 	if err == nil {
