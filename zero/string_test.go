@@ -145,6 +145,33 @@ func TestStringIsZero(t *testing.T) {
 	}
 }
 
+func TestStringIsZeroOrBlank(t *testing.T) {
+	str := StringFrom("test")
+	if str.IsZeroOrBlank() {
+		t.Errorf("IsZero() should be false")
+	}
+
+	null := StringFrom("")
+	if !null.IsZeroOrBlank() {
+		t.Errorf("IsZeroOrBlank() should be true")
+	}
+
+	empty := NewString("", true)
+	if !empty.IsZeroOrBlank() {
+		t.Errorf("IsZeroOrBlank() should be true")
+	}
+
+	nullBlank := StringFrom(" ")
+	if !nullBlank.IsZeroOrBlank() {
+		t.Errorf("IsZeroOrBlank() should be true")
+	}
+
+	emptyBlank := NewString(" ", true)
+	if !emptyBlank.IsZeroOrBlank() {
+		t.Errorf("IsZeroOrBlank() should be true")
+	}
+}
+
 func TestStringScan(t *testing.T) {
 	var str String
 	err := str.Scan("test")
