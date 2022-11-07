@@ -36,6 +36,11 @@ func NewTime(t time.Time, valid bool) Time {
 	}
 }
 
+// T creates a new Time that will always be valid.
+func T(t time.Time) Time {
+	return TimeFrom(t)
+}
+
 // TimeFrom creates a new Time that will always be valid.
 func TimeFrom(t time.Time) Time {
 	return NewTime(t, true)

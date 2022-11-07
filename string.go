@@ -20,6 +20,16 @@ type String struct {
 	sql.NullString
 }
 
+// S creates a new String that will never be blank.
+func S(s string) String {
+	return StringFrom(s)
+}
+
+// ZS creates a new String that is valid if s is not zero.
+func ZS(s string) String {
+	return NewString(s, s != "")
+}
+
 // StringFrom creates a new String that will never be blank.
 func StringFrom(s string) String {
 	return NewString(s, true)

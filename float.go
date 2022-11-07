@@ -31,6 +31,11 @@ func NewFloat(f float64, valid bool) Float {
 	}
 }
 
+// F creates a new Float that will always be valid.
+func F(f float64) Float {
+	return FloatFrom(f)
+}
+
 // FloatFrom creates a new Float that will always be valid.
 func FloatFrom(f float64) Float {
 	return NewFloat(f, true)
