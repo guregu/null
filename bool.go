@@ -34,6 +34,11 @@ func NewBool(b bool, valid bool) Bool {
 	}
 }
 
+// B creates a new Bool that will always be valid.
+func B(b bool) Bool {
+	return BoolFrom(b)
+}
+
 // BoolFrom creates a new Bool that will always be valid.
 func BoolFrom(b bool) Bool {
 	return NewBool(b, true)

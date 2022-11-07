@@ -29,6 +29,11 @@ func NewInt(i int64, valid bool) Int {
 	}
 }
 
+// I creates a new Int that will always be valid.
+func I(i int64) Int {
+	return IntFrom(i)
+}
+
 // IntFrom creates a new Int that will always be valid.
 func IntFrom(i int64) Int {
 	return NewInt(i, true)
