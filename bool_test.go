@@ -295,3 +295,10 @@ func assertBoolEqualIsFalse(t *testing.T, a, b Bool) {
 		t.Errorf("Equal() of Bool{%t, Valid:%t} and Bool{%t, Valid:%t} should return false", a.Bool, a.Valid, b.Bool, b.Valid)
 	}
 }
+
+func TestTrueFalse(t *testing.T) {
+	assert.True(t, True().Valid)
+	assert.True(t, True().Bool)
+	assert.True(t, False().Valid)
+	assert.False(t, False().Bool)
+}

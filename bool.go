@@ -24,6 +24,14 @@ type Bool struct {
 	sql.NullBool
 }
 
+func True() Bool {
+	return B(true)
+}
+
+func False() Bool {
+	return B(false)
+}
+
 // NewBool creates a new Bool
 func NewBool(b bool, valid bool) Bool {
 	return Bool{
