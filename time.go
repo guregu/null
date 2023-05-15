@@ -13,6 +13,7 @@ import (
 // It will marshal to null if null.
 type Time struct {
 	sql.NullTime
+	Unmarshaled bool
 }
 
 // Value implements the driver Valuer interface.
@@ -66,6 +67,7 @@ func (t Time) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON implements json.Unmarshaler.
 // It supports string and null input.
 func (t *Time) UnmarshalJSON(data []byte) error {
+	t.Unmarshaled = true
 	if bytes.Equal(data, nullBytes) {
 		t.Valid = false
 		return nil

@@ -18,6 +18,7 @@ var nullBytes = []byte("null")
 // It will marshal to null if null. Blank string input will be considered null.
 type String struct {
 	sql.NullString
+	Unmarshaled bool
 }
 
 // StringFrom creates a new String that will never be blank.
@@ -54,6 +55,7 @@ func NewString(s string, valid bool) String {
 // UnmarshalJSON implements json.Unmarshaler.
 // It supports string and null input. Blank string input does not produce a null String.
 func (s *String) UnmarshalJSON(data []byte) error {
+	s.Unmarshaled = true
 	if bytes.Equal(data, nullBytes) {
 		s.Valid = false
 		return nil

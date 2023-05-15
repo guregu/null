@@ -16,6 +16,7 @@ import (
 // It will decode to null, not zero, if null.
 type Float struct {
 	sql.NullFloat64
+	Unmarshaled bool
 }
 
 // NewFloat creates a new Float
@@ -53,6 +54,7 @@ func (f Float) ValueOrZero() float64 {
 // It supports number and null input.
 // 0 will not be considered a null Float.
 func (f *Float) UnmarshalJSON(data []byte) error {
+	f.Unmarshaled = true
 	if bytes.Equal(data, nullBytes) {
 		f.Valid = false
 		return nil
