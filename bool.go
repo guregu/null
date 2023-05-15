@@ -13,6 +13,7 @@ import (
 // It will decode to null, not false, if null.
 type Bool struct {
 	sql.NullBool
+	Unmarshaled bool
 }
 
 // NewBool creates a new Bool
@@ -47,6 +48,7 @@ func (b Bool) ValueOrZero() bool {
 // It supports number and null input.
 // 0 will not be considered a null Bool.
 func (b *Bool) UnmarshalJSON(data []byte) error {
+	b.Unmarshaled = true
 	if bytes.Equal(data, nullBytes) {
 		b.Valid = false
 		return nil

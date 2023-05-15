@@ -14,6 +14,7 @@ import (
 // It will decode to null, not zero, if null.
 type Int struct {
 	sql.NullInt64
+	Unmarshaled bool
 }
 
 // NewInt creates a new Int
@@ -51,6 +52,7 @@ func (i Int) ValueOrZero() int64 {
 // It supports number, string, and null input.
 // 0 will not be considered a null Int.
 func (i *Int) UnmarshalJSON(data []byte) error {
+	i.Unmarshaled = true
 	if bytes.Equal(data, nullBytes) {
 		i.Valid = false
 		return nil
