@@ -49,6 +49,7 @@ func NewString(s string, valid bool) String {
 			String: s,
 			Valid:  valid,
 		},
+		Unmarshaled: true,
 	}
 }
 

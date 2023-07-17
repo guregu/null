@@ -23,6 +23,7 @@ func NewBool(b bool, valid bool) Bool {
 			Bool:  b,
 			Valid: valid,
 		},
+		Unmarshaled: true,
 	}
 }
 

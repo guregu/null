@@ -24,6 +24,7 @@ func NewInt(i int64, valid bool) Int {
 			Int64: i,
 			Valid: valid,
 		},
+		Unmarshaled: true,
 	}
 }
 

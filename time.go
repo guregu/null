@@ -31,6 +31,7 @@ func NewTime(t time.Time, valid bool) Time {
 			Time:  t,
 			Valid: valid,
 		},
+		Unmarshaled: true,
 	}
 }
 

@@ -26,6 +26,7 @@ func NewFloat(f float64, valid bool) Float {
 			Float64: f,
 			Valid:   valid,
 		},
+		Unmarshaled: true,
 	}
 }
 
