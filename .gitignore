@@ -1,2 +1,3 @@
-coverage.out
+cover*.out
 .idea/
+.DS_Store

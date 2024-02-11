@@ -1,12 +1,10 @@
 package zero
 
 import (
-	"bytes"
 	"database/sql"
-	"encoding/json"
-	"errors"
-	"fmt"
 	"strconv"
+
+	"github.com/guregu/null/v5/internal"
 )
 
 // Int is a nullable int64.
@@ -15,6 +13,9 @@ import (
 type Int struct {
 	sql.NullInt64
 }
+
+// Int64 is an alias for Int.
+type Int64 = Int
 
 // NewInt creates a new Int
 func NewInt(i int64, valid bool) Int {
@@ -52,33 +53,10 @@ func (i Int) ValueOrZero() int64 {
 // It supports number and null input.
 // 0 will be considered a null Int.
 func (i *Int) UnmarshalJSON(data []byte) error {
-	if bytes.Equal(data, nullBytes) {
-		i.Valid = false
-		return nil
+	err := internal.UnmarshalIntJSON(data, &i.Int64, &i.Valid, 64, strconv.ParseInt)
+	if err != nil {
+		return err
 	}
-
-	if err := json.Unmarshal(data, &i.Int64); err != nil {
-		var typeError *json.UnmarshalTypeError
-		if errors.As(err, &typeError) {
-			// special case: accept string input
-			if typeError.Value != "string" {
-				return fmt.Errorf("zero: JSON input is invalid type (need int or string): %w", err)
-			}
-			var str string
-			if err := json.Unmarshal(data, &str); err != nil {
-				return fmt.Errorf("zero: couldn't unmarshal number string: %w", err)
-			}
-			n, err := strconv.ParseInt(str, 10, 64)
-			if err != nil {
-				return fmt.Errorf("zero: couldn't convert string to int: %w", err)
-			}
-			i.Int64 = n
-			i.Valid = n != 0
-			return nil
-		}
-		return fmt.Errorf("zero: couldn't unmarshal JSON: %w", err)
-	}
-
 	i.Valid = i.Int64 != 0
 	return nil
 }
@@ -87,18 +65,12 @@ func (i *Int) UnmarshalJSON(data []byte) error {
 // It will unmarshal to a null Int if the input is a blank, or zero.
 // It will return an error if the input is not an integer, blank, or "null".
 func (i *Int) UnmarshalText(text []byte) error {
-	str := string(text)
-	if str == "" || str == "null" {
-		i.Valid = false
-		return nil
-	}
-	var err error
-	i.Int64, err = strconv.ParseInt(string(text), 10, 64)
+	err := internal.UnmarshalIntText(text, &i.Int64, &i.Valid, 64, strconv.ParseInt)
 	if err != nil {
-		return fmt.Errorf("zero: couldn't unmarshal text: %w", err)
+		return err
 	}
 	i.Valid = i.Int64 != 0
-	return err
+	return nil
 }
 
 // MarshalJSON implements json.Marshaler.
@@ -143,4 +115,8 @@ func (i Int) IsZero() bool {
 // Equal returns true if both ints have the same value or are both either null or zero.
 func (i Int) Equal(other Int) bool {
 	return i.ValueOrZero() == other.ValueOrZero()
+}
+
+func (i Int) value() (int64, bool) {
+	return i.Int64, i.Valid
 }

@@ -1,269 +1,393 @@
 package null
 
 import (
+	"encoding"
 	"encoding/json"
 	"errors"
 	"math"
 	"strconv"
 	"testing"
+
+	"github.com/guregu/null/v5/internal"
 )
 
 var (
-	intJSON       = []byte(`12345`)
-	intStringJSON = []byte(`"12345"`)
-	nullIntJSON   = []byte(`{"Int64":12345,"Valid":true}`)
+	intJSON       = []byte(`123`)
+	intStringJSON = []byte(`"123"`)
 )
 
-func TestIntFrom(t *testing.T) {
-	i := IntFrom(12345)
-	assertInt(t, i, "IntFrom()")
+type nullint interface {
+	Int | Int32 | Int16 | Byte
+	IsZero() bool
+	value() (int64, bool)
+}
 
-	zero := IntFrom(0)
-	if !zero.Valid {
-		t.Error("IntFrom(0)", "is invalid, but should be valid")
-	}
+func TestIntFrom(t *testing.T) {
+	testIntFrom(t, IntFrom)
+	testIntFrom(t, Int32From)
+	testIntFrom(t, Int16From)
+	testIntFrom(t, ByteFrom)
+}
+
+func testIntFrom[N nullint, V internal.Integer](t *testing.T, from func(V) N) {
+	t.Run(internal.TypeName[N](), func(t *testing.T) {
+		i := from(123)
+		assertInt(t, i, "from(123)")
+
+		zero := from(0)
+		_, valid := zero.value()
+		if !valid {
+			t.Error("from(0)", "is invalid, but should be valid")
+		}
+	})
 }
 
 func TestIntFromPtr(t *testing.T) {
-	n := int64(12345)
-	iptr := &n
-	i := IntFromPtr(iptr)
-	assertInt(t, i, "IntFromPtr()")
+	testIntFromPtr(t, IntFromPtr)
+	testIntFromPtr(t, Int32FromPtr)
+	testIntFromPtr(t, Int16FromPtr)
+	testIntFromPtr(t, ByteFromPtr)
+}
 
-	null := IntFromPtr(nil)
-	assertNullInt(t, null, "IntFromPtr(nil)")
+func testIntFromPtr[N nullint, V internal.Integer](t *testing.T, fromPtr func(*V) N) {
+	t.Run(internal.TypeName[N](), func(t *testing.T) {
+		n := V(123)
+		iptr := &n
+		i := fromPtr(iptr)
+		assertInt(t, i, "fromPtr()")
+
+		null := fromPtr(nil)
+		assertNullInt(t, null, "fromPtr(nil)")
+	})
 }
 
 func TestUnmarshalInt(t *testing.T) {
-	var i Int
-	err := json.Unmarshal(intJSON, &i)
-	maybePanic(err)
-	assertInt(t, i, "int json")
+	testUnmarshalInt[Int](t)
+	testUnmarshalInt[Int32](t)
+	testUnmarshalInt[Int16](t)
+	testUnmarshalInt[Byte](t)
+}
 
-	var si Int
-	err = json.Unmarshal(intStringJSON, &si)
-	maybePanic(err)
-	assertInt(t, si, "int string json")
+func testUnmarshalInt[N nullint](t *testing.T) {
+	t.Run(internal.TypeName[N](), func(t *testing.T) {
+		var i N
+		err := json.Unmarshal(intJSON, &i)
+		maybePanic(err)
+		assertInt(t, i, "int json")
 
-	var ni Int
-	err = json.Unmarshal(nullIntJSON, &ni)
-	if err == nil {
-		panic("err should not be nill")
-	}
+		var si N
+		err = json.Unmarshal(intStringJSON, &si)
+		maybePanic(err)
+		assertInt(t, si, "int string json")
 
-	var bi Int
-	err = json.Unmarshal(floatBlankJSON, &bi)
-	if err == nil {
-		panic("err should not be nill")
-	}
+		var bi N
+		err = json.Unmarshal(floatBlankJSON, &bi)
+		if err == nil {
+			panic("err should not be nill")
+		}
 
-	var null Int
-	err = json.Unmarshal(nullJSON, &null)
-	maybePanic(err)
-	assertNullInt(t, null, "null json")
+		var null N
+		err = json.Unmarshal(nullJSON, &null)
+		maybePanic(err)
+		assertNullInt(t, null, "null json")
 
-	var badType Int
-	err = json.Unmarshal(boolJSON, &badType)
-	if err == nil {
-		panic("err should not be nil")
-	}
-	assertNullInt(t, badType, "wrong type json")
+		var badType N
+		err = json.Unmarshal(boolJSON, &badType)
+		if err == nil {
+			panic("err should not be nil")
+		}
+		assertNullInt(t, badType, "wrong type json")
 
-	var invalid Int
-	err = invalid.UnmarshalJSON(invalidJSON)
-	var syntaxError *json.SyntaxError
-	if !errors.As(err, &syntaxError) {
-		t.Errorf("expected wrapped json.SyntaxError, not %T", err)
-	}
-	assertNullInt(t, invalid, "invalid json")
+		var invalid N
+		err = json.Unmarshal(invalidJSON, &invalid)
+		var syntaxError *json.SyntaxError
+		if !errors.As(err, &syntaxError) {
+			t.Errorf("expected wrapped json.SyntaxError, not %T", err)
+		}
+		assertNullInt(t, invalid, "invalid json")
+	})
 }
 
 func TestUnmarshalNonIntegerNumber(t *testing.T) {
 	var i Int
 	err := json.Unmarshal(floatJSON, &i)
 	if err == nil {
-		panic("err should be present; non-integer number coerced to int")
+		panic("err should be present; non-internal.Integer number coerced to int")
 	}
 }
 
-func TestUnmarshalInt64Overflow(t *testing.T) {
-	int64Overflow := uint64(math.MaxInt64)
+func TestUnmarshalIntOverflow(t *testing.T) {
+	testUnmarshalIntOverflow[Int, int64](t, math.MaxInt64)
+	testUnmarshalIntOverflow[Int32, int32](t, math.MaxInt32)
+	testUnmarshalIntOverflow[Int16, int16](t, math.MaxInt16)
+	testUnmarshalIntOverflow[Byte, byte](t, math.MaxUint8)
+}
 
-	// Max int64 should decode successfully
-	var i Int
-	err := json.Unmarshal([]byte(strconv.FormatUint(int64Overflow, 10)), &i)
-	maybePanic(err)
+func testUnmarshalIntOverflow[N nullint, V internal.Integer](t *testing.T, max V) {
+	t.Run(internal.TypeName[N](), func(t *testing.T) {
+		overflow := uint64(max)
 
-	// Attempt to overflow
-	int64Overflow++
-	err = json.Unmarshal([]byte(strconv.FormatUint(int64Overflow, 10)), &i)
-	if err == nil {
-		panic("err should be present; decoded value overflows int64")
-	}
+		// Max int64 should decode successfully
+		var i N
+		err := json.Unmarshal([]byte(strconv.FormatUint(overflow, 10)), &i)
+		maybePanic(err)
+
+		// Attempt to overflow
+		overflow++
+		err = json.Unmarshal([]byte(strconv.FormatUint(overflow, 10)), &i)
+		if err == nil {
+			t.Error("err should be present but isn't; decoded value overflows")
+		}
+	})
 }
 
 func TestTextUnmarshalInt(t *testing.T) {
-	var i Int
-	err := i.UnmarshalText([]byte("12345"))
-	maybePanic(err)
-	assertInt(t, i, "UnmarshalText() int")
+	testTextUnmarshalInt(t, (*Int).UnmarshalText)
+	testTextUnmarshalInt(t, (*Int32).UnmarshalText)
+	testTextUnmarshalInt(t, (*Int16).UnmarshalText)
+	testTextUnmarshalInt(t, (*Byte).UnmarshalText)
+}
 
-	var blank Int
-	err = blank.UnmarshalText([]byte(""))
-	maybePanic(err)
-	assertNullInt(t, blank, "UnmarshalText() empty int")
+func testTextUnmarshalInt[N nullint](t *testing.T, unmarshal func(*N, []byte) error) {
+	t.Run(internal.TypeName[N](), func(t *testing.T) {
+		var i N
+		err := unmarshal(&i, []byte("123"))
+		maybePanic(err)
+		assertInt(t, i, "unmarshal int")
 
-	var null Int
-	err = null.UnmarshalText([]byte("null"))
-	maybePanic(err)
-	assertNullInt(t, null, `UnmarshalText() "null"`)
+		var blank N
+		err = unmarshal(&blank, []byte(""))
+		maybePanic(err)
+		assertNullInt(t, blank, "unmarshal empty int")
 
-	var invalid Int
-	err = invalid.UnmarshalText([]byte("hello world"))
-	if err == nil {
-		panic("expected error")
-	}
+		var null N
+		err = unmarshal(&null, []byte("null"))
+		maybePanic(err)
+		assertNullInt(t, null, `unmarshal "null"`)
+
+		var invalid N
+		err = unmarshal(&invalid, []byte("hello world"))
+		if err == nil {
+			panic("expected error")
+		}
+	})
 }
 
 func TestMarshalInt(t *testing.T) {
-	i := IntFrom(12345)
-	data, err := json.Marshal(i)
-	maybePanic(err)
-	assertJSONEquals(t, data, "12345", "non-empty json marshal")
+	testMarshalInt(t, NewInt)
+	testMarshalInt(t, NewInt32)
+	testMarshalInt(t, NewInt16)
+	testMarshalInt(t, NewByte)
+}
 
-	// invalid values should be encoded as null
-	null := NewInt(0, false)
-	data, err = json.Marshal(null)
-	maybePanic(err)
-	assertJSONEquals(t, data, "null", "null json marshal")
+func testMarshalInt[N interface{ ValueOrZero() V }, V internal.Integer](t *testing.T, newInt func(V, bool) N) {
+	t.Run(internal.TypeName[N](), func(t *testing.T) {
+		i := newInt(123, true)
+		data, err := json.Marshal(i)
+		maybePanic(err)
+		assertJSONEquals(t, data, "123", "non-empty json marshal")
+
+		// invalid values should be encoded as null
+		null := newInt(0, false)
+		data, err = json.Marshal(null)
+		maybePanic(err)
+		assertJSONEquals(t, data, "null", "null json marshal")
+	})
 }
 
 func TestMarshalIntText(t *testing.T) {
-	i := IntFrom(12345)
-	data, err := i.MarshalText()
-	maybePanic(err)
-	assertJSONEquals(t, data, "12345", "non-empty text marshal")
+	testMarshalIntText(t, NewInt)
+	testMarshalIntText(t, NewInt32)
+	testMarshalIntText(t, NewInt16)
+	testMarshalIntText(t, NewByte)
+}
 
-	// invalid values should be encoded as null
-	null := NewInt(0, false)
-	data, err = null.MarshalText()
-	maybePanic(err)
-	assertJSONEquals(t, data, "", "null text marshal")
+func testMarshalIntText[N encoding.TextMarshaler, V internal.Integer](t *testing.T, newInt func(V, bool) N) {
+	t.Run(internal.TypeName[N](), func(t *testing.T) {
+		i := newInt(123, true)
+		data, err := i.MarshalText()
+		maybePanic(err)
+		assertJSONEquals(t, data, "123", "non-empty text marshal")
+
+		// invalid values should be encoded as null
+		null := newInt(0, false)
+		data, err = null.MarshalText()
+		maybePanic(err)
+		assertJSONEquals(t, data, "", "null text marshal")
+	})
 }
 
 func TestIntPointer(t *testing.T) {
-	i := IntFrom(12345)
-	ptr := i.Ptr()
-	if *ptr != 12345 {
-		t.Errorf("bad %s int: %#v ≠ %d\n", "pointer", ptr, 12345)
-	}
+	testIntPointer(t, NewInt)
+	testIntPointer(t, NewInt32)
+	testIntPointer(t, NewInt16)
+	testIntPointer(t, NewByte)
+}
 
-	null := NewInt(0, false)
-	ptr = null.Ptr()
-	if ptr != nil {
-		t.Errorf("bad %s int: %#v ≠ %s\n", "nil pointer", ptr, "nil")
-	}
+func testIntPointer[N interface{ Ptr() *V }, V internal.Integer](t *testing.T, newInt func(V, bool) N) {
+	t.Run(internal.TypeName[N](), func(t *testing.T) {
+		i := newInt(123, true)
+		ptr := i.Ptr()
+		if *ptr != 123 {
+			t.Errorf("bad %s int: %#v ≠ %d\n", "pointer", ptr, 123)
+		}
+
+		null := newInt(0, false)
+		ptr = null.Ptr()
+		if ptr != nil {
+			t.Errorf("bad %s int: %#v ≠ %s\n", "nil pointer", ptr, "nil")
+		}
+	})
 }
 
 func TestIntIsZero(t *testing.T) {
-	i := IntFrom(12345)
-	if i.IsZero() {
-		t.Errorf("IsZero() should be false")
-	}
+	testIntIsZero(t, NewInt)
+	testIntIsZero(t, NewInt32)
+	testIntIsZero(t, NewInt16)
+	testIntIsZero(t, NewByte)
+}
 
-	null := NewInt(0, false)
-	if !null.IsZero() {
-		t.Errorf("IsZero() should be true")
-	}
+func testIntIsZero[N nullint, V internal.Integer](t *testing.T, newInt func(V, bool) N) {
+	t.Run(internal.TypeName[N](), func(t *testing.T) {
+		i := newInt(123, true)
+		if i.IsZero() {
+			t.Errorf("IsZero() should be false")
+		}
 
-	zero := NewInt(0, true)
-	if zero.IsZero() {
-		t.Errorf("IsZero() should be false")
-	}
+		null := newInt(0, false)
+		if !null.IsZero() {
+			t.Errorf("IsZero() should be true")
+		}
+
+		zero := newInt(0, true)
+		if zero.IsZero() {
+			t.Errorf("IsZero() should be false")
+		}
+	})
 }
 
 func TestIntSetValid(t *testing.T) {
-	change := NewInt(0, false)
-	assertNullInt(t, change, "SetValid()")
-	change.SetValid(12345)
-	assertInt(t, change, "SetValid()")
+	testIntSetValid(t, NewInt, (*Int).SetValid)
+	testIntSetValid(t, NewInt32, (*Int32).SetValid)
+	testIntSetValid(t, NewInt16, (*Int16).SetValid)
+	testIntSetValid(t, NewByte, (*Byte).SetValid)
+}
+
+func testIntSetValid[N nullint, V internal.Integer](t *testing.T, newInt func(V, bool) N, setValid func(*N, V)) {
+	t.Run(internal.TypeName[N](), func(t *testing.T) {
+		change := newInt(0, false)
+		assertNullInt(t, change, "SetValid()")
+		setValid(&change, 123)
+		assertInt(t, change, "SetValid()")
+	})
 }
 
 func TestIntScan(t *testing.T) {
-	var i Int
-	err := i.Scan(12345)
-	maybePanic(err)
-	assertInt(t, i, "scanned int")
+	testIntScan(t, (*Int).Scan)
+	testIntScan(t, (*Int32).Scan)
+	testIntScan(t, (*Int16).Scan)
+	testIntScan(t, (*Byte).Scan)
+}
 
-	var null Int
-	err = null.Scan(nil)
-	maybePanic(err)
-	assertNullInt(t, null, "scanned null")
+func testIntScan[N nullint](t *testing.T, scan func(*N, any) error) {
+	t.Run(internal.TypeName[N](), func(t *testing.T) {
+		var i N
+		err := scan(&i, 123)
+		maybePanic(err)
+		assertInt(t, i, "scanned int")
+
+		var null N
+		err = scan(&null, nil)
+		maybePanic(err)
+		assertNullInt(t, null, "scanned null")
+	})
 }
 
 func TestIntValueOrZero(t *testing.T) {
-	valid := NewInt(12345, true)
-	if valid.ValueOrZero() != 12345 {
-		t.Error("unexpected ValueOrZero", valid.ValueOrZero())
-	}
+	testIntValueOrZero(t, NewInt)
+	testIntValueOrZero(t, NewInt32)
+	testIntValueOrZero(t, NewInt16)
+	testIntValueOrZero(t, NewByte)
+}
 
-	invalid := NewInt(12345, false)
-	if invalid.ValueOrZero() != 0 {
-		t.Error("unexpected ValueOrZero", invalid.ValueOrZero())
-	}
+func testIntValueOrZero[N interface{ ValueOrZero() V }, V internal.Integer](t *testing.T, newInt func(V, bool) N) {
+	t.Run(internal.TypeName[N](), func(t *testing.T) {
+		valid := newInt(123, true)
+		if valid.ValueOrZero() != 123 {
+			t.Error("unexpected ValueOrZero", valid.ValueOrZero())
+		}
+
+		invalid := newInt(123, false)
+		if invalid.ValueOrZero() != 0 {
+			t.Error("unexpected ValueOrZero", invalid.ValueOrZero())
+		}
+	})
 }
 
 func TestIntEqual(t *testing.T) {
-	int1 := NewInt(10, false)
-	int2 := NewInt(10, false)
-	assertIntEqualIsTrue(t, int1, int2)
-
-	int1 = NewInt(10, false)
-	int2 = NewInt(20, false)
-	assertIntEqualIsTrue(t, int1, int2)
-
-	int1 = NewInt(10, true)
-	int2 = NewInt(10, true)
-	assertIntEqualIsTrue(t, int1, int2)
-
-	int1 = NewInt(10, true)
-	int2 = NewInt(10, false)
-	assertIntEqualIsFalse(t, int1, int2)
-
-	int1 = NewInt(10, false)
-	int2 = NewInt(10, true)
-	assertIntEqualIsFalse(t, int1, int2)
-
-	int1 = NewInt(10, true)
-	int2 = NewInt(20, true)
-	assertIntEqualIsFalse(t, int1, int2)
+	testIntEqual(t, NewInt)
+	testIntEqual(t, NewInt32)
+	testIntEqual(t, NewInt16)
+	testIntEqual(t, NewByte)
 }
 
-func assertInt(t *testing.T, i Int, from string) {
-	if i.Int64 != 12345 {
-		t.Errorf("bad %s int: %d ≠ %d\n", from, i.Int64, 12345)
+func testIntEqual[N interface{ Equal(N) bool }, V internal.Integer](t *testing.T, newInt func(V, bool) N) {
+	t.Run(internal.TypeName[N](), func(t *testing.T) {
+		int1 := newInt(10, false)
+		int2 := newInt(10, false)
+		assertIntEqualIsTrue(t, int1, int2)
+
+		int1 = newInt(10, false)
+		int2 = newInt(20, false)
+		assertIntEqualIsTrue(t, int1, int2)
+
+		int1 = newInt(10, true)
+		int2 = newInt(10, true)
+		assertIntEqualIsTrue(t, int1, int2)
+
+		int1 = newInt(10, true)
+		int2 = newInt(10, false)
+		assertIntEqualIsFalse(t, int1, int2)
+
+		int1 = newInt(10, false)
+		int2 = newInt(10, true)
+		assertIntEqualIsFalse(t, int1, int2)
+
+		int1 = newInt(10, true)
+		int2 = newInt(20, true)
+		assertIntEqualIsFalse(t, int1, int2)
+	})
+}
+
+func assertInt(t *testing.T, i interface{ value() (int64, bool) }, from string) {
+	t.Helper()
+	n, valid := i.value()
+	if n != 123 {
+		t.Errorf("bad %s int: %d ≠ %d\n", from, n, 123)
 	}
-	if !i.Valid {
+	if !valid {
 		t.Error(from, "is invalid, but should be valid")
 	}
 }
 
-func assertNullInt(t *testing.T, i Int, from string) {
-	if i.Valid {
+func assertNullInt(t *testing.T, i interface{ value() (int64, bool) }, from string) {
+	t.Helper()
+	_, valid := i.value()
+	if valid {
 		t.Error(from, "is valid, but should be invalid")
 	}
 }
 
-func assertIntEqualIsTrue(t *testing.T, a, b Int) {
+func assertIntEqualIsTrue[N interface{ Equal(N) bool }](t *testing.T, a, b N) {
 	t.Helper()
 	if !a.Equal(b) {
-		t.Errorf("Equal() of Int{%v, Valid:%t} and Int{%v, Valid:%t} should return true", a.Int64, a.Valid, b.Int64, b.Valid)
+		t.Errorf("Equal() of %#v and %#v should return true", a, b)
 	}
 }
 
-func assertIntEqualIsFalse(t *testing.T, a, b Int) {
+func assertIntEqualIsFalse[N interface{ Equal(N) bool }](t *testing.T, a, b N) {
 	t.Helper()
 	if a.Equal(b) {
-		t.Errorf("Equal() of Int{%v, Valid:%t} and Int{%v, Valid:%t} should return false", a.Int64, a.Valid, b.Int64, b.Valid)
+		t.Errorf("Equal() of %#v and %#v should return false", a, b)
 	}
 }
