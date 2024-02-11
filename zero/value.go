@@ -3,7 +3,6 @@
 package zero
 
 import (
-	"bytes"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -61,7 +60,7 @@ func (t Value[T]) MarshalJSON() ([]byte, error) {
 // It supports string and null input.
 func (t *Value[T]) UnmarshalJSON(data []byte) error {
 	var zero T
-	if bytes.Equal(data, nullBytes) {
+	if len(data) > 0 && data[0] == 'n' {
 		t.Valid = false
 		t.V = zero
 		return nil
