@@ -10,9 +10,6 @@ import (
 	"fmt"
 )
 
-// nullBytes is a JSON null literal
-var nullBytes = []byte("null")
-
 // String is a nullable string.
 // JSON marshals to a blank string if null.
 // Considered null to SQL if zero.

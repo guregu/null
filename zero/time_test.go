@@ -179,8 +179,8 @@ func TestTimeValue(t *testing.T) {
 	ti := TimeFrom(timeValue1)
 	v, err := ti.Value()
 	maybePanic(err)
-	if ti.Time != timeValue1 {
-		t.Errorf("bad time.Time value: %v ≠ %v", ti.Time, timeValue1)
+	if v != timeValue1 {
+		t.Errorf("bad time.Time value: %v ≠ %v", v, timeValue1)
 	}
 
 	var nt time.Time
