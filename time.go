@@ -11,6 +11,8 @@ import (
 
 // Time is a nullable time.Time. It supports SQL and JSON serialization.
 // It will marshal to null if null.
+// Handles Hubspot "NaT" notation for null time.
+// Exact same signature as null.Time otherwise.
 type Time struct {
 	sql.NullTime
 }
@@ -66,7 +68,7 @@ func (t Time) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON implements json.Unmarshaler.
 // It supports string and null input.
 func (t *Time) UnmarshalJSON(data []byte) error {
-	if bytes.Equal(data, nullBytes) {
+	if bytes.Equal(data, nullBytes) || bytes.Equal(data, []byte("NaT")) {
 		t.Valid = false
 		return nil
 	}
