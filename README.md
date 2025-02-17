@@ -3,7 +3,7 @@
 
 null is a library with reasonable options for dealing with nullable SQL and JSON values
 
-There are two packages: `null` and its subpackage `zero`. 
+There are two packages: `null` and its subpackage `zero`.
 
 Types in `null` will only be considered null on null input, and will JSON encode to `null`. If you need zero and null be considered separate values, use these.
 
@@ -14,6 +14,7 @@ Types in `zero` are treated like zero values in Go: blank string input will prod
 - All types implement `sql.Scanner` and `driver.Valuer`, so you can use this library in place of `sql.NullXXX`.
 - All types also implement `json.Marshaler` and `json.Unmarshaler`, so you can marshal them to their native JSON representation.
 - All non-generic types implement `encoding.TextMarshaler`, `encoding.TextUnmarshaler`. A null object's `MarshalText` will return a blank string.
+- All types implement `interface { IsZero() bool }`. Combined with Go 1.24's `,omitzero`, this lets you omit null types from JSON.
 
 ## null package
 
@@ -25,17 +26,17 @@ Nullable string.
 Marshals to JSON null if SQL source data is null. Zero (blank) input will not produce a null String.
 
 #### null.Int, null.Int32, null.Int16, null.Byte
-Nullable int64/int32/int16/byte. 
+Nullable int64/int32/int16/byte.
 
 Marshals to JSON null if SQL source data is null. Zero input will not produce a null Int.
 
 #### null.Float
-Nullable float64. 
+Nullable float64.
 
 Marshals to JSON null if SQL source data is null. Zero input will not produce a null Float.
 
 #### null.Bool
-Nullable bool. 
+Nullable bool.
 
 Marshals to JSON null if SQL source data is null. False input will not produce a null Bool.
 
@@ -58,14 +59,14 @@ Nullable string.
 Will marshal to a blank string if null. Blank string input produces a null String. Null values and zero values are considered equivalent.
 
 #### zero.Int, zero.Int32, zero.Int16, zero.Byte
-Nullable int64/int32/int16/byte. 
+Nullable int64/int32/int16/byte.
 
-Will marshal to 0 if null. 0 produces a null Int. Null values and zero values are considered equivalent. 
+Will marshal to 0 if null. 0 produces a null Int. Null values and zero values are considered equivalent.
 
 #### zero.Float
 Nullable float64.
 
-Will marshal to 0.0 if null. 0.0 produces a null Float. Null values and zero values are considered equivalent. 
+Will marshal to 0.0 if null. 0.0 produces a null Float. Null values and zero values are considered equivalent.
 
 #### zero.Bool
 Nullable bool.
@@ -104,7 +105,8 @@ This package isn't intended to be a catch-all data-wrangling package. It is esse
 - Unmarshaling from JSON `sql.NullXXX` JSON objects (e.g. `{"Int64": 123, "Valid": true}`) is no longer supported. It's unlikely many people used this, but if you need it, use v3.
 
 ### Bugs
-`json`'s `",omitempty"` struct tag does not work correctly right now. It will never omit a null or empty String. This might be [fixed eventually](https://github.com/golang/go/issues/11939).
+- ~~`json`'s `",omitempty"` struct tag does not work correctly right now. It will never omit a null or empty String. This might be [fixed eventually](https://github.com/golang/go/issues/11939).~~
+  - As of Go 1.24, you can use `,omitzero` to omit this package's types. Only took 10 years!
 
 ### License
 BSD
