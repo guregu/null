@@ -37,6 +37,14 @@ func (s String) ValueOrZero() string {
 	return s.String
 }
 
+// ValueOr returns the inner value if valid, otherwise v.
+func (s String) ValueOr(v string) string {
+	if !s.Valid {
+		return v
+	}
+	return s.String
+}
+
 // NewString creates a new String
 func NewString(s string, valid bool) String {
 	return String{

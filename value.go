@@ -46,6 +46,14 @@ func (t Value[T]) ValueOrZero() T {
 	return t.V
 }
 
+// ValueOr returns the inner value if valid, otherwise v.
+func (t Value[T]) ValueOr(v T) T {
+	if !t.Valid {
+		return v
+	}
+	return t.V
+}
+
 // MarshalJSON implements json.Marshaler.
 // It will encode null if this value is null.
 func (t Value[T]) MarshalJSON() ([]byte, error) {
