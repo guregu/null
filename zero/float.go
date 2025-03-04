@@ -49,6 +49,14 @@ func (f Float) ValueOrZero() float64 {
 	return f.Float64
 }
 
+// ValueOr returns the inner value if valid, otherwise v.
+func (f Float) ValueOr(v float64) float64 {
+	if !f.Valid {
+		return v
+	}
+	return f.Float64
+}
+
 // UnmarshalJSON implements json.Unmarshaler.
 // It supports number and null input.
 // 0 will be considered a null Float.

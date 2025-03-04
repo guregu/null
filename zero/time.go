@@ -56,6 +56,14 @@ func (t Time) ValueOrZero() time.Time {
 	return t.Time
 }
 
+// ValueOr returns the inner value if valid, otherwise v.
+func (t Time) ValueOr(v time.Time) time.Time {
+	if !t.Valid {
+		return v
+	}
+	return t.Time
+}
+
 // MarshalJSON implements json.Marshaler.
 // It will encode the zero value of time.Time
 // if this time is invalid.

@@ -46,6 +46,14 @@ func (b Byte) ValueOrZero() byte {
 	return b.Byte
 }
 
+// ValueOr returns the inner value if valid, otherwise v.
+func (b Byte) ValueOr(v byte) byte {
+	if !b.Valid {
+		return v
+	}
+	return b.Byte
+}
+
 // UnmarshalJSON implements json.Unmarshaler.
 // It supports number and null input.
 // 0 will be considered a null Byte.
