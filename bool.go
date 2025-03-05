@@ -42,6 +42,14 @@ func (b Bool) ValueOrZero() bool {
 	return b.Valid && b.Bool
 }
 
+// ValueOr returns the inner value if valid, otherwise v.
+func (b Bool) ValueOr(v bool) bool {
+	if !b.Valid {
+		return v
+	}
+	return b.Bool
+}
+
 // UnmarshalJSON implements json.Unmarshaler.
 // It supports number and null input.
 // 0 will not be considered a null Bool.

@@ -175,6 +175,18 @@ func TestStringValueOrZero(t *testing.T) {
 	}
 }
 
+func TestStringValueOr(t *testing.T) {
+	valid := NewString("test", true)
+	if valid.ValueOr("foo") != "test" {
+		t.Error("unexpected ValueOr", valid.ValueOr("foo"))
+	}
+
+	invalid := NewString("test", false)
+	if invalid.ValueOr("foo") != "foo" {
+		t.Error("unexpected ValueOr", invalid.ValueOr("foo"))
+	}
+}
+
 func TestStringEqual(t *testing.T) {
 	str1 := NewString("foo", false)
 	str2 := NewString("foo", false)

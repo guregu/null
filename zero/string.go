@@ -49,6 +49,14 @@ func (s String) ValueOrZero() string {
 	return s.String
 }
 
+// ValueOr returns the inner value if valid, otherwise v.
+func (s String) ValueOr(v string) string {
+	if !s.Valid {
+		return v
+	}
+	return s.String
+}
+
 // UnmarshalJSON implements json.Unmarshaler.
 // It supports string and null input. Blank string input produces a null String.
 func (s *String) UnmarshalJSON(data []byte) error {

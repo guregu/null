@@ -50,6 +50,11 @@ func testValue[T any](t *testing.T, good T) {
 				t.Error("ValueOrZero() want:", zero, "got:", nullVOZ)
 			}
 
+			nullVO := null.ValueOr(good)
+			if !reflect.DeepEqual(nullVO, good) {
+				t.Error("ValueOr() want:", good, "got:", nullVO)
+			}
+
 			t.Run("MarshalJSON", func(t *testing.T) {
 				wantJSON, err := json.Marshal(nilv)
 				if err != nil {
@@ -129,6 +134,11 @@ func testValueValid[T any](t *testing.T, value T) {
 	validVOZ := valid.ValueOrZero()
 	if !reflect.DeepEqual(validVOZ, value) {
 		t.Error("ValueOrZero() want:", value, "got:", validVOZ)
+	}
+
+	validV0 := valid.ValueOr(value)
+	if !reflect.DeepEqual(validV0, value) {
+		t.Error("ValueOr() want:", value, "got:", validV0)
 	}
 
 	t.Run("MarshalJSON", func(t *testing.T) {

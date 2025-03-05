@@ -213,6 +213,18 @@ func TestFloatValueOrZero(t *testing.T) {
 	}
 }
 
+func TestFloatValueOr(t *testing.T) {
+	valid := NewFloat(1.2345, true)
+	if valid.ValueOr(10) != 1.2345 {
+		t.Error("unexpected ValueOr", valid.ValueOr(10))
+	}
+
+	invalid := NewFloat(1.2345, false)
+	if invalid.ValueOr(10) != 10 {
+		t.Error("unexpected ValueOr", invalid.ValueOr(10))
+	}
+}
+
 func TestFloatEqual(t *testing.T) {
 	f1 := NewFloat(10, false)
 	f2 := NewFloat(10, false)

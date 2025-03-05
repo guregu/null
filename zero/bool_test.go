@@ -186,6 +186,18 @@ func TestBoolValueOrZero(t *testing.T) {
 	}
 }
 
+func TestBoolValueOr(t *testing.T) {
+	valid := NewBool(true, true)
+	if valid.ValueOr(false) != true {
+		t.Error("unexpected ValueOr", valid.ValueOr(false))
+	}
+
+	invalid := NewBool(true, false)
+	if invalid.ValueOr(true) != true {
+		t.Error("unexpected ValueOr", invalid.ValueOr(true))
+	}
+}
+
 func TestBoolEqual(t *testing.T) {
 	b1 := NewBool(true, false)
 	b2 := NewBool(true, false)

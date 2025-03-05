@@ -205,6 +205,19 @@ func TestTimeValueOrZero(t *testing.T) {
 	}
 }
 
+func TestTimeValueOr(t *testing.T) {
+	valid := TimeFrom(timeValue1)
+	if valid.ValueOr(timeValue2) != valid.Time {
+		t.Error("unexpected ValueOr", valid.ValueOr(timeValue2))
+	}
+
+	invalid := valid
+	invalid.Valid = false
+	if invalid.ValueOr(timeValue2) != timeValue2 {
+		t.Error("unexpected ValueOr", invalid.ValueOr(timeValue2))
+	}
+}
+
 func TestTimeIsZero(t *testing.T) {
 	str := TimeFrom(timeValue1)
 	if str.IsZero() {

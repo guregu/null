@@ -340,6 +340,27 @@ func testIntValueOrZero[N interface{ ValueOrZero() V }, V internal.Integer](t *t
 	})
 }
 
+func TestIntValueOr(t *testing.T) {
+	testIntValueOr(t, NewInt)
+	testIntValueOr(t, NewInt32)
+	testIntValueOr(t, NewInt16)
+	testIntValueOr(t, NewByte)
+}
+
+func testIntValueOr[N interface{ ValueOr(V) V }, V internal.Integer](t *testing.T, newInt func(V, bool) N) {
+	t.Run(internal.TypeName[N](), func(t *testing.T) {
+		valid := newInt(123, true)
+		if valid.ValueOr(V(100)) != 123 {
+			t.Error("unexpected ValueOr", valid.ValueOr(V(100)))
+		}
+
+		invalid := newInt(123, false)
+		if invalid.ValueOr(V(100)) != V(100) {
+			t.Error("unexpected ValueOr", invalid.ValueOr(V(100)))
+		}
+	})
+}
+
 func TestIntEqual(t *testing.T) {
 	testIntEqual(t, NewInt)
 	testIntEqual(t, NewInt32)

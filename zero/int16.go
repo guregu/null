@@ -46,6 +46,14 @@ func (i Int16) ValueOrZero() int16 {
 	return i.Int16
 }
 
+// ValueOr returns the inner value if valid, otherwise v.
+func (i Int16) ValueOr(v int16) int16 {
+	if !i.Valid {
+		return v
+	}
+	return i.Int16
+}
+
 // UnmarshalJSON implements json.Unmarshaler.
 // It supports number and null input.
 // 0 will be considered a null Int16.
