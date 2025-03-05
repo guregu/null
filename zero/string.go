@@ -8,6 +8,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"strings"
 )
 
 // String is a nullable string.
@@ -107,6 +108,11 @@ func (s String) Ptr() *string {
 // IsZero returns true for null or empty strings, for potential future omitempty support.
 func (s String) IsZero() bool {
 	return !s.Valid || s.String == ""
+}
+
+// IsZero returns true for null empty strings or strings which consist only of blanks.
+func (s String) IsZeroOrBlank() bool {
+	return !s.Valid || strings.ReplaceAll(s.String, " ", "") == ""
 }
 
 // Equal returns true if both strings have the same value or are both either null or empty.
