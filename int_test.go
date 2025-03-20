@@ -82,9 +82,8 @@ func testUnmarshalInt[N nullint](t *testing.T) {
 
 		var bi N
 		err = json.Unmarshal(floatBlankJSON, &bi)
-		if err == nil {
-			panic("err should not be nill")
-		}
+		maybePanic(err)
+		assertNullInt(t, bi, "blank json")
 
 		var null N
 		err = json.Unmarshal(nullJSON, &null)

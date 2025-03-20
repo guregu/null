@@ -22,6 +22,11 @@ func UnmarshalFloatJSON(data []byte, value *float64, valid *bool) error {
 		if err := json.Unmarshal(data, &str); err != nil {
 			return fmt.Errorf("null: couldn't unmarshal number string: %w", err)
 		}
+		if len(str) == 0 {
+			*value = 0
+			*valid = false
+			return nil
+		}
 		n, err := strconv.ParseFloat(str, 64)
 		if err != nil {
 			return fmt.Errorf("null: couldn't convert string to int: %w", err)

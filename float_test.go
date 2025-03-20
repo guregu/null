@@ -58,9 +58,8 @@ func TestUnmarshalFloat(t *testing.T) {
 
 	var blank Float
 	err = json.Unmarshal(floatBlankJSON, &blank)
-	if err == nil {
-		panic("expected error")
-	}
+	maybePanic(err)
+	assertNullFloat(t, blank, "blank json")
 
 	var badType Float
 	err = json.Unmarshal(boolJSON, &badType)

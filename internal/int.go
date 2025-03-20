@@ -25,6 +25,11 @@ func UnmarshalIntJSON[T Integer, U int64 | uint64](data []byte, value *T, valid 
 		if err := json.Unmarshal(data, &str); err != nil {
 			return fmt.Errorf("null: couldn't unmarshal number string: %w", err)
 		}
+		if len(str) == 0 {
+			*value = 0
+			*valid = false
+			return nil
+		}
 		n, err := parse(str, 10, bits)
 		if err != nil {
 			return fmt.Errorf("null: couldn't convert string to int: %w", err)
