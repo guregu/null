@@ -62,8 +62,11 @@ func (f Float) ValueOr(v float64) float64 {
 // 0 will be considered a null Float.
 func (f *Float) UnmarshalJSON(data []byte) error {
 	err := internal.UnmarshalFloatJSON(data, &f.Float64, &f.Valid)
+	if err != nil {
+		return err
+	}
 	f.Valid = f.Float64 != 0
-	return err
+	return nil
 }
 
 // UnmarshalText implements encoding.TextUnmarshaler.

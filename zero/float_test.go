@@ -83,6 +83,23 @@ func TestUnmarshalFloat(t *testing.T) {
 	assertNullFloat(t, invalid, "invalid json")
 }
 
+func TestUnmarshalFloatErrorDoesNotRestoreValidity(t *testing.T) {
+	for _, data := range []string{`true`, `{}`, `[]`, `1e1000`} {
+		t.Run(data, func(t *testing.T) {
+			f := FloatFrom(1.2345)
+			err := json.Unmarshal([]byte(data), &f)
+			var typeError *json.UnmarshalTypeError
+			if !errors.As(err, &typeError) {
+				t.Fatalf("expected UnmarshalTypeError, got %v", err)
+			}
+			assertNullFloat(t, f, "failed decoding into reused float")
+			if f.Ptr() != nil || f.ValueOr(10) != 10 {
+				t.Error("failed decoding exposes the old value as valid")
+			}
+		})
+	}
+}
+
 func TestTextUnmarshalFloat(t *testing.T) {
 	var f Float
 	err := f.UnmarshalText([]byte("1.2345"))
